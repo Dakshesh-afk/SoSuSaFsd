@@ -1,0 +1,60 @@
+﻿@page "/comments/details"
+@using Microsoft.EntityFrameworkCore
+@using SoSuSaFsd.Domain
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Comments</h2>
+    <hr />
+    @if (comments is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Content</dt>
+            <dd class="col-sm-10">@comments.Content</dd>
+            <dt class="col-sm-2">PostID</dt>
+            <dd class="col-sm-10">@comments.PostID</dd>
+            <dt class="col-sm-2">UserID</dt>
+            <dd class="col-sm-10">@comments.UserID</dd>
+            <dt class="col-sm-2">ParentCommentID</dt>
+            <dd class="col-sm-10">@comments.ParentCommentID</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@comments.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@comments.DateUpdated</dd>
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@comments.CreatedBy</dd>
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@comments.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/comments/edit?id={comments.Id}")">Edit</a> |
+            <a href="@($"/comments")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Comments? comments;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        comments = await context.Comments.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (comments is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

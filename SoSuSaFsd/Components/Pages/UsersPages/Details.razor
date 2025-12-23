@@ -1,0 +1,76 @@
+﻿@page "/users/details"
+@using Microsoft.EntityFrameworkCore
+@using SoSuSaFsd.Domain
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Users</h2>
+    <hr />
+    @if (users is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Username</dt>
+            <dd class="col-sm-10">@users.Username</dd>
+            <dt class="col-sm-2">Email</dt>
+            <dd class="col-sm-10">@users.Email</dd>
+            <dt class="col-sm-2">PasswordHash</dt>
+            <dd class="col-sm-10">@users.PasswordHash</dd>
+            <dt class="col-sm-2">Role</dt>
+            <dd class="col-sm-10">@users.Role</dd>
+            <dt class="col-sm-2">Bio</dt>
+            <dd class="col-sm-10">@users.Bio</dd>
+            <dt class="col-sm-2">ProfileImage</dt>
+            <dd class="col-sm-10">@users.ProfileImage</dd>
+            <dt class="col-sm-2">FirstName</dt>
+            <dd class="col-sm-10">@users.FirstName</dd>
+            <dt class="col-sm-2">LastName</dt>
+            <dd class="col-sm-10">@users.LastName</dd>
+            <dt class="col-sm-2">DateOfBirth</dt>
+            <dd class="col-sm-10">@users.DateOfBirth</dd>
+            <dt class="col-sm-2">PhoneNumber</dt>
+            <dd class="col-sm-10">@users.PhoneNumber</dd>
+            <dt class="col-sm-2">DisplayName</dt>
+            <dd class="col-sm-10">@users.DisplayName</dd>
+            <dt class="col-sm-2">IsActive</dt>
+            <dd class="col-sm-10">@users.IsActive</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@users.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@users.DateUpdated</dd>
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@users.CreatedBy</dd>
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@users.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/users/edit?id={users.Id}")">Edit</a> |
+            <a href="@($"/users")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Users? users;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        users = await context.Users.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (users is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

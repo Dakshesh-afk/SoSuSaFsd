@@ -1,0 +1,60 @@
+﻿@page "/posts/details"
+@using Microsoft.EntityFrameworkCore
+@using SoSuSaFsd.Domain
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Posts</h2>
+    <hr />
+    @if (posts is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Content</dt>
+            <dd class="col-sm-10">@posts.Content</dd>
+            <dt class="col-sm-2">PostStatus</dt>
+            <dd class="col-sm-10">@posts.PostStatus</dd>
+            <dt class="col-sm-2">UserId</dt>
+            <dd class="col-sm-10">@posts.UserId</dd>
+            <dt class="col-sm-2">CategoryId</dt>
+            <dd class="col-sm-10">@posts.CategoryId</dd>
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@posts.DateCreated</dd>
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@posts.DateUpdated</dd>
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@posts.CreatedBy</dd>
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@posts.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/posts/edit?id={posts.Id}")">Edit</a> |
+            <a href="@($"/posts")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Posts? posts;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        posts = await context.Posts.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (posts is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

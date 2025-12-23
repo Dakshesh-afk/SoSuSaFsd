@@ -1,0 +1,51 @@
+﻿@page "/users"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="users/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Users">
+    <PropertyColumn Property="users => users.Username" />
+    <PropertyColumn Property="users => users.Email" />
+    <PropertyColumn Property="users => users.PasswordHash" />
+    <PropertyColumn Property="users => users.Role" />
+    <PropertyColumn Property="users => users.Bio" />
+    <PropertyColumn Property="users => users.ProfileImage" />
+    <PropertyColumn Property="users => users.FirstName" />
+    <PropertyColumn Property="users => users.LastName" />
+    <PropertyColumn Property="users => users.DateOfBirth" />
+    <PropertyColumn Property="users => users.PhoneNumber" />
+    <PropertyColumn Property="users => users.DisplayName" />
+    <PropertyColumn Property="users => users.IsActive" />
+    <PropertyColumn Property="users => users.DateCreated" />
+    <PropertyColumn Property="users => users.DateUpdated" />
+    <PropertyColumn Property="users => users.CreatedBy" />
+    <PropertyColumn Property="users => users.UpdatedBy" />
+
+    <TemplateColumn Context="users">
+        <a href="@($"users/edit?id={users.Id}")">Edit</a> |
+        <a href="@($"users/details?id={users.Id}")">Details</a> |
+        <a href="@($"users/delete?id={users.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private SoSuSaFsdContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

@@ -1,0 +1,43 @@
+﻿@page "/comments"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="comments/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Comments">
+    <PropertyColumn Property="comments => comments.Content" />
+    <PropertyColumn Property="comments => comments.PostID" />
+    <PropertyColumn Property="comments => comments.UserID" />
+    <PropertyColumn Property="comments => comments.ParentCommentID" />
+    <PropertyColumn Property="comments => comments.DateCreated" />
+    <PropertyColumn Property="comments => comments.DateUpdated" />
+    <PropertyColumn Property="comments => comments.CreatedBy" />
+    <PropertyColumn Property="comments => comments.UpdatedBy" />
+
+    <TemplateColumn Context="comments">
+        <a href="@($"comments/edit?id={comments.Id}")">Edit</a> |
+        <a href="@($"comments/details?id={comments.Id}")">Details</a> |
+        <a href="@($"comments/delete?id={comments.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private SoSuSaFsdContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
