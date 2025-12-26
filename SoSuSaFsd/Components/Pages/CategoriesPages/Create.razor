@@ -1,0 +1,208 @@
+﻿@page "/categories/create"
+@rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Data
+@inject IDbContextFactory<SoSuSaFsdContext> DbFactory
+@inject NavigationManager Navigation
+
+<PageTitle>SoSuSa - Create Category</PageTitle>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f9f9f9;
+        color: #333;
+    }
+
+    .main-container {
+        display: flex;
+        justify-content: center;
+        padding-top: 100px;
+        min-height: 100vh;
+    }
+
+    .auth-card {
+        background-color: #fff;
+        width: 100%;
+        max-width: 500px;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid #eee;
+        height: fit-content;
+    }
+
+    .page-header {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 20px;
+        color: #333;
+        text-align: center;
+    }
+
+    hr {
+        border: 0;
+        border-top: 1px solid #ddd;
+        margin: 20px 0;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        background-color: #fff;
+    }
+
+        .form-control:focus {
+            border-color: #333;
+            outline: none;
+        }
+
+    .btn-black {
+        width: 100%;
+        padding: 12px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background 0.2s;
+    }
+
+        .btn-black:hover {
+            background-color: #000;
+        }
+
+    .btn-secondary {
+        width: 100%;
+        padding: 12px;
+        background-color: #fff;
+        color: #333;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+        .btn-secondary:hover {
+            background-color: #f0f0f0;
+        }
+
+    .validation-message {
+        color: #d9534f;
+        font-size: 13px;
+        margin-top: 5px;
+    }
+</style>
+
+<div class="main-container">
+    <div class="auth-card">
+        <h1 class="page-header">Create New Category</h1>
+        <hr />
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" style="color: #d9534f; background-color: #fdf7f7; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; border: 1px solid #f5c6cb;">
+                @errorMessage
+            </div>
+        }
+
+        <EditForm Model="NewCategory" OnValidSubmit="AddCategory">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label>Category Name</label>
+                <InputText @bind-Value="NewCategory.CategoryName" class="form-control" placeholder="e.g. Technology" />
+                <ValidationMessage For="() => NewCategory.CategoryName" class="validation-message" />
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <InputTextArea @bind-Value="NewCategory.CategoryDescription" class="form-control" rows="4" placeholder="What is this category about?" />
+                <ValidationMessage For="() => NewCategory.CategoryDescription" class="validation-message" />
+            </div>
+
+            <button type="submit" class="btn-black">Create Category</button>
+            <button type="button" class="btn-secondary" @onclick="Cancel">Cancel</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Name { get; set; }
+
+    [SupplyParameterFromForm]
+    public Categories NewCategory { get; set; } = new();
+
+    private string? errorMessage;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(Name))
+        {
+            NewCategory.CategoryName = Name;
+        }
+    }
+
+    private async Task AddCategory()
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            var exists = await context.Categories
+                .AnyAsync(c => c.CategoryName.ToLower() == NewCategory.CategoryName.ToLower());
+
+            if (exists)
+            {
+                errorMessage = "This category already exists! Please choose another name.";
+                return;
+            }
+
+            // Set system fields
+            NewCategory.DateCreated = DateTime.Now;
+            NewCategory.DateUpdated = DateTime.Now;
+            NewCategory.CreatedBy = "System";
+            NewCategory.UpdatedBy = "System";
+
+            // Set Restricted to FALSE by default (Open for everyone)
+            NewCategory.CategoryIsRestricted = false;
+
+            context.Categories.Add(NewCategory);
+            await context.SaveChangesAsync();
+
+            // Redirect using .Id (inherited from BaseDomainModel)
+            Navigation.NavigateTo($"/category/{NewCategory.Id}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error: " + ex.Message;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

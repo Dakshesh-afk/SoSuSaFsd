@@ -1,30 +1,76 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">SoSuSaFsd</a>
+﻿@using SoSuSaFsd.Data
+@using SoSuSaFsd.Domain
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<SoSuSaFsdContext> DbFactory
+@inject NavigationManager Navigation
+
+<div class="h-100 d-flex flex-column p-3 bg-white border-end">
+
+    <div class="mb-4">
+        <h2 class="fw-bold">SoSuSa</h2>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="fw-bold text-secondary">Following</h5>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link text-dark" href="#"># News</a></li>
+        </ul>
+    </div>
+
+    <div class="mb-4">
+        <h5 class="fw-bold text-secondary">Explore</h5>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link text-dark" href="/posts"># General</a></li>
+        </ul>
+    </div>
+
+    <div class="mt-auto pb-3">
+        <div class="input-group">
+            <input type="text"
+                   class="form-control"
+                   placeholder="Find category..."
+                   @bind="searchTerm"
+                   @bind:event="oninput" />
+
+            <button class="btn btn-dark"
+                    style="z-index: 9999; position: relative;"
+                    @onclick="HandleCategorySearch">
+                +
+            </button>
+        </div>
+        <small class="text-muted">Typing: @searchTerm</small>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+@code {
+    private string searchTerm = "";
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    private async Task HandleCategorySearch()
+    {
+        // Debug log to verify it works
+        Console.WriteLine($"[DEBUG] Search Clicked! Term: {searchTerm}");
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        if (string.IsNullOrWhiteSpace(searchTerm)) return;
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
 
+            var existingCategory = await context.Categories
+                .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
+
+            if (existingCategory != null)
+            {
+                Navigation.NavigateTo($"/categories/details?id={existingCategory.Id}");
+            }
+            else
+            {
+                Navigation.NavigateTo($"/categories/create?name={searchTerm}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[DEBUG] Error: {ex.Message}");
+        }
+    }
+}

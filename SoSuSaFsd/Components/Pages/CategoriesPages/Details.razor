@@ -1,0 +1,65 @@
+﻿@page "/categories/details"
+@using Microsoft.EntityFrameworkCore
+@using SoSuSaFsd.Domain
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Categories</h2>
+    <hr />
+    @if (categories is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <dl class="row">
+            <dt class="col-sm-2">CategoryName</dt>
+            <dd class="col-sm-10">@categories.CategoryName</dd>
+
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@categories.CategoryDescription</dd>
+
+            <dt class="col-sm-2">IsRestricted</dt>
+            <dd class="col-sm-10">@categories.CategoryIsRestricted</dd>
+
+            <dt class="col-sm-2">DateCreated</dt>
+            <dd class="col-sm-10">@categories.DateCreated</dd>
+
+            <dt class="col-sm-2">DateUpdated</dt>
+            <dd class="col-sm-10">@categories.DateUpdated</dd>
+
+            <dt class="col-sm-2">CreatedBy</dt>
+            <dd class="col-sm-10">@categories.CreatedBy</dd>
+
+            <dt class="col-sm-2">UpdatedBy</dt>
+            <dd class="col-sm-10">@categories.UpdatedBy</dd>
+        </dl>
+        <div>
+            <a href="@($"/categories/edit?id={categories.Id}")">Edit</a> |
+            <a href="@($"/categories")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Categories? categories;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        categories = await context.Categories.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (categories is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

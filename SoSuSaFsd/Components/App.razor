@@ -1,36 +1,25 @@
-﻿<!DOCTYPE html>
+﻿@using static Microsoft.AspNetCore.Components.Web.RenderMode
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="SoSuSa.styles.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet />
+    <link rel="stylesheet" href="SoSuSaFsd.styles.css" />
+
+
+    <HeadOutlet @rendermode="InteractiveServer" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'sosusa-black': '#333333',
-                        'sosusa-gray': '#555555',
-                        'sosusa-light': '#f9f9f9',
-                        'sosusa-border': '#e1e1e1',
-                        'sosusa-blue': '#1da1f2',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 
 <body>
-    <Routes />
+    <Routes @rendermode="InteractiveServer" />
+
     <script src="_framework/blazor.web.js"></script>
 </body>
 

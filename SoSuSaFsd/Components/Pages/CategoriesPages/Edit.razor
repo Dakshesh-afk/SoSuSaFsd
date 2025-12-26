@@ -1,0 +1,122 @@
+﻿@page "/categories/edit"
+@using Microsoft.EntityFrameworkCore
+@using SoSuSaFsd.Domain
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Categories</h2>
+<hr />
+@if (Categories is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Categories" OnValidSubmit="UpdateCategories" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert" />
+                <input type="hidden" name="Categories.Id" value="@Categories.Id" />
+
+                <div class="mb-3">
+                    <label for="categoryname" class="form-label">CategoryName:</label>
+                    <InputText id="categoryname" @bind-Value="Categories.CategoryName" class="form-control" />
+                    <ValidationMessage For="() => Categories.CategoryName" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <InputText id="description" @bind-Value="Categories.CategoryDescription" class="form-control" />
+                    <ValidationMessage For="() => Categories.CategoryDescription" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="isrestricted" class="form-label">IsRestricted:</label>
+                    <InputCheckbox id="isrestricted" @bind-Value="Categories.CategoryIsRestricted" class="form-check-input" />
+                    <ValidationMessage For="() => Categories.CategoryIsRestricted" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="datecreated" class="form-label">DateCreated:</label>
+                    <InputDate id="datecreated" @bind-Value="Categories.DateCreated" class="form-control" />
+                    <ValidationMessage For="() => Categories.DateCreated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dateupdated" class="form-label">DateUpdated:</label>
+                    <InputDate id="dateupdated" @bind-Value="Categories.DateUpdated" class="form-control" />
+                    <ValidationMessage For="() => Categories.DateUpdated" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="createdby" class="form-label">CreatedBy:</label>
+                    <InputText id="createdby" @bind-Value="Categories.CreatedBy" class="form-control" />
+                    <ValidationMessage For="() => Categories.CreatedBy" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="updatedby" class="form-label">UpdatedBy:</label>
+                    <InputText id="updatedby" @bind-Value="Categories.UpdatedBy" class="form-control" />
+                    <ValidationMessage For="() => Categories.UpdatedBy" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/categories">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Categories? Categories { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Categories ??= await context.Categories.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Categories is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task UpdateCategories()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Categories!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!CategoriesExists(Categories!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/categories");
+    }
+
+    private bool CategoriesExists(int id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Categories.Any(e => e.Id == id);
+    }
+}

@@ -1,0 +1,45 @@
+﻿@page "/categories"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="categories/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Categories">
+    <PropertyColumn Property="categories => categories.CategoryName" />
+
+    <PropertyColumn Property="categories => categories.CategoryDescription" Title="Description" />
+
+    <PropertyColumn Property="categories => categories.CategoryIsRestricted" Title="Restricted" />
+
+    <PropertyColumn Property="categories => categories.DateCreated" />
+    <PropertyColumn Property="categories => categories.DateUpdated" />
+    <PropertyColumn Property="categories => categories.CreatedBy" />
+    <PropertyColumn Property="categories => categories.UpdatedBy" />
+
+    <TemplateColumn Context="categories">
+        <a href="@($"categories/edit?id={categories.Id}")">Edit</a> |
+        <a href="@($"categories/details?id={categories.Id}")">Details</a> |
+        <a href="@($"categories/delete?id={categories.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private SoSuSaFsdContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

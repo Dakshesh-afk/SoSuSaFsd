@@ -1,5 +1,10 @@
 ﻿@page "/"
 @rendermode InteractiveServer
+@using SoSuSaFsd.Data
+@using SoSuSaFsd.Domain
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<SoSuSaFsdContext> DbFactory
+@inject NavigationManager Navigation
 
 <PageTitle>SoSuSa - Home</PageTitle>
 
@@ -15,6 +20,7 @@
     a {
         text-decoration: none;
         color: #333;
+        cursor: pointer;
     }
 
     ul {
@@ -34,9 +40,11 @@
         background-color: #ffffff;
         border-bottom: 2px solid #333;
         padding: 10px 0;
-        position: sticky;
+        position: fixed;
         top: 0;
-        z-index: 100;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
     }
 
     .header-container {
@@ -122,6 +130,16 @@
             background-color: #000;
         }
 
+        .login-btn.secondary {
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
+            .login-btn.secondary:hover {
+                background-color: #f0f0f0;
+            }
+
     /* --- 3. MAIN LAYOUT --- */
     .main-layout {
         display: flex;
@@ -131,14 +149,15 @@
         margin: 0 auto 20px auto;
         min-height: 80vh;
         gap: 0;
+        margin-top: 80px;
     }
 
     /* --- SIDEBAR STYLES --- */
     .sidebar {
         width: 240px;
         position: sticky;
-        top: 64px;
-        height: calc(100vh - 64px);
+        top: 80px;
+        height: calc(100vh - 80px);
         display: flex;
         flex-direction: column;
         padding-top: 20px;
@@ -199,6 +218,8 @@
         .category-link:hover {
             color: #000;
             text-decoration: underline;
+            background-color: #f9f9f9;
+            border-radius: 4px;
         }
 
         .category-link.active-setting {
@@ -218,13 +239,13 @@
         border-top: 1px solid #ddd;
     }
 
-    .category-search-form {
+    .category-search-container {
         display: flex;
         gap: 10px;
         align-items: center;
     }
 
-        .category-search-form input {
+        .category-search-container input {
             flex-grow: 1;
             padding: 8px;
             border: 1px solid #ccc;
@@ -421,7 +442,6 @@
 
     .modal-close {
         color: #aaa;
-        float: right;
         font-size: 28px;
         font-weight: bold;
         cursor: pointer;
@@ -605,7 +625,7 @@
             text-decoration: underline;
         }
 
-    /* Utility to hide elements (Corrected: No !important to allow JS toggling) */
+    /* Utility to hide elements */
     .hidden {
         display: none;
     }
@@ -647,46 +667,40 @@
     <aside class="sidebar sidebar-left">
         <div id="sidebar-home" class="section-view active">
             <div class="sidebar-section">
-                <h3>Following</h3>
+                <h3>Recently Created</h3>
                 <ul class="category-list">
-                    <li>
-                        <a class="category-link">
-                            <span class="hashtag">#</span> News
-                            <i class="fas fa-check-circle verified-badge" title="Verified Category"></i>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="category-link">
-                            <span class="hashtag">#</span> TpNews
-                            <i class="fas fa-check-circle verified-badge" title="Verified Category"></i>
-                        </a>
-                    </li>
+                    @if (RecentCategories != null)
+                    {
+                        @foreach (var cat in RecentCategories)
+                        {
+                            <li>
+                                <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                                    <span class="hashtag">#</span> @cat.CategoryName
+                                </a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li>Loading...</li>
+                    }
                 </ul>
                 <hr />
             </div>
 
-            <div class="sidebar-section">
-                <div class="section-header">
-                    <h3>Explore</h3>
-                </div>
-                <ul class="category-list scrollable-list">
-                    <li><a class="category-link"><span class="hashtag">#</span> General</a></li>
-                    <li>
-                        <a class="category-link">
-                            <span class="hashtag">#</span> Sports
-                            <i class="fas fa-check-circle verified-badge" title="Verified Category"></i>
-                        </a>
-                    </li>
-                    <li><a class="category-link"><span class="hashtag">#</span> CampusLife</a></li>
-                    <li><a class="category-link"><span class="hashtag">#</span> Events</a></li>
-                </ul>
-            </div>
-
             <div class="sidebar-footer">
-                <form action="#" class="category-search-form">
-                    <input type="text" placeholder="Find category...">
-                    <button type="button" class="create-cat-btn" title="Create New Category">+</button>
-                </form>
+                <div class="category-search-container">
+                    <input type="text"
+                           placeholder="Find category..."
+                           @bind="searchTerm"
+                           @bind:event="oninput" />
+                    <button type="button"
+                            class="create-cat-btn"
+                            title="Create New Category"
+                            @onclick="HandleCategorySearch">
+                        +
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -729,11 +743,9 @@
                 </ul>
             </div>
         </div>
-
     </aside>
 
     <main class="feed-area">
-
         <div id="feed-home" class="section-view active">
             <div class="feed-header">
                 <div class="feed-header-top">
@@ -791,7 +803,6 @@
         <div id="feed-profile" class="section-view">
             <h1 class="page-title">My Posts</h1>
             <hr />
-
             <div class="post-card">
                 <div class="post-header">
                     <div class="post-avatar"></div>
@@ -813,7 +824,6 @@
         </div>
 
         <div id="feed-settings" class="section-view">
-
             <div id="settings-form-profile" class="settings-content active">
                 <h1 class="page-title">Edit Profile</h1>
                 <hr />
@@ -890,21 +900,53 @@
                     </form>
                 </div>
             </div>
-
         </div>
 
     </main>
 
     <aside class="sidebar sidebar-right" id="right-sidebar">
         <div class="sidebar-section">
-            <h3>Trending</h3>
+            <h3>Verified Categories</h3>
             <ul class="category-list">
-                <li><a class="category-link"><span class="hashtag">#</span> ExamWeek</a></li>
-                <li><a class="category-link"><span class="hashtag">#</span> HolidayPlans</a></li>
+                @if (VerifiedCategories != null)
+                {
+                    @foreach (var cat in VerifiedCategories)
+                    {
+                        <li>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                                <span class="hashtag">#</span> @cat.CategoryName
+                                <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                            </a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li>Loading...</li>
+                }
             </ul>
         </div>
     </aside>
 
+</div>
+
+<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin: 0;">Category Not Found</h2>
+            <span class="modal-close" style="float: none; margin: 0;" @onclick="() => showCreateConfirm = false">&times;</span>
+        </div>
+        <hr />
+        <p style="margin-bottom: 20px; font-size: 16px;">
+            The category <b>#@searchTerm</b> does not exist yet.
+            <br /><br />
+            Would you like to create it?
+        </p>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button>
+            <button type="button" class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">No, Cancel</button>
+        </div>
+    </div>
 </div>
 
 <div id="report-modal" class="modal">
@@ -989,7 +1031,6 @@
         const loginView = document.getElementById('login-view');
         const regView = document.getElementById('register-view');
 
-        // Logic adjusted for CSS-based toggling
         if (loginView.style.display === 'none') {
             loginView.style.display = 'block';
             regView.style.display = 'none';
@@ -1001,9 +1042,7 @@
 
     function showLoginOverlay() {
         document.getElementById('auth-overlay').style.display = 'flex';
-        // Reset to home view behind the blur
         showSection('home');
-        // Ensure we are back to login view when reopening
         document.getElementById('login-view').style.display = 'block';
         document.getElementById('register-view').style.display = 'none';
     }
@@ -1017,7 +1056,7 @@
         document.getElementById('report-modal').style.display = 'none';
     }
 
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         const modal = document.getElementById('report-modal');
         if (event.target == modal) {
             modal.style.display = "none";
@@ -1063,3 +1102,86 @@
         document.getElementById('set-link-' + formName).classList.add('active-setting');
     }
 </script>
+
+@code {
+    private string searchTerm = "";
+    private string homeErrorMessage = "";
+    private bool showCreateConfirm = false;
+
+    // --- New Data Lists for Sidebars ---
+    private List<Categories> RecentCategories = new();
+    private List<Categories> VerifiedCategories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // 1. Fetch Recently Created (Top 5 by DateCreated Descending)
+            RecentCategories = await context.Categories
+                .OrderByDescending(c => c.DateCreated)
+                .Take(5)
+                .ToListAsync();
+
+            // 2. Fetch "Verified" Categories
+            // Simulate Verified by checking for specific names (until you have an IsVerified column)
+            VerifiedCategories = await context.Categories
+                .Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports")
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error loading sidebar data: " + ex.Message);
+        }
+    }
+
+    private void NavigateToCategory(int id)
+    {
+        Navigation.NavigateTo($"/category/{id}");
+    }
+
+    private async Task HandleCategorySearch()
+    {
+        homeErrorMessage = "";
+
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            homeErrorMessage = "Please type a category name first.";
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // Search for the category
+            var existingCategory = await context.Categories
+                .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
+
+            if (existingCategory != null)
+            {
+                // Found it -> Go to Custom Details
+                Navigation.NavigateTo($"/category/{existingCategory.Id}");
+            }
+            else
+            {
+                // Not Found -> Show the "Do you want to create this?" popup
+                showCreateConfirm = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            homeErrorMessage = $"Error: {ex.Message}";
+            if (ex.InnerException != null)
+            {
+                homeErrorMessage += $" | Inner: {ex.InnerException.Message}";
+            }
+        }
+    }
+
+    private void NavigateToCreate()
+    {
+        Navigation.NavigateTo($"/categories/create?name={searchTerm}");
+    }
+}
