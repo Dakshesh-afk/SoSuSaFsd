@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SoSuSaFsd.Domain;
 
 namespace SoSuSaFsd.Data
 {
-    public class SoSuSaFsdContext : DbContext
+    public class SoSuSaFsdContext : IdentityDbContext<Users>
     {
-        public SoSuSaFsdContext (DbContextOptions<SoSuSaFsdContext> options)
+        public SoSuSaFsdContext(DbContextOptions<SoSuSaFsdContext> options)
             : base(options)
         {
         }

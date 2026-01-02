@@ -4,10 +4,7 @@
     {
         public string? Content { get; set; }
         public string? PostStatus { get; set; }
-
-        // Foreign Key to Users
-        public int UserId { get; set; }
-        // Foreign Key to Categories
+        public string UserId { get; set; }
         public int CategoryId { get; set; }
 
     }

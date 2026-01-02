@@ -3,8 +3,11 @@
 @using SoSuSaFsd.Data
 @using SoSuSaFsd.Domain
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
 @inject IDbContextFactory<SoSuSaFsdContext> DbFactory
+@inject IServiceScopeFactory ScopeFactory
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <PageTitle>SoSuSa - Home</PageTitle>
 
@@ -612,6 +615,12 @@
             background-color: #000;
         }
 
+        /* Disabled state for loading */
+        .auth-btn:disabled {
+            background-color: #777;
+            cursor: not-allowed;
+        }
+
     .auth-switch {
         margin-top: 20px;
         font-size: 14px;
@@ -637,6 +646,20 @@
         .section-view.active {
             display: block;
         }
+
+    /* --- UTILITY FOR ERROR MESSAGES --- */
+    .error-msg {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        font-size: 14px;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
 </style>
 
 <header class="site-header">
@@ -651,7 +674,6 @@
             <a onclick="showSection('home')" id="nav-home" class="active-link">Home</a>
             <a onclick="showSection('profile')" id="nav-profile">Profile</a>
             <a onclick="showSection('settings')" id="nav-settings">Settings</a>
-            <a href="admin" style="color:red; font-weight:bold;">Admin</a>
         </nav>
         <div class="header-right">
             <form action="#">
@@ -663,7 +685,6 @@
 </header>
 
 <div class="main-layout">
-
     <aside class="sidebar sidebar-left">
         <div id="sidebar-home" class="section-view active">
             <div class="sidebar-section">
@@ -707,23 +728,27 @@
         <div id="sidebar-profile" class="section-view">
             <div class="profile-card">
                 <div class="profile-avatar-large"></div>
-                <h2 class="profile-name">Testuser</h2>
-                <p class="profile-handle">@@testuser1</p>
+                <h2 class="profile-name">
+                    @(loggedInUser?.UserName ?? "Guest")
+                </h2>
+                <p class="profile-handle">
+                    @@@(loggedInUser?.UserName?.ToLower() ?? "guest")
+                </p>
                 <p class="profile-bio">
-                    computer engineering
+                    @(loggedInUser?.Bio ?? "No bio available")
                 </p>
 
                 <div class="profile-stats">
                     <div class="stat-item">
-                        <b>1</b>
+                        <b>0</b>
                         <span>Posts</span>
                     </div>
                     <div class="stat-item">
-                        <b>450</b>
+                        <b>0</b>
                         <span>Followers</span>
                     </div>
                     <div class="stat-item">
-                        <b>300</b>
+                        <b>0</b>
                         <span>Following</span>
                     </div>
                 </div>
@@ -759,37 +784,15 @@
                 <div class="post-header">
                     <div class="post-avatar"></div>
                     <div class="post-meta">
-                        <div><b>Straits Times</b></div>
+                        <div><b>Admin</b></div>
                         <div class="post-category-tag">
-                            Posted in <a>#News</a>
+                            Posted in <a>#Welcome</a>
                             <i class="fas fa-check-circle verified-badge small" title="Verified Category"></i>
                         </div>
                     </div>
                 </div>
                 <div class="post-content">
-                    Official report: SoSuSa has launched to combat misinformation.
-                </div>
-                <div class="post-actions">
-                    <button class="action-btn"><i class="far fa-heart"></i> Like</button>
-                    <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
-                    <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
-                    <button class="action-btn report-btn" onclick="openReportModal()"><i class="far fa-flag"></i> Report</button>
-                </div>
-            </div>
-
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div class="post-meta">
-                        <div><b>TP Admin</b></div>
-                        <div class="post-category-tag">
-                            Posted in <a>#TpNews</a>
-                            <i class="fas fa-check-circle verified-badge small" title="Verified Category"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    <b>Announcement:</b> Exam week schedules have been updated, please check the student portal
+                    Welcome to SoSuSa! Log in to start posting.
                 </div>
                 <div class="post-actions">
                     <button class="action-btn"><i class="far fa-heart"></i> Like</button>
@@ -803,24 +806,7 @@
         <div id="feed-profile" class="section-view">
             <h1 class="page-title">My Posts</h1>
             <hr />
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div class="post-meta">
-                        <div><b>Testuser</b></div>
-                        <div class="post-category-tag">Posted in <a>#CampusLife</a></div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    Just registered hope to enjoy my stay
-                </div>
-                <div class="post-actions">
-                    <button class="action-btn"><i class="far fa-heart"></i> Like</button>
-                    <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
-                    <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
-                    <button class="action-btn report-btn"><i class="far fa-trash-alt"></i> Delete</button>
-                </div>
-            </div>
+            <p style="text-align:center; color:#666;">No posts yet.</p>
         </div>
 
         <div id="feed-settings" class="section-view">
@@ -830,25 +816,14 @@
                 <div class="post-card" style="padding: 20px;">
                     <form>
                         <div class="settings-form-group">
-                            <label>Profile Picture</label>
-                            <div style="display: flex; align-items: center; gap: 20px;">
-                                <div class="profile-avatar-large" style="width: 80px; height: 80px; margin: 0; border-radius: 50%; background-color: #ddd;"></div>
-                                <input type="file" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="settings-form-group">
                             <label>Display Name</label>
-                            <input type="text" value="Testuser">
-                        </div>
-                        <div class="settings-form-group">
-                            <label>Username (Handle)</label>
-                            <input type="text" value="@@testuser1" readonly style="background-color: #f0f0f0; cursor: not-allowed;">
+                            <input type="text" value="@(loggedInUser?.DisplayName)">
                         </div>
                         <div class="settings-form-group">
                             <label>Bio</label>
-                            <textarea rows="4">computer engineering</textarea>
+                            <textarea rows="4">@(loggedInUser?.Bio)</textarea>
                         </div>
-                        <button type="button" class="login-btn" onclick="alert('Profile Updated!')">Save Changes</button>
+                        <button type="button" class="login-btn">Save Changes</button>
                     </form>
                 </div>
             </div>
@@ -857,21 +832,7 @@
                 <h1 class="page-title">Change Password</h1>
                 <hr />
                 <div class="post-card" style="padding: 20px;">
-                    <form>
-                        <div class="settings-form-group">
-                            <label>Current Password</label>
-                            <input type="password" placeholder="Enter current password">
-                        </div>
-                        <div class="settings-form-group">
-                            <label>New Password</label>
-                            <input type="password" placeholder="Enter new password">
-                        </div>
-                        <div class="settings-form-group">
-                            <label>Confirm New Password</label>
-                            <input type="password" placeholder="Confirm new password">
-                        </div>
-                        <button type="button" class="login-btn" onclick="alert('Password Changed Successfully!')">Update Password</button>
-                    </form>
+                    <p>Password change functionality coming soon.</p>
                 </div>
             </div>
 
@@ -880,28 +841,11 @@
                 <hr />
                 <div class="post-card" style="padding: 20px;">
                     <p style="margin-bottom: 20px; font-size: 14px; color: #666;">
-                        Apply for permission to post in verified categories. Your request will be reviewed by an admin.
+                        Apply for permission to post in verified categories.
                     </p>
-                    <form>
-                        <div class="settings-form-group">
-                            <label>Select Category</label>
-                            <select>
-                                <option value="">-- Choose Category --</option>
-                                <option value="TpNews">#TpNews</option>
-                                <option value="News">#News</option>
-                                <option value="Sports">#Sports</option>
-                            </select>
-                        </div>
-                        <div class="settings-form-group">
-                            <label>Reason for Verification</label>
-                            <textarea rows="4" placeholder="Explain why you are qualified to post in this verified category..."></textarea>
-                        </div>
-                        <button type="button" class="login-btn" onclick="alert('Verification Request Submitted!')">Submit Request</button>
-                    </form>
                 </div>
             </div>
         </div>
-
     </main>
 
     <aside class="sidebar sidebar-right" id="right-sidebar">
@@ -984,14 +928,30 @@
 
         <div id="login-view">
             <div class="auth-header">Welcome</div>
-            <form onsubmit="event.preventDefault(); loginUser();">
+
+            @if (!string.IsNullOrEmpty(authErrorMessage))
+            {
+                <span class="error-msg">@authErrorMessage</span>
+            }
+
+            <form @onsubmit="PerformLogin">
                 <div class="auth-input-group">
-                    <input type="text" placeholder="Username or Email" required>
+                    <input type="text" placeholder="UserName" required @bind="loginUsername">
                 </div>
                 <div class="auth-input-group">
-                    <input type="password" placeholder="Password" required>
+                    <input type="password" placeholder="Password" required @bind="loginPassword">
                 </div>
-                <button type="submit" class="auth-btn">Log In</button>
+                <button type="submit" class="auth-btn" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <text>Logging in...</text>
+                    }
+                    else
+                    {
+
+                        <text>Log In</text>
+                    }
+                </button>
             </form>
             <div class="auth-switch">
                 Don't have an account? <a onclick="toggleAuthMode()">Register</a>
@@ -1000,17 +960,33 @@
 
         <div id="register-view" class="hidden">
             <div class="auth-header">Create Account</div>
-            <form onsubmit="event.preventDefault(); loginUser();">
+
+            @if (!string.IsNullOrEmpty(registerErrorMessage))
+            {
+                <span class="error-msg">@registerErrorMessage</span>
+            }
+
+            <form @onsubmit="PerformRegister">
                 <div class="auth-input-group">
-                    <input type="email" placeholder="Email Address" required>
+                    <input type="email" placeholder="Email Address" required @bind="registerEmail">
                 </div>
                 <div class="auth-input-group">
-                    <input type="text" placeholder="Username" required>
+                    <input type="text" placeholder="UserName" required @bind="registerUsername">
                 </div>
                 <div class="auth-input-group">
-                    <input type="password" placeholder="Password" required>
+                    <input type="password" placeholder="Password" required @bind="registerPassword">
                 </div>
-                <button type="submit" class="auth-btn">Sign Up</button>
+                <button type="submit" class="auth-btn" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <text>Signing Up...</text>
+                    }
+                    else
+                    {
+
+                        <text>Sign Up</text>
+                    }
+                </button>
             </form>
             <div class="auth-switch">
                 Already have an account? <a onclick="toggleAuthMode()">Log In</a>
@@ -1021,8 +997,8 @@
 </div>
 
 <script>
-    // --- AUTH LOGIC ---
-    function loginUser() {
+    // --- AUTH LOGIC (Updated to work with C#) ---
+    function loginSuccessJS() {
         document.getElementById('auth-overlay').style.display = 'none';
         showSection('profile');
     }
@@ -1104,11 +1080,25 @@
 </script>
 
 @code {
+    // --- AUTH VARIABLES ---
+    private string loginUsername = "";
+    private string loginPassword = "";
+    private string authErrorMessage = "";
+    private bool isLoading = false;
+
+    private string registerEmail = "";
+    private string registerUsername = "";
+    private string registerPassword = "";
+    private string registerErrorMessage = "";
+
+    // This object holds the session for THIS PAGE only
+    private Users? loggedInUser;
+
+    // --- OTHER VARIABLES ---
     private string searchTerm = "";
     private string homeErrorMessage = "";
     private bool showCreateConfirm = false;
 
-    // --- New Data Lists for Sidebars ---
     private List<Categories> RecentCategories = new();
     private List<Categories> VerifiedCategories = new();
 
@@ -1117,22 +1107,144 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-
-            // 1. Fetch Recently Created (Top 5 by DateCreated Descending)
             RecentCategories = await context.Categories
                 .OrderByDescending(c => c.DateCreated)
                 .Take(5)
                 .ToListAsync();
 
-            // 2. Fetch "Verified" Categories
-            // Simulate Verified by checking for specific names (until you have an IsVerified column)
             VerifiedCategories = await context.Categories
                 .Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports")
                 .ToListAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error loading sidebar data: " + ex.Message);
+            Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+
+    private async Task PerformLogin()
+    {
+        authErrorMessage = "";
+        isLoading = true;
+        StateHasChanged();
+        await Task.Delay(50);
+
+        if (string.IsNullOrWhiteSpace(loginUsername) || string.IsNullOrWhiteSpace(loginPassword))
+        {
+            authErrorMessage = "Please enter both username and password.";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            using (var scope = ScopeFactory.CreateScope())
+            {
+                var _userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+
+                var user = await _userManager.FindByNameAsync(loginUsername);
+
+                if (user != null)
+                {
+                    if (await _userManager.CheckPasswordAsync(user, loginPassword))
+                    {
+                        // --- NEW: CHECK IF USER IS ADMIN ---
+                        bool isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+                        if (isAdmin)
+                        {
+                            // Redirect to Admin Dashboard immediately
+                            Navigation.NavigateTo("/admin", forceLoad: true);
+                        }
+                        else
+                        {
+                            // Regular user? Just close the popup and show profile
+                            loggedInUser = user;
+                            await JSRuntime.InvokeVoidAsync("loginSuccessJS");
+                        }
+                    }
+                    else
+                    {
+                        authErrorMessage = "Invalid Password.";
+                    }
+                }
+                else
+                {
+                    authErrorMessage = "User not found.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            authErrorMessage = "Error: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    private async Task PerformRegister()
+    {
+        registerErrorMessage = "";
+        isLoading = true;
+        StateHasChanged();
+
+        if (string.IsNullOrWhiteSpace(registerUsername) || string.IsNullOrWhiteSpace(registerPassword) || string.IsNullOrWhiteSpace(registerEmail))
+        {
+            registerErrorMessage = "All fields are required.";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            using (var scope = ScopeFactory.CreateScope())
+            {
+                var _userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+                var _roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                // 1. Create the user object
+                var newUser = new Users
+                {
+                    UserName = registerUsername,
+                    Email = registerEmail,
+                    DateCreated = DateTime.Now,
+                    IsActive = true
+                };
+
+                var result = await _userManager.CreateAsync(newUser, registerPassword);
+
+                if (result.Succeeded)
+                {
+                    // --- DEV HACK: CREATE ADMIN ROLE IF MISSING ---
+                    if (!await _roleManager.RoleExistsAsync("Admin"))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("Admin"));
+                    }
+
+                    // --- DEV HACK: IF USERNAME IS "Admin", MAKE THEM ADMIN ---
+                    // Change "Admin" to whatever username you want to be the superuser
+                    if (registerUsername.ToLower() == "admin")
+                    {
+                        await _userManager.AddToRoleAsync(newUser, "Admin");
+                    }
+
+                    loggedInUser = newUser;
+                    await JSRuntime.InvokeVoidAsync("loginSuccessJS");
+                }
+                else
+                {
+                    registerErrorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            registerErrorMessage = "Error: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
@@ -1144,39 +1256,29 @@
     private async Task HandleCategorySearch()
     {
         homeErrorMessage = "";
-
         if (string.IsNullOrWhiteSpace(searchTerm))
         {
             homeErrorMessage = "Please type a category name first.";
             return;
         }
-
         try
         {
             using var context = DbFactory.CreateDbContext();
-
-            // Search for the category
             var existingCategory = await context.Categories
                 .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
 
             if (existingCategory != null)
             {
-                // Found it -> Go to Custom Details
                 Navigation.NavigateTo($"/category/{existingCategory.Id}");
             }
             else
             {
-                // Not Found -> Show the "Do you want to create this?" popup
                 showCreateConfirm = true;
             }
         }
         catch (Exception ex)
         {
             homeErrorMessage = $"Error: {ex.Message}";
-            if (ex.InnerException != null)
-            {
-                homeErrorMessage += $" | Inner: {ex.InnerException.Message}";
-            }
         }
     }
 
