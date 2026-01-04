@@ -3,8 +3,12 @@
 @using SoSuSaFsd.Data
 @using SoSuSaFsd.Domain
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
 @inject IDbContextFactory<SoSuSaFsdContext> DbFactory
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IServiceScopeFactory ScopeFactory
 
 <PageTitle>@Title</PageTitle>
 
@@ -407,7 +411,7 @@
         <div class="sidebar-section">
             <h3>Recently Created</h3>
             <ul class="category-list">
-                @if (RecentCategories != null)
+                @if (RecentCategories != null && RecentCategories.Any())
                 {
                     @foreach (var cat in RecentCategories)
                     {
@@ -420,7 +424,14 @@
                 }
                 else
                 {
-                    <li>Loading...</li>
+                    <AuthorizeView>
+                        <Authorized>
+                            <li>You haven't created any categories yet.</li>
+                        </Authorized>
+                        <NotAuthorized>
+                            <li>Login to see your categories.</li>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 }
             </ul>
             <hr />
@@ -575,17 +586,35 @@
                 Title = "#" + CurrentCategory.CategoryName;
             }
 
-            // 2. Fetch Recently Created (Top 5 by DateCreated Descending)
-            // Assumes 'DateCreated' exists in your Domain model based on your screenshot
-            RecentCategories = await context.Categories
-                .OrderByDescending(c => c.DateCreated)
-                .Take(5)
-                .ToListAsync();
+            // 2. Fetch Recently Created (FILTERED BY USER)
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var userId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null && user.Identity?.IsAuthenticated == true)
+            {
+                // Fallback lookup if claim is missing but IsAuthenticated is true
+                using var scope = ScopeFactory.CreateScope();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+                var dbUser = await userManager.GetUserAsync(user);
+                userId = dbUser?.Id;
+            }
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                RecentCategories = await context.Categories
+                    .Where(c => c.CreatedBy == userId)
+                    .OrderByDescending(c => c.DateCreated)
+                    .Take(5)
+                    .ToListAsync();
+            }
+            else
+            {
+                // Not logged in -> Empty list
+                RecentCategories = new List<Categories>();
+            }
 
             // 3. Fetch "Verified" Categories
-            // Since we don't have an explicit 'IsVerified' column yet,
-            // I am simulating this by fetching common categories (News, TpNews, Sports)
-            // If you add an 'IsVerified' bool later, change this to: .Where(c => c.IsVerified)
             VerifiedCategories = await context.Categories
                 .Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports")
                 .ToListAsync();

@@ -8,5 +8,6 @@ namespace SoSuSaFsd.Domain
         public string? CategoryName { get; set; }
         public string? CategoryDescription { get; set; }
         public bool CategoryIsRestricted { get; set; }
+        public string? CreatedBy { get; set; }
     }
 }

@@ -3,206 +3,150 @@
 @using Microsoft.EntityFrameworkCore
 @using SoSuSaFsd.Domain
 @using SoSuSaFsd.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
 @inject IDbContextFactory<SoSuSaFsdContext> DbFactory
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IServiceScopeFactory ScopeFactory
 
-<PageTitle>SoSuSa - Create Category</PageTitle>
-
+<!-- Same styles as before -->
 <style>
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f9f9f9;
-        color: #333;
-    }
-
-    .main-container {
-        display: flex;
-        justify-content: center;
-        padding-top: 100px;
-        min-height: 100vh;
+        font-family: 'Segoe UI', sans-serif;
+        background: #f9f9f9;
+        padding-top: 50px;
     }
 
     .auth-card {
-        background-color: #fff;
-        width: 100%;
         max-width: 500px;
+        margin: 0 auto;
+        background: white;
         padding: 40px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        border: 1px solid #eee;
-        height: fit-content;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
-
-    .page-header {
-        font-size: 24px;
-        font-weight: 800;
-        margin-bottom: 20px;
-        color: #333;
-        text-align: center;
-    }
-
-    hr {
-        border: 0;
-        border-top: 1px solid #ddd;
-        margin: 20px 0;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 14px;
-        }
 
     .form-control {
         width: 100%;
-        padding: 12px;
+        padding: 10px;
+        margin-bottom: 15px;
         border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 14px;
+        border-radius: 5px;
         box-sizing: border-box;
-        background-color: #fff;
     }
-
-        .form-control:focus {
-            border-color: #333;
-            outline: none;
-        }
 
     .btn-black {
         width: 100%;
         padding: 12px;
-        background-color: #333;
+        background: #333;
         color: white;
         border: none;
-        border-radius: 20px;
-        font-size: 16px;
-        font-weight: bold;
+        border-radius: 5px;
         cursor: pointer;
-        margin-top: 20px;
-        transition: background 0.2s;
     }
-
-        .btn-black:hover {
-            background-color: #000;
-        }
 
     .btn-secondary {
         width: 100%;
         padding: 12px;
-        background-color: #fff;
+        background: white;
         color: #333;
         border: 1px solid #ccc;
-        border-radius: 20px;
-        font-size: 16px;
-        font-weight: bold;
-        cursor: pointer;
+        border-radius: 5px;
         margin-top: 10px;
-    }
-
-        .btn-secondary:hover {
-            background-color: #f0f0f0;
-        }
-
-    .validation-message {
-        color: #d9534f;
-        font-size: 13px;
-        margin-top: 5px;
+        cursor: pointer;
     }
 </style>
 
-<div class="main-container">
-    <div class="auth-card">
-        <h1 class="page-header">Create New Category</h1>
-        <hr />
+<div class="auth-card">
+    <h2>Create New Category</h2>
+    <hr />
 
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="alert alert-danger" style="color: #d9534f; background-color: #fdf7f7; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; border: 1px solid #f5c6cb;">
-                @errorMessage
-            </div>
-        }
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p style="color:red; background:#fee; padding:10px;">@errorMessage</p>
+    }
 
-        <EditForm Model="NewCategory" OnValidSubmit="AddCategory">
-            <DataAnnotationsValidator />
+    <EditForm Model="NewCategory" OnValidSubmit="AddCategory">
+        <DataAnnotationsValidator />
 
-            <div class="form-group">
-                <label>Category Name</label>
-                <InputText @bind-Value="NewCategory.CategoryName" class="form-control" placeholder="e.g. Technology" />
-                <ValidationMessage For="() => NewCategory.CategoryName" class="validation-message" />
-            </div>
+        <label>Category Name</label>
+        <InputText @bind-Value="NewCategory.CategoryName" class="form-control" />
 
-            <div class="form-group">
-                <label>Description</label>
-                <InputTextArea @bind-Value="NewCategory.CategoryDescription" class="form-control" rows="4" placeholder="What is this category about?" />
-                <ValidationMessage For="() => NewCategory.CategoryDescription" class="validation-message" />
-            </div>
+        <label>Description</label>
+        <InputTextArea @bind-Value="NewCategory.CategoryDescription" class="form-control" rows="4" />
 
-            <button type="submit" class="btn-black">Create Category</button>
-            <button type="button" class="btn-secondary" @onclick="Cancel">Cancel</button>
-        </EditForm>
-    </div>
+        <button type="submit" class="btn-black">Create Category</button>
+        <button type="button" class="btn-secondary" @onclick='() => Navigation.NavigateTo("/")'>Cancel</button>
+    </EditForm>
 </div>
 
 @code {
     [SupplyParameterFromQuery]
     public string? Name { get; set; }
 
-    [SupplyParameterFromForm]
     public Categories NewCategory { get; set; } = new();
-
     private string? errorMessage;
 
     protected override void OnInitialized()
     {
-        if (!string.IsNullOrEmpty(Name))
-        {
-            NewCategory.CategoryName = Name;
-        }
+        if (!string.IsNullOrEmpty(Name)) NewCategory.CategoryName = Name;
     }
 
     private async Task AddCategory()
     {
+        // 1. Get the real logged-in user from the Cookie/AuthState
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity.IsAuthenticated)
+        {
+            errorMessage = "You must be logged in to create a category.";
+            return;
+        }
+
+        // 2. Get the actual User ID (Guid/String)
+        var userId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            // Fallback: try to find by name using UserManager if ID claim is missing
+            using var scope = ScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+            var dbUser = await userManager.GetUserAsync(user);
+            userId = dbUser?.Id;
+        }
+
+        if (userId == null)
+        {
+            errorMessage = "Could not identify user.";
+            return;
+        }
+
         try
         {
             using var context = DbFactory.CreateDbContext();
 
-            var exists = await context.Categories
-                .AnyAsync(c => c.CategoryName.ToLower() == NewCategory.CategoryName.ToLower());
-
-            if (exists)
+            // Check duplicates
+            if (await context.Categories.AnyAsync(c => c.CategoryName == NewCategory.CategoryName))
             {
-                errorMessage = "This category already exists! Please choose another name.";
+                errorMessage = "Category already exists.";
                 return;
             }
 
-            // Set system fields
+            // Save with User ID
             NewCategory.DateCreated = DateTime.Now;
-            NewCategory.DateUpdated = DateTime.Now;
-            NewCategory.CreatedBy = "System";
-            NewCategory.UpdatedBy = "System";
-
-            // Set Restricted to FALSE by default (Open for everyone)
+            NewCategory.CreatedBy = userId; // <--- This is the key part!
             NewCategory.CategoryIsRestricted = false;
 
             context.Categories.Add(NewCategory);
             await context.SaveChangesAsync();
 
-            // Redirect using .Id (inherited from BaseDomainModel)
             Navigation.NavigateTo($"/category/{NewCategory.Id}");
         }
         catch (Exception ex)
         {
-            errorMessage = "Error: " + ex.Message;
+            errorMessage = ex.Message;
         }
-    }
-
-    private void Cancel()
-    {
-        Navigation.NavigateTo("/");
     }
 }
