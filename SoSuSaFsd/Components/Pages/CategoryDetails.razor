@@ -5,14 +5,33 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Hosting
 @inject IDbContextFactory<SoSuSaFsdContext> DbFactory
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IServiceScopeFactory ScopeFactory
+@inject IWebHostEnvironment Environment /* NEEDED FOR FILE SAVING */
 
 <PageTitle>@Title</PageTitle>
 
 <style>
+    /* ... (Keep your existing styles exactly as they are) ... */
+    /* Add specific styles for the file upload preview */
+    .image-preview {
+        max-width: 100%;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        display: block;
+    }
+
+    .file-input-wrapper {
+        margin: 10px 0;
+    }
+
+    /* ... (Rest of your CSS) ... */
+
     /* --- GLOBAL & LAYOUT --- */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -39,7 +58,6 @@
         margin: 15px 0;
     }
 
-    /* Header */
     .site-header {
         background-color: #ffffff;
         border-bottom: 2px solid #333;
@@ -49,6 +67,8 @@
         left: 0;
         width: 100%;
         z-index: 1000;
+        height: 62px;
+        box-sizing: border-box;
     }
 
     .header-container {
@@ -57,6 +77,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 100%;
     }
 
     .logo-area {
@@ -86,7 +107,6 @@
         letter-spacing: -1px;
     }
 
-    /* Main Layout */
     .main-layout {
         display: flex;
         justify-content: center;
@@ -95,19 +115,19 @@
         margin: 0 auto 20px auto;
         min-height: 80vh;
         gap: 0;
-        margin-top: 80px;
+        margin-top: 62px;
     }
 
-    /* Sidebars */
     .sidebar {
         width: 240px;
         position: sticky;
-        top: 80px;
-        height: calc(100vh - 80px);
+        top: 60px;
+        height: calc(100vh - 60px);
         display: flex;
         flex-direction: column;
-        padding-top: 20px;
+        padding-top: 22px;
         box-sizing: border-box;
+        overflow-y: auto;
     }
 
     .sidebar-left {
@@ -133,10 +153,6 @@
             text-transform: none;
         }
 
-    .category-list li {
-        margin-bottom: 10px;
-    }
-
     .category-link {
         font-size: 16px;
         color: #555;
@@ -150,6 +166,8 @@
         .category-link:hover {
             color: #000;
             text-decoration: underline;
+            background-color: #f9f9f9;
+            border-radius: 4px;
         }
 
     .hashtag {
@@ -158,10 +176,10 @@
         margin-right: 8px;
     }
 
-    /* --- SEARCH BAR RESTORED STYLE --- */
     .sidebar-footer {
         margin-top: 15px;
-        padding-top: 0;
+        padding-top: 15px;
+        border-top: 1px solid #ddd;
     }
 
     .category-search-container {
@@ -199,7 +217,6 @@
             background-color: #000;
         }
 
-    /* Feed & Posts */
     .feed-area {
         width: 600px;
         flex-grow: 0;
@@ -290,6 +307,21 @@
         line-height: 1.6;
     }
 
+    .post-image-container {
+        width: 100%;
+        max-height: 400px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        background: #f9f9f9;
+    }
+
+    .post-image {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+    }
+
     .post-actions {
         border-top: 1px solid #f0f0f0;
         display: flex;
@@ -309,7 +341,6 @@
             color: #000;
         }
 
-    /* Modal */
     .modal {
         display: flex;
         position: fixed;
@@ -349,7 +380,7 @@
 
     .modal-textarea {
         width: 100%;
-        height: 120px;
+        height: 100px;
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 8px;
@@ -357,7 +388,7 @@
         font-family: inherit;
         font-size: 15px;
         box-sizing: border-box;
-        margin: 15px 0;
+        margin: 10px 0;
     }
 
     .login-btn {
@@ -389,7 +420,6 @@
 </header>
 
 <div class="main-layout">
-
     <aside class="sidebar sidebar-left">
         <div class="sidebar-section">
             <h3>Recently Created</h3>
@@ -415,19 +445,10 @@
             </ul>
             <hr />
         </div>
-
         <div class="sidebar-footer">
             <div class="category-search-container">
-                <input type="text"
-                       placeholder="Find category..."
-                       @bind="searchTerm"
-                       @bind:event="oninput" />
-                <button type="button"
-                        class="create-cat-btn"
-                        title="Create New Category"
-                        @onclick="HandleCategorySearch">
-                    +
-                </button>
+                <input type="text" placeholder="Find category..." @bind="searchTerm" @bind:event="oninput" />
+                <button type="button" class="create-cat-btn" title="Create New Category" @onclick="HandleCategorySearch">+</button>
             </div>
         </div>
     </aside>
@@ -487,6 +508,14 @@
                         <div class="post-content">
                             @post.Content
                         </div>
+
+                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        {
+                            <div class="post-image-container">
+                                <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
+                            </div>
+                        }
+
                         <div class="post-actions">
                             <button class="action-btn">Like</button>
                             <button class="action-btn">Comment</button>
@@ -529,14 +558,13 @@
             </ul>
         </div>
     </aside>
-
 </div>
 
 @if (showPostModal)
 {
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="() => showPostModal = false">&times;</span>
+            <span class="modal-close" @onclick="ClosePostModal">&times;</span>
             <h2 style="margin-top: 0;">Create Post</h2>
             <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
                 Posting to <b>#@CurrentCategory?.CategoryName</b>
@@ -546,9 +574,21 @@
                       placeholder="What's on your mind?"
                       @bind="newPostContent"></textarea>
 
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="login-btn secondary" @onclick="() => showPostModal = false">Cancel</button>
-                <button class="login-btn" @onclick="HandleCreatePost">Post</button>
+            <div class="file-input-wrapper">
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Image (Optional):</label>
+                <InputFile OnChange="HandleFileSelected" accept=".jpg,.jpeg,.png,.gif" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(previewImageUrl))
+            {
+                <img src="@previewImageUrl" class="image-preview" alt="Image Preview" />
+            }
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
+                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">
+                    @(isUploading ? "Uploading..." : "Post")
+                </button>
             </div>
         </div>
     </div>
@@ -584,6 +624,12 @@
     private string errorMessage = "";
     private string? currentUserId;
 
+    // --- Image Upload Variables ---
+    private IBrowserFile? selectedFile;
+    private string? previewImageUrl;
+    private bool isUploading = false;
+    private const long MaxFileSize = 1024 * 1024 * 5; // 5MB limit
+
     protected override async Task OnParametersSetAsync()
     {
         IsLoading = true;
@@ -612,7 +658,6 @@
                 isFollowing = (existingFollow != null);
             }
 
-            // LOAD POSTS
             CategoryPosts = await context.Posts
                 .Where(p => p.CategoryId == Id)
                 .Include(p => p.User)
@@ -629,17 +674,76 @@
         finally { IsLoading = false; }
     }
 
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+
+        // Check file size
+        if (selectedFile.Size <= MaxFileSize)
+        {
+            try
+            {
+                var format = "image/png"; // enforce preview format
+
+                // --- FIX START ---
+                // We use a MemoryStream to copy the ENTIRE file stream first
+                using var memoryStream = new MemoryStream();
+
+                // This copies every chunk until the file is fully read
+                await selectedFile.OpenReadStream(MaxFileSize).CopyToAsync(memoryStream);
+
+                // Convert the complete stream to an array
+                var buffer = memoryStream.ToArray();
+                // --- FIX END ---
+
+                previewImageUrl = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+                errorMessage = ""; // Clear error if successful
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "Error reading file: " + ex.Message;
+                selectedFile = null;
+            }
+        }
+        else
+        {
+            errorMessage = "File is too large (Max 5MB)";
+            selectedFile = null;
+        }
+    }
+
     private async Task HandleCreatePost()
     {
-        if (string.IsNullOrWhiteSpace(newPostContent)) return;
+        if (string.IsNullOrWhiteSpace(newPostContent) && selectedFile == null) return;
         if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
+
+        isUploading = true;
+        string? uploadedImagePath = null;
 
         try
         {
+            // 1. Save File if selected
+            if (selectedFile != null)
+            {
+                // Define path: wwwroot/uploads
+                var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                await using var fileStream = new FileStream(filePath, FileMode.Create);
+                await selectedFile.OpenReadStream(MaxFileSize).CopyToAsync(fileStream);
+
+                uploadedImagePath = $"/uploads/{fileName}";
+            }
+
+            // 2. Save to DB
             using var context = DbFactory.CreateDbContext();
             var newPost = new Posts
             {
                 Content = newPostContent,
+                ImageUrl = uploadedImagePath, // Save the path
                 CategoryId = Id,
                 UserId = currentUserId,
                 PostStatus = "Published",
@@ -650,11 +754,26 @@
             };
             context.Posts.Add(newPost);
             await context.SaveChangesAsync();
+
+            // 3. Reset UI
             newPostContent = "";
+            selectedFile = null;
+            previewImageUrl = null;
             showPostModal = false;
+
+            // Refresh
             CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).OrderByDescending(p => p.DateCreated).ToListAsync();
         }
         catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; }
+        finally { isUploading = false; }
+    }
+
+    private void ClosePostModal()
+    {
+        showPostModal = false;
+        newPostContent = "";
+        selectedFile = null;
+        previewImageUrl = null;
     }
 
     private async Task ToggleFollow()

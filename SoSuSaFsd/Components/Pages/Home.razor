@@ -50,6 +50,9 @@
         left: 0;
         width: 100%;
         z-index: 1000;
+        /* FIXED HEIGHT to ensure perfect alignment */
+        height: 62px;
+        box-sizing: border-box;
     }
 
     .header-container {
@@ -58,6 +61,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 100%;
     }
 
     .logo-area {
@@ -156,19 +160,24 @@
         margin: 0 auto 20px auto;
         min-height: 80vh;
         gap: 0;
-        margin-top: 80px;
+        /* Margin matches Header Height exactly */
+        margin-top: 62px;
     }
 
-    /* --- SIDEBAR STYLES --- */
+    /* --- SIDEBAR STYLES (FIXED) --- */
     .sidebar {
         width: 240px;
         position: sticky;
-        top: 80px;
-        height: calc(100vh - 80px);
+        /* FIX 1: Overlap the header slightly (60px instead of 62px) to close the gap */
+        top: 60px;
+        /* FIX 2: Height fills the screen exactly */
+        height: calc(100vh - 60px);
         display: flex;
         flex-direction: column;
-        padding-top: 20px;
+        padding-top: 22px; /* Increased padding slightly since top 2px are hidden behind header */
         box-sizing: border-box;
+        /* FIX 3: Scrollable Sidebar (Prevents text being covered/cut off) */
+        overflow-y: auto;
     }
 
     .sidebar-left {
@@ -310,6 +319,7 @@
             border-color: #bbb;
         }
 
+    /* --- POST CARD --- */
     .post-card {
         background-color: #fff;
         padding: 0;
@@ -340,13 +350,14 @@
 
     .post-category-tag {
         color: #666;
-        font-size: 14px;
-        margin-top: 4px;
+        font-size: 13px;
+        margin-top: 2px;
     }
 
         .post-category-tag a {
             color: #333;
             font-weight: bold;
+            text-decoration: none;
         }
 
             .post-category-tag a:hover {
@@ -359,6 +370,24 @@
         line-height: 1.6;
         padding: 5px 15px 20px 15px;
     }
+
+    /* --- ADDED: IMAGE STYLES --- */
+    .post-image-container {
+        width: 100%;
+        max-height: 400px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        background: #f9f9f9;
+        margin-bottom: 10px;
+    }
+
+    .post-image {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+    }
+    /* --------------------------- */
 
     .post-actions {
         border-top: 1px solid #f0f0f0;
@@ -401,7 +430,7 @@
             font-size: 12px;
         }
 
-    /* --- MODAL STYLES --- */
+    /* --- PROFILE & MODAL STYLES --- */
     .modal {
         display: none;
         position: fixed;
@@ -435,11 +464,6 @@
         line-height: 20px;
     }
 
-        .modal-close:hover {
-            color: black;
-        }
-
-    /* --- PROFILE SPECIFIC STYLES --- */
     .profile-card {
         text-align: center;
         padding-bottom: 20px;
@@ -502,11 +526,6 @@
         transition: background-color 0.2s;
     }
 
-        .edit-profile-btn:hover {
-            background-color: #f0f0f0;
-        }
-
-    /* --- SETTINGS STYLES --- */
     .settings-form-group {
         margin-bottom: 20px;
     }
@@ -517,7 +536,7 @@
             font-weight: bold;
         }
 
-        .settings-form-group input, .settings-form-group textarea, .settings-form-group select {
+        .settings-form-group input, .settings-form-group textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -526,7 +545,6 @@
             box-sizing: border-box;
         }
 
-    /* --- LOGIN OVERLAY STYLES --- */
     .auth-overlay {
         position: fixed;
         top: 0;
@@ -551,12 +569,6 @@
         text-align: center;
         border: 1px solid #eee;
     }
-
-        .auth-card .logo-area {
-            justify-content: center;
-            margin-bottom: 30px;
-            cursor: default;
-        }
 
     .auth-header {
         font-size: 24px;
@@ -593,27 +605,11 @@
         margin-top: 10px;
     }
 
-        .auth-btn:hover {
-            background-color: #000;
-        }
-
-        .auth-btn:disabled {
-            background-color: #777;
-            cursor: not-allowed;
-        }
-
     .auth-switch {
         margin-top: 20px;
         font-size: 14px;
         color: #666;
     }
-
-        .auth-switch a {
-            color: #333;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: underline;
-        }
 
     .hidden {
         display: none;
@@ -644,9 +640,7 @@
 <header class="site-header">
     <div class="header-container">
         <div class="logo-area" onclick="showSection('home')">
-            <div class="logo-icon">
-                <i class="fas fa-check"></i>
-            </div>
+            <div class="logo-icon"><i class="fas fa-check"></i></div>
             <span class="logo-text">SoSuSa</span>
         </div>
         <nav class="main-nav">
@@ -658,7 +652,6 @@
             <form action="#">
                 <input type="text" id="header-search-input" class="search-bar" placeholder="Search posts...">
             </form>
-
             <AuthorizeView>
                 <Authorized>
                     <button class="login-btn" @onclick="ForceLogout">Logout</button>
@@ -667,7 +660,6 @@
                     <button class="login-btn" onclick="showLoginOverlay()">Login</button>
                 </NotAuthorized>
             </AuthorizeView>
-
         </div>
     </div>
 </header>
@@ -692,30 +684,17 @@
                     else
                     {
                         <AuthorizeView>
-                            <Authorized>
-                                <li>You haven't created any categories yet.</li>
-                            </Authorized>
-                            <NotAuthorized>
-                                <li>Login to see your categories.</li>
-                            </NotAuthorized>
+                            <Authorized><li>You haven't created any categories yet.</li></Authorized>
+                            <NotAuthorized><li>Login to see your categories.</li></NotAuthorized>
                         </AuthorizeView>
                     }
                 </ul>
                 <hr />
             </div>
-
             <div class="sidebar-footer">
                 <div class="category-search-container">
-                    <input type="text"
-                           placeholder="Find category..."
-                           @bind="searchTerm"
-                           @bind:event="oninput" />
-                    <button type="button"
-                            class="create-cat-btn"
-                            title="Create New Category"
-                            @onclick="HandleCategorySearch">
-                        +
-                    </button>
+                    <input type="text" placeholder="Find category..." @bind="searchTerm" @bind:event="oninput" />
+                    <button type="button" class="create-cat-btn" title="Create New Category" @onclick="HandleCategorySearch">+</button>
                 </div>
             </div>
         </div>
@@ -723,23 +702,14 @@
         <div id="sidebar-profile" class="section-view">
             <div class="profile-card">
                 <div class="profile-avatar-large"></div>
-
-                <h2 class="profile-name">
-                    @(currentUser?.UserName ?? "Guest")
-                </h2>
-                <p class="profile-handle">
-                    @@@(currentUser?.UserName?.ToLower() ?? "guest")
-                </p>
-                <p class="profile-bio">
-                    @(currentUser?.Bio ?? "No bio available")
-                </p>
-
+                <h2 class="profile-name">@(currentUser?.UserName ?? "Guest")</h2>
+                <p class="profile-handle">@@@(currentUser?.UserName?.ToLower() ?? "guest")</p>
+                <p class="profile-bio">@(currentUser?.Bio ?? "No bio available")</p>
                 <div class="profile-stats">
                     <div class="stat-item"><b>0</b><span>Posts</span></div>
                     <div class="stat-item"><b>0</b><span>Followers</span></div>
                     <div class="stat-item"><b>0</b><span>Following</span></div>
                 </div>
-
                 <button class="edit-profile-btn" onclick="showSection('settings')">Edit Profile</button>
             </div>
         </div>
@@ -762,32 +732,57 @@
             <div class="feed-header">
                 <div class="feed-header-top">
                     <h1 class="page-title">Home</h1>
-                    <button class="create-post-btn">Create Post</button>
+                    <button class="create-post-btn" onclick="alert('Join a category to post!')">Create Post</button>
                 </div>
             </div>
             <hr />
 
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div class="post-meta">
-                        <div><b>Admin</b></div>
-                        <div class="post-category-tag">
-                            Posted in <a>#Welcome</a>
-                            <i class="fas fa-check-circle verified-badge small" title="Verified Category"></i>
+            @if (FeedPosts != null && FeedPosts.Any())
+            {
+                @foreach (var post in FeedPosts)
+                {
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
+                            <div>
+                                <b>@(post.User?.UserName ?? "User")</b>
+                                <div class="post-meta">
+                                    <span style="font-size: 12px; color: #888;">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</span>
+                                    <div class="post-category-tag">
+                                        Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>#@post.Category?.CategoryName</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            @post.Content
+                        </div>
+
+                        @* --- ADDED: Image Logic --- *@
+                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        {
+                            <div class="post-image-container">
+                                <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
+                            </div>
+                        }
+                        @* ------------------------- *@
+
+                        <div class="post-actions">
+                            <button class="action-btn"><i class="far fa-heart"></i> Like</button>
+                            <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
+                            <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
+                            <button class="action-btn report-btn" onclick="openReportModal()"><i class="far fa-flag"></i> Report</button>
                         </div>
                     </div>
+                }
+            }
+            else
+            {
+                <div style="text-align: center; color: #666; margin-top: 40px; padding: 20px;">
+                    <h3>Your feed is empty.</h3>
+                    <p>Follow categories to see posts here!</p>
                 </div>
-                <div class="post-content">
-                    Welcome to SoSuSa! Log in to start posting.
-                </div>
-                <div class="post-actions">
-                    <button class="action-btn"><i class="far fa-heart"></i> Like</button>
-                    <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
-                    <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
-                    <button class="action-btn report-btn" onclick="openReportModal()"><i class="far fa-flag"></i> Report</button>
-                </div>
-            </div>
+            }
         </div>
 
         <div id="feed-profile" class="section-view">
@@ -859,12 +854,8 @@
                 else
                 {
                     <AuthorizeView>
-                        <Authorized>
-                            <li>You aren't following anything.</li>
-                        </Authorized>
-                        <NotAuthorized>
-                            <li>Login to see follows.</li>
-                        </NotAuthorized>
+                        <Authorized><li>You aren't following anything.</li></Authorized>
+                        <NotAuthorized><li>Login to see follows.</li></NotAuthorized>
                     </AuthorizeView>
                 }
             </ul>
@@ -887,43 +878,26 @@
             <h3 style="margin:0;">Welcome</h3>
             <span style="cursor:pointer; font-size:20px;" onclick="document.getElementById('auth-overlay').style.display = 'none'">&times;</span>
         </div>
-
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
             <div class="error-msg">@ErrorMessage</div>
         }
-
         <div id="login-view">
             <form action="api/Account/login" method="post">
-                <div class="auth-input-group">
-                    <input type="text" name="username" placeholder="Username" required />
-                </div>
-                <div class="auth-input-group">
-                    <input type="password" name="password" placeholder="Password" required />
-                </div>
+                <div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div>
+                <div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div>
                 <button type="submit" class="auth-btn">Log In</button>
             </form>
-            <div class="auth-switch">
-                Don't have an account? <a onclick="toggleAuthMode()">Register</a>
-            </div>
+            <div class="auth-switch">Don't have an account? <a onclick="toggleAuthMode()">Register</a></div>
         </div>
-
         <div id="register-view" class="hidden">
             <form action="api/Account/register" method="post">
-                <div class="auth-input-group">
-                    <input type="email" name="email" placeholder="Email Address" required />
-                </div>
-                <div class="auth-input-group">
-                    <input type="text" name="username" placeholder="Username" required />
-                </div>
-                <div class="auth-input-group">
-                    <input type="password" name="password" placeholder="Password" required />
-                </div>
+                <div class="auth-input-group"><input type="email" name="email" placeholder="Email Address" required /></div>
+                <div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div>
+                <div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div>
                 <button type="submit" class="auth-btn">Sign Up</button>
             </form>
-            <div class="auth-switch">
-                Already have an account? <a onclick="toggleAuthMode()">Log In</a>
-            </div>
+            <div class="auth-switch">Already have an account? <a onclick="toggleAuthMode()">Log In</a></div>
         </div>
     </div>
 </div>
@@ -945,22 +919,17 @@
         document.getElementById('login-view').classList.remove('hidden');
         document.getElementById('register-view').classList.add('hidden');
     }
-    // ... Existing Scripts for sections ...
     function showSection(sectionName) {
         document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.main-nav a').forEach(el => el.classList.remove('active-link'));
-
         document.getElementById('nav-' + sectionName).classList.add('active-link');
         document.getElementById('sidebar-' + sectionName).classList.add('active');
         document.getElementById('feed-' + sectionName).classList.add('active');
-
         const headerSearch = document.getElementById('header-search-input');
         const rightSidebar = document.getElementById('right-sidebar');
-
         if (sectionName === 'profile') {
             headerSearch.placeholder = "Search for users...";
             rightSidebar.style.display = 'none';
-            // Show the actual profile data if needed
         } else if (sectionName === 'settings') {
             headerSearch.placeholder = "Search posts...";
             rightSidebar.style.display = 'none';
@@ -971,13 +940,10 @@
         }
     }
     function showSettingsForm(formName) {
-        // Simple visibility toggling
         document.querySelectorAll('.settings-content').forEach(el => el.style.display = 'none');
         document.querySelectorAll('.category-list a').forEach(el => el.classList.remove('active-setting'));
-
         const target = document.getElementById('settings-form-' + formName);
         if(target) target.style.display = 'block';
-
         const link = document.getElementById('set-link-' + formName);
         if(link) link.classList.add('active-setting');
     }
@@ -986,8 +952,7 @@
 </script>
 
 @code {
-    [SupplyParameterFromQuery]
-    public string? Error { get; set; }
+    [SupplyParameterFromQuery] public string? Error { get; set; }
 
     private string searchTerm = "";
     private string ErrorMessage = "";
@@ -996,80 +961,62 @@
 
     private List<Categories> RecentCategories = new();
     private List<Categories> VerifiedCategories = new();
-
-    // NEW: List to hold followed categories
     private List<Categories> FollowedCategories = new();
+    private List<Posts> FeedPosts = new();
 
-    // Hold the current user data for Profile UI
     private Users? currentUser;
 
     protected override async Task OnInitializedAsync()
     {
-        // 1. Check for Controller Errors
-        if (!string.IsNullOrEmpty(Error))
-        {
-            ErrorMessage = Error;
-            ShowLoginOverlay = true;
-        }
+        if (!string.IsNullOrEmpty(Error)) { ErrorMessage = Error; ShowLoginOverlay = true; }
 
         try
         {
             using var context = DbFactory.CreateDbContext();
 
-            // 2. Load Global Data
-            VerifiedCategories = await context.Categories
-                .Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports")
-                .ToListAsync();
+            VerifiedCategories = await context.Categories.Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports").ToListAsync();
 
-            // 3. Check Authentication State
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userPrincipal = authState.User;
 
             if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
             {
-                // Retrieve User ID
                 var userId = userPrincipal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-                // Fallback lookup if claim is missing
                 if (string.IsNullOrEmpty(userId))
                 {
                     using var scope = ScopeFactory.CreateScope();
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
                     var dbUser = await userManager.GetUserAsync(userPrincipal);
                     userId = dbUser?.Id;
-
-                    // Also set currentUser for the Profile UI
                     currentUser = dbUser;
                 }
                 else if (currentUser == null)
                 {
-                    // Fetch full user object for Profile UI if we only had the ID
                     using var scope = ScopeFactory.CreateScope();
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
                     currentUser = await userManager.FindByIdAsync(userId);
                 }
 
-                // AUTO-FIX: Force logout if Cookie exists but User does not (Ghost Session)
-                if (currentUser == null)
-                {
-                    ForceLogout();
-                    return;
-                }
+                if (currentUser == null) { ForceLogout(); return; }
 
-                // 4. Load User-Specific Data
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    RecentCategories = await context.Categories
-                        .Where(c => c.CreatedBy == userId)
-                        .OrderByDescending(c => c.DateCreated)
-                        .Take(5)
-                        .ToListAsync();
+                    RecentCategories = await context.Categories.Where(c => c.CreatedBy == userId).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
 
-                    // NEW QUERY: Get Followed Categories
                     FollowedCategories = await context.CategoryFollows
                         .Where(cf => cf.UserId == userId)
                         .Include(cf => cf.Category)
                         .Select(cf => cf.Category!)
+                        .ToListAsync();
+
+                    var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
+
+                    FeedPosts = await context.Posts
+                        .Where(p => followedCategoryIds.Contains(p.CategoryId))
+                        .Include(p => p.User)
+                        .Include(p => p.Category)
+                        .OrderByDescending(p => p.DateCreated)
                         .ToListAsync();
                 }
             }
@@ -1080,37 +1027,17 @@
         }
     }
 
-    private void ForceLogout()
-    {
-        // TRUE forces the browser to bypass Blazor routing and hit the server endpoint
-        Navigation.NavigateTo("/api/Account/logout", true);
-    }
-
-    private void NavigateToCategory(int id)
-    {
-        Navigation.NavigateTo($"/category/{id}");
-    }
+    private void ForceLogout() => Navigation.NavigateTo("/api/Account/logout", true);
+    private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}");
 
     private async Task HandleCategorySearch()
     {
         if (string.IsNullOrWhiteSpace(searchTerm)) return;
-
         using var context = DbFactory.CreateDbContext();
-        var existingCategory = await context.Categories
-            .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
-
-        if (existingCategory != null)
-        {
-            Navigation.NavigateTo($"/category/{existingCategory.Id}");
-        }
-        else
-        {
-            showCreateConfirm = true;
-        }
+        var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
+        if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}");
+        else showCreateConfirm = true;
     }
 
-    private void NavigateToCreate()
-    {
-        Navigation.NavigateTo($"/categories/create?name={searchTerm}");
-    }
+    private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
 }
