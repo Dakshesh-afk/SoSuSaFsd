@@ -50,7 +50,6 @@
         left: 0;
         width: 100%;
         z-index: 1000;
-        /* FIXED HEIGHT to ensure perfect alignment */
         height: 62px;
         box-sizing: border-box;
     }
@@ -160,23 +159,19 @@
         margin: 0 auto 20px auto;
         min-height: 80vh;
         gap: 0;
-        /* Margin matches Header Height exactly */
         margin-top: 62px;
     }
 
-    /* --- SIDEBAR STYLES (FIXED) --- */
+    /* --- SIDEBAR STYLES --- */
     .sidebar {
         width: 240px;
         position: sticky;
-        /* FIX 1: Overlap the header slightly (60px instead of 62px) to close the gap */
         top: 60px;
-        /* FIX 2: Height fills the screen exactly */
         height: calc(100vh - 60px);
         display: flex;
         flex-direction: column;
-        padding-top: 22px; /* Increased padding slightly since top 2px are hidden behind header */
+        padding-top: 22px;
         box-sizing: border-box;
-        /* FIX 3: Scrollable Sidebar (Prevents text being covered/cut off) */
         overflow-y: auto;
     }
 
@@ -371,7 +366,7 @@
         padding: 5px 15px 20px 15px;
     }
 
-    /* --- ADDED: IMAGE STYLES --- */
+    /* --- IMAGE STYLES --- */
     .post-image-container {
         width: 100%;
         max-height: 400px;
@@ -387,7 +382,6 @@
         max-height: 400px;
         object-fit: contain;
     }
-    /* --------------------------- */
 
     .post-actions {
         border-top: 1px solid #f0f0f0;
@@ -758,14 +752,12 @@
                             @post.Content
                         </div>
 
-                        @* --- ADDED: Image Logic --- *@
                         @if (!string.IsNullOrEmpty(post.ImageUrl))
                         {
                             <div class="post-image-container">
                                 <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
                             </div>
                         }
-                        @* ------------------------- *@
 
                         <div class="post-actions">
                             <button class="action-btn"><i class="far fa-heart"></i> Like</button>
@@ -788,7 +780,48 @@
         <div id="feed-profile" class="section-view">
             <h1 class="page-title">My Posts</h1>
             <hr />
-            <p style="text-align:center; color:#666;">No posts yet.</p>
+
+            @* --- NEW CODE: Display User's Own Posts --- *@
+            @if (UserPosts != null && UserPosts.Any())
+            {
+                @foreach (var post in UserPosts)
+                {
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
+                            <div>
+                                <b>@(post.User?.UserName ?? "User")</b>
+                                <div class="post-meta">
+                                    <span style="font-size: 12px; color: #888;">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</span>
+                                    <div class="post-category-tag">
+                                        Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>#@post.Category?.CategoryName</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            @post.Content
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        {
+                            <div class="post-image-container">
+                                <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
+                            </div>
+                        }
+
+                        <div class="post-actions">
+                            <button class="action-btn"><i class="far fa-heart"></i> Like</button>
+                            <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
+                            <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p style="text-align:center; color:#666;">No posts yet.</p>
+            }
         </div>
 
         <div id="feed-settings" class="section-view">
@@ -963,6 +996,7 @@
     private List<Categories> VerifiedCategories = new();
     private List<Categories> FollowedCategories = new();
     private List<Posts> FeedPosts = new();
+    private List<Posts> UserPosts = new(); // --- NEW: Store User's Own Posts ---
 
     private Users? currentUser;
 
@@ -1012,8 +1046,17 @@
 
                     var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
 
+                    // 1. Fetch Feed Posts (Followed)
                     FeedPosts = await context.Posts
                         .Where(p => followedCategoryIds.Contains(p.CategoryId))
+                        .Include(p => p.User)
+                        .Include(p => p.Category)
+                        .OrderByDescending(p => p.DateCreated)
+                        .ToListAsync();
+
+                    // 2. --- NEW: Fetch User's Own Posts ---
+                    UserPosts = await context.Posts
+                        .Where(p => p.UserId == userId)
                         .Include(p => p.User)
                         .Include(p => p.Category)
                         .OrderByDescending(p => p.DateCreated)
