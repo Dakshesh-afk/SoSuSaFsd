@@ -240,6 +240,11 @@
         font-weight: 800;
         color: #222;
         margin: 0;
+        /* Ensure badge aligns nicely */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
 
     .cat-desc {
@@ -268,6 +273,24 @@
             color: #333;
             border: 1px solid #ccc;
         }
+
+    /* --- VERIFIED BADGE --- */
+    .verified-badge {
+        color: #1da1f2;
+        font-size: 24px; /* Larger for header */
+        /* Header badge position fix */
+        position: relative;
+        top: 5px;
+    }
+
+    .verified-badge-small {
+        color: #1da1f2;
+        font-size: 14px;
+        margin-left: 5px;
+        /* Sidebar badge position fix */
+        position: relative;
+        top: 3px;
+    }
 
     /* --- POST CARD --- */
     .post-card {
@@ -524,6 +547,11 @@
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                 <span class="hashtag">#</span> @cat.CategoryName
+                                @* --- ADDED: Sidebar Verified Tick --- *@
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
+                                }
                             </a>
                         </li>
                     }
@@ -564,7 +592,14 @@
         else
         {
             <div class="category-header-card">
-                <h1 class="page-title">#@CurrentCategory.CategoryName</h1>
+                @* --- UPDATED: Header Verified Tick --- *@
+                <h1 class="page-title">
+                    #@CurrentCategory.CategoryName
+                    @if (CurrentCategory.IsVerified)
+                    {
+                        <i class="fas fa-check-circle verified-badge" title="Verified Category"></i>
+                    }
+                </h1>
                 <p class="cat-desc">@(string.IsNullOrEmpty(CurrentCategory.CategoryDescription) ? "No description provided." : CurrentCategory.CategoryDescription)</p>
 
                 @if (!string.IsNullOrEmpty(errorMessage))
@@ -700,6 +735,11 @@
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                 <span class="hashtag">#</span> @cat.CategoryName
+                                @* --- ADDED: Sidebar Verified Tick --- *@
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
+                                }
                             </a>
                         </li>
                     }

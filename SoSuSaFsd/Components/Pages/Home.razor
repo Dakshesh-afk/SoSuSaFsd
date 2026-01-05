@@ -409,42 +409,17 @@
         color: #d9534f;
     }
 
+    /* --- UPDATED: VERIFIED BADGE ALIGNMENT FIX --- */
     .verified-badge {
         color: #1da1f2;
         font-size: 14px;
         margin-left: 5px;
-        vertical-align: middle;
+        /* FIX: Use position relative to force it down, overriding flex alignment */
+        position: relative;
+        top: 3px;
     }
 
     /* --- CAROUSEL STYLES --- */
-    .media-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        margin-bottom: 10px;
-        background: #000;
-    }
-
-    .media-grid-item {
-        flex: 1 1 calc(50% - 5px);
-        height: 300px;
-        position: relative;
-        overflow: hidden;
-    }
-
-        .media-grid-item:only-child {
-            flex: 1 1 100%;
-            height: auto;
-            max-height: 500px;
-        }
-
-    .post-media-item {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
     .carousel-container {
         position: relative;
         width: 100%;
@@ -840,6 +815,11 @@
                             <li>
                                 <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                     <span class="hashtag">#</span> @cat.CategoryName
+                                    @* --- UPDATED: Add Verified Tick --- *@
+                                    @if (cat.IsVerified)
+                                    {
+                                        <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                                    }
                                 </a>
                             </li>
                         }
@@ -913,7 +893,14 @@
                                 <div class="post-meta">
                                     <span style="font-size: 12px; color: #888;">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</span>
                                     <div class="post-category-tag">
-                                        Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>#@post.Category?.CategoryName</a>
+                                        Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>
+                                            #@post.Category?.CategoryName
+                                            @* --- UPDATED: Add Verified Tick --- *@
+                                            @if (post.Category?.IsVerified == true)
+                                            {
+                                                <i class="fas fa-check-circle verified-badge" style="font-size:12px;" title="Verified"></i>
+                                            }
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -988,7 +975,14 @@
                                 <div class="post-meta">
                                     <span style="font-size: 12px; color: #888;">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</span>
                                     <div class="post-category-tag">
-                                        Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>#@post.Category?.CategoryName</a>
+                                        Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>
+                                            #@post.Category?.CategoryName
+                                            @* --- UPDATED: Add Verified Tick --- *@
+                                            @if (post.Category?.IsVerified == true)
+                                            {
+                                                <i class="fas fa-check-circle verified-badge" style="font-size:12px;" title="Verified"></i>
+                                            }
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -1046,7 +1040,14 @@
                     @foreach (var cat in FollowedCategories)
                     {
                         <div class="following-card">
-                            <h3>#@cat.CategoryName</h3>
+                            <h3>
+                                #@cat.CategoryName
+                                @* --- UPDATED: Add Verified Tick --- *@
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                                }
+                            </h3>
                             <button class="login-btn secondary" @onclick="() => UnfollowCategory(cat.Id)">Unfollow</button>
                         </div>
                     }
@@ -1147,7 +1148,7 @@
                     <p style="margin-bottom: 20px; color: #666;">
                         Request access to post in verified categories. Your request will be reviewed by administrators.
                     </p>
-                    
+
                     @if (!string.IsNullOrEmpty(accessRequestMessage))
                     {
                         @if (isAccessRequestSuccess)
@@ -1198,9 +1199,9 @@
                                             </div>
                                         </div>
                                         <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase;
-                                            @(request.Status == "Approved" ? "background: #d4edda; color: #155724;" : 
-                                              request.Status == "Rejected" ? "background: #f8d7da; color: #721c24;" : 
-                                              "background: #fff3cd; color: #856404;")">
+                                                                                                                @(request.Status == "Approved" ? "background: #d4edda; color: #155724;" :
+                                                                                                                                                          request.Status == "Rejected" ? "background: #f8d7da; color: #721c24;" :
+                                                                                                                                                          "background: #fff3cd; color: #856404;")">
                                             @request.Status
                                         </span>
                                     </div>
@@ -1239,7 +1240,16 @@
                 {
                     @foreach (var cat in FollowedCategories)
                     {
-                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="hashtag">#</span> @cat.CategoryName</a></li>
+                        <li>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                                <span class="hashtag">#</span> @cat.CategoryName
+                                @* --- UPDATED: Add Verified Tick --- *@
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                                }
+                            </a>
+                        </li>
                     }
                 }
             </ul>
@@ -1292,8 +1302,6 @@
     </div>
 </div>
 
-@* SCRIPT BLOCK REMOVED - IT IS NOW IN App.razor *@
-
 @code {
     [SupplyParameterFromQuery] public string? Error { get; set; }
 
@@ -1312,7 +1320,7 @@
 
     private Users? currentUser;
     private string updateStatusMessage = "";
-    
+
     // Access Request Form
     private int selectedCategoryId = 0;
     private string accessRequestReason = "";
@@ -1351,7 +1359,15 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            VerifiedCategories = await context.Categories.Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports").ToListAsync();
+
+            // --- UPDATED LOGIC HERE: Fetch top 5 most recently created Verified Categories ---
+            VerifiedCategories = await context.Categories
+                .Where(c => c.IsVerified == true)
+                .OrderByDescending(c => c.DateCreated)
+                .Take(5)
+                .ToListAsync();
+            // --------------------------------------------------------------------------------
+
             VerifiedCategoriesForRequest = await context.Categories.Where(c => c.IsVerified == true).OrderBy(c => c.CategoryName).ToListAsync();
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userPrincipal = authState.User;
@@ -1511,11 +1527,11 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            
+
             // Check if user already has a pending request for this category
             var existingRequest = await context.CategoryAccessRequests
                 .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Pending");
-            
+
             if (existingRequest != null)
             {
                 accessRequestMessage = "You already have a pending request for this category.";
@@ -1526,7 +1542,7 @@
             // Check if user already has approved access
             var approvedRequest = await context.CategoryAccessRequests
                 .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Approved");
-            
+
             if (approvedRequest != null)
             {
                 accessRequestMessage = "You already have approved access to this category.";
@@ -1550,11 +1566,11 @@
 
             accessRequestMessage = "Your access request has been submitted successfully. An administrator will review it.";
             isAccessRequestSuccess = true;
-            
+
             // Reset form
             selectedCategoryId = 0;
             accessRequestReason = "";
-            
+
             // Reload user requests
             UserAccessRequests = await context.CategoryAccessRequests
                 .Where(r => r.UserId == currentUser.Id)
