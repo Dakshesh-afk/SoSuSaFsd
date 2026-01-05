@@ -8,6 +8,7 @@ namespace SoSuSaFsd.Domain
 
         // NEW: Property to store the image file path/URL
         public string? ImageUrl { get; set; }
+        public string? VideoUrl { get; set; }
 
         public string? PostStatus { get; set; }
 

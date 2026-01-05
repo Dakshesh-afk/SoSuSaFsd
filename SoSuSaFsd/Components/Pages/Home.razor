@@ -373,17 +373,18 @@
         padding: 5px 15px 20px 15px;
     }
 
+    /* --- MEDIA STYLES (Supports both Image and Video) --- */
     .post-image-container {
         width: 100%;
         max-height: 400px;
         overflow: hidden;
         display: flex;
         justify-content: center;
-        background: #f9f9f9;
+        background: #000; /* Black background for videos looks better */
         margin-bottom: 10px;
     }
 
-    .post-image {
+    .post-media {
         max-width: 100%;
         max-height: 400px;
         object-fit: contain;
@@ -648,14 +649,12 @@
             <form action="#">
                 <input type="text" id="header-search-input" class="search-bar" placeholder="Search posts...">
             </form>
-
             <AuthorizeView>
                 <Authorized>
-                    @* --- UPDATED ADMIN BUTTON: Forces page refresh --- *@
+                    @* --- ADMIN PANEL BUTTON --- *@
                     <AuthorizeView Roles="Admin" Context="innerContext">
                         <button class="admin-btn" style="margin-right: 10px;" @onclick="NavigateToAdmin">Admin Panel</button>
                     </AuthorizeView>
-                    @* ------------------------------------------------- *@
 
                     <button class="login-btn" @onclick="ForceLogout">Logout</button>
                 </Authorized>
@@ -761,12 +760,23 @@
                             @post.Content
                         </div>
 
+                        @* --- VIDEO OR IMAGE DISPLAY --- *@
                         @if (!string.IsNullOrEmpty(post.ImageUrl))
                         {
                             <div class="post-image-container">
-                                <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
+                                <img src="@post.ImageUrl" class="post-media" alt="Post Image" />
                             </div>
                         }
+                        else if (!string.IsNullOrEmpty(post.VideoUrl))
+                        {
+                            <div class="post-image-container">
+                                <video controls class="post-media">
+                                    <source src="@post.VideoUrl" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        }
+                        @* ------------------------------ *@
 
                         <div class="post-actions">
                             <button class="action-btn"><i class="far fa-heart"></i> Like</button>
@@ -811,12 +821,23 @@
                             @post.Content
                         </div>
 
+                        @* --- VIDEO OR IMAGE DISPLAY --- *@
                         @if (!string.IsNullOrEmpty(post.ImageUrl))
                         {
                             <div class="post-image-container">
-                                <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
+                                <img src="@post.ImageUrl" class="post-media" alt="Post Image" />
                             </div>
                         }
+                        else if (!string.IsNullOrEmpty(post.VideoUrl))
+                        {
+                            <div class="post-image-container">
+                                <video controls class="post-media">
+                                    <source src="@post.VideoUrl" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        }
+                        @* ------------------------------ *@
 
                         <div class="post-actions">
                             <button class="action-btn"><i class="far fa-heart"></i> Like</button>
@@ -1054,7 +1075,7 @@
 
                     var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
 
-                    // 1. Fetch Feed Posts
+                    // 1. Fetch Feed Posts (Followed Categories)
                     FeedPosts = await context.Posts
                         .Where(p => followedCategoryIds.Contains(p.CategoryId))
                         .Include(p => p.User)
@@ -1062,7 +1083,7 @@
                         .OrderByDescending(p => p.DateCreated)
                         .ToListAsync();
 
-                    // 2. Fetch User Posts
+                    // 2. Fetch User's Own Posts
                     UserPosts = await context.Posts
                         .Where(p => p.UserId == userId)
                         .Include(p => p.User)

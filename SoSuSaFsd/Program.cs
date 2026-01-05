@@ -21,7 +21,7 @@ builder.Services.AddControllers();
 // --- CRITICAL FIX 4: INCREASE SIGNALR MESSAGE LIMIT ---
 builder.Services.Configure<HubOptions>(options =>
 {
-    options.MaximumReceiveMessageSize = 1024 * 1024 * 10; // 10MB
+    options.MaximumReceiveMessageSize = 1024 * 1024 * 1000; // 100MB
 });
 
 // 2. Add Identity Services

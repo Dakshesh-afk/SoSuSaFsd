@@ -10,14 +10,13 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IServiceScopeFactory ScopeFactory
-@inject IWebHostEnvironment Environment /* NEEDED FOR FILE SAVING */
+@inject IWebHostEnvironment Environment
 
 <PageTitle>@Title</PageTitle>
 
 <style>
-    /* ... (Keep your existing styles exactly as they are) ... */
-    /* Add specific styles for the file upload preview */
-    .image-preview {
+    /* ... (Keep your existing styles) ... */
+    .image-preview, .video-preview {
         max-width: 100%;
         max-height: 200px;
         margin-top: 10px;
@@ -313,10 +312,17 @@
         overflow: hidden;
         display: flex;
         justify-content: center;
-        background: #f9f9f9;
+        background: #000; /* Dark background better for videos */
     }
 
     .post-image {
+        max-width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+    }
+
+    /* Shared style for media items */
+    .post-media {
         max-width: 100%;
         max-height: 400px;
         object-fit: contain;
@@ -509,12 +515,23 @@
                             @post.Content
                         </div>
 
+                        @* --- UPDATED DISPLAY LOGIC: Video OR Image --- *@
                         @if (!string.IsNullOrEmpty(post.ImageUrl))
                         {
                             <div class="post-image-container">
-                                <img src="@post.ImageUrl" class="post-image" alt="Post Image" />
+                                <img src="@post.ImageUrl" class="post-media" alt="Post Image" />
                             </div>
                         }
+                        else if (!string.IsNullOrEmpty(post.VideoUrl))
+                        {
+                            <div class="post-image-container">
+                                <video controls class="post-media">
+                                    <source src="@post.VideoUrl" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        }
+                        @* --------------------------------------------- *@
 
                         <div class="post-actions">
                             <button class="action-btn">Like</button>
@@ -575,13 +592,22 @@
                       @bind="newPostContent"></textarea>
 
             <div class="file-input-wrapper">
-                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Image (Optional):</label>
-                <InputFile OnChange="HandleFileSelected" accept=".jpg,.jpeg,.png,.gif" />
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Image or Video):</label>
+                @* --- UPDATED INPUT ACCEPT --- *@
+                <InputFile OnChange="HandleFileSelected" accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
             </div>
 
-            @if (!string.IsNullOrEmpty(previewImageUrl))
+            @* --- UPDATED PREVIEW LOGIC --- *@
+            @if (!string.IsNullOrEmpty(previewDataUrl))
             {
-                <img src="@previewImageUrl" class="image-preview" alt="Image Preview" />
+                @if (isPreviewVideo)
+                {
+                    <video controls class="video-preview" src="@previewDataUrl"></video>
+                }
+                else
+                {
+                    <img src="@previewDataUrl" class="image-preview" alt="Image Preview" />
+                }
             }
 
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
@@ -624,11 +650,12 @@
     private string errorMessage = "";
     private string? currentUserId;
 
-    // --- Image Upload Variables ---
+    // --- UPDATED UPLOAD VARIABLES ---
     private IBrowserFile? selectedFile;
-    private string? previewImageUrl;
+    private string? previewDataUrl;
+    private bool isPreviewVideo = false;
     private bool isUploading = false;
-    private const long MaxFileSize = 1024 * 1024 * 5; // 5MB limit
+    private const long MaxFileSize = 1024 * 1024 * 100; // 100 MB Limit
 
     protected override async Task OnParametersSetAsync()
     {
@@ -677,27 +704,30 @@
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         selectedFile = e.File;
-
         // Check file size
         if (selectedFile.Size <= MaxFileSize)
         {
             try
             {
-                var format = "image/png"; // enforce preview format
+                // Detect video extension
+                var extension = Path.GetExtension(selectedFile.Name).ToLower();
+                isPreviewVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov");
 
-                // --- FIX START ---
-                // We use a MemoryStream to copy the ENTIRE file stream first
-                using var memoryStream = new MemoryStream();
-
-                // This copies every chunk until the file is fully read
-                await selectedFile.OpenReadStream(MaxFileSize).CopyToAsync(memoryStream);
-
-                // Convert the complete stream to an array
-                var buffer = memoryStream.ToArray();
-                // --- FIX END ---
-
-                previewImageUrl = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
-                errorMessage = ""; // Clear error if successful
+                // Preview Limit: Only preview if < 20MB to avoid browser crash
+                if (selectedFile.Size < 1024 * 1024 * 20)
+                {
+                    using var memoryStream = new MemoryStream();
+                    await selectedFile.OpenReadStream(MaxFileSize).CopyToAsync(memoryStream);
+                    var buffer = memoryStream.ToArray();
+                    var format = isPreviewVideo ? "video/mp4" : "image/png";
+                    previewDataUrl = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+                }
+                else
+                {
+                    previewDataUrl = null;
+                    errorMessage = "File selected (Preview disabled for large files).";
+                }
+                errorMessage = "";
             }
             catch (Exception ex)
             {
@@ -707,7 +737,7 @@
         }
         else
         {
-            errorMessage = "File is too large (Max 5MB)";
+            errorMessage = "File is too large (Max 100MB)";
             selectedFile = null;
         }
     }
@@ -718,24 +748,28 @@
         if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
 
         isUploading = true;
-        string? uploadedImagePath = null;
+        string? uploadedPath = null;
 
         try
         {
+            bool isVideo = false;
+
             // 1. Save File if selected
             if (selectedFile != null)
             {
-                // Define path: wwwroot/uploads
+                var extension = Path.GetExtension(selectedFile.Name).ToLower();
+                isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov");
+
                 var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
                 if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(selectedFile.Name)}";
+                var fileName = $"{Guid.NewGuid()}{extension}";
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
                 await using var fileStream = new FileStream(filePath, FileMode.Create);
                 await selectedFile.OpenReadStream(MaxFileSize).CopyToAsync(fileStream);
 
-                uploadedImagePath = $"/uploads/{fileName}";
+                uploadedPath = $"/uploads/{fileName}";
             }
 
             // 2. Save to DB
@@ -743,7 +777,10 @@
             var newPost = new Posts
             {
                 Content = newPostContent,
-                ImageUrl = uploadedImagePath, // Save the path
+                // --- NEW LOGIC: Save to correct column based on type ---
+                ImageUrl = isVideo ? null : uploadedPath,
+                VideoUrl = isVideo ? uploadedPath : null,
+                // -------------------------------------------------------
                 CategoryId = Id,
                 UserId = currentUserId,
                 PostStatus = "Published",
@@ -758,7 +795,7 @@
             // 3. Reset UI
             newPostContent = "";
             selectedFile = null;
-            previewImageUrl = null;
+            previewDataUrl = null;
             showPostModal = false;
 
             // Refresh
@@ -773,7 +810,7 @@
         showPostModal = false;
         newPostContent = "";
         selectedFile = null;
-        previewImageUrl = null;
+        previewDataUrl = null;
     }
 
     private async Task ToggleFollow()
