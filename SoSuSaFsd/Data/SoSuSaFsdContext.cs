@@ -17,5 +17,6 @@ namespace SoSuSaFsd.Data
         public DbSet<SoSuSaFsd.Domain.Categories> Categories { get; set; } = default!;
         public DbSet<SoSuSaFsd.Domain.CategoryFollows> CategoryFollows { get; set; } = default!;
         public DbSet<SoSuSaFsd.Domain.PostMedia> PostMedia { get; set; } = default!;
+        public DbSet<SoSuSaFsd.Domain.CategoryAccessRequests> CategoryAccessRequests { get; set; } = default!;
     }
 }

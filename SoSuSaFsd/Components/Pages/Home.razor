@@ -1140,7 +1140,82 @@
                     </EditForm>
                 </div>
             </div>
-            <div id="settings-form-verification" class="settings-content hidden">Verification</div>
+            <div id="settings-form-verification" class="settings-content hidden">
+                <h1 class="page-title">Request Category Access</h1>
+                <hr />
+                <div class="post-card" style="padding: 20px;">
+                    <p style="margin-bottom: 20px; color: #666;">
+                        Request access to post in verified categories. Your request will be reviewed by administrators.
+                    </p>
+                    
+                    @if (!string.IsNullOrEmpty(accessRequestMessage))
+                    {
+                        @if (isAccessRequestSuccess)
+                        {
+                            <div class="success-msg">@accessRequestMessage</div>
+                        }
+                        else
+                        {
+                            <div class="error-msg">@accessRequestMessage</div>
+                        }
+                    }
+
+                    <form @onsubmit="HandleAccessRequest" @onsubmit:preventDefault>
+                        <div class="settings-form-group">
+                            <label>Select Category</label>
+                            <select @bind="selectedCategoryId" class="settings-form-group" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+                                <option value="0">-- Select a verified category --</option>
+                                @foreach (var cat in VerifiedCategoriesForRequest)
+                                {
+                                    <option value="@cat.Id"># @cat.CategoryName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="settings-form-group">
+                            <label>Reason for Request</label>
+                            <textarea rows="5" @bind="accessRequestReason" placeholder="Explain why you need access to post in this category..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
+                        </div>
+
+                        <button type="submit" class="login-btn" disabled="@(selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason))">
+                            Submit Request
+                        </button>
+                    </form>
+
+                    @if (UserAccessRequests != null && UserAccessRequests.Any())
+                    {
+                        <hr style="margin: 30px 0;" />
+                        <h3 style="margin-bottom: 15px;">Your Requests</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            @foreach (var request in UserAccessRequests.OrderByDescending(r => r.DateCreated))
+                            {
+                                <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                        <div>
+                                            <strong># @request.Category?.CategoryName</strong>
+                                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                                @request.DateCreated.ToString("MMM dd, yyyy")
+                                            </div>
+                                        </div>
+                                        <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase;
+                                            @(request.Status == "Approved" ? "background: #d4edda; color: #155724;" : 
+                                              request.Status == "Rejected" ? "background: #f8d7da; color: #721c24;" : 
+                                              "background: #fff3cd; color: #856404;")">
+                                            @request.Status
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(request.Reason))
+                                    {
+                                        <div style="font-size: 14px; color: #555; margin-top: 8px;">
+                                            <strong>Reason:</strong> @request.Reason
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </main>
 
@@ -1229,12 +1304,20 @@
 
     private List<Categories> RecentCategories = new();
     private List<Categories> VerifiedCategories = new();
+    private List<Categories> VerifiedCategoriesForRequest = new();
     private List<Categories> FollowedCategories = new();
     private List<Posts> FeedPosts = new();
     private List<Posts> UserPosts = new();
+    private List<CategoryAccessRequests> UserAccessRequests = new();
 
     private Users? currentUser;
     private string updateStatusMessage = "";
+    
+    // Access Request Form
+    private int selectedCategoryId = 0;
+    private string accessRequestReason = "";
+    private string accessRequestMessage = "";
+    private bool isAccessRequestSuccess = false;
 
     // --- CAROUSEL STATE ---
     private Dictionary<int, int> _carouselIndices = new();
@@ -1269,6 +1352,7 @@
         {
             using var context = DbFactory.CreateDbContext();
             VerifiedCategories = await context.Categories.Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports").ToListAsync();
+            VerifiedCategoriesForRequest = await context.Categories.Where(c => c.IsVerified == true).OrderBy(c => c.CategoryName).ToListAsync();
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userPrincipal = authState.User;
             if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
@@ -1283,6 +1367,7 @@
                     var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
                     FeedPosts = await context.Posts.Where(p => followedCategoryIds.Contains(p.CategoryId)).Include(p => p.User).Include(p => p.Category).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
                     UserPosts = await context.Posts.Where(p => p.UserId == userId).Include(p => p.User).Include(p => p.Category).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
+                    UserAccessRequests = await context.CategoryAccessRequests.Where(r => r.UserId == userId).Include(r => r.Category).OrderByDescending(r => r.DateCreated).ToListAsync();
                 }
             }
         }
@@ -1406,4 +1491,81 @@
     private async Task HandleCategorySearch() { if (!string.IsNullOrWhiteSpace(searchTerm)) { using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}"); else showCreateConfirm = true; } }
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
     private void NavigateToAdmin() { Navigation.NavigateTo("admin", forceLoad: true); }
+
+    private async Task HandleAccessRequest()
+    {
+        if (selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason))
+        {
+            accessRequestMessage = "Please select a category and provide a reason.";
+            isAccessRequestSuccess = false;
+            return;
+        }
+
+        if (currentUser == null || string.IsNullOrEmpty(currentUser.Id))
+        {
+            accessRequestMessage = "You must be logged in to submit a request.";
+            isAccessRequestSuccess = false;
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            
+            // Check if user already has a pending request for this category
+            var existingRequest = await context.CategoryAccessRequests
+                .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Pending");
+            
+            if (existingRequest != null)
+            {
+                accessRequestMessage = "You already have a pending request for this category.";
+                isAccessRequestSuccess = false;
+                return;
+            }
+
+            // Check if user already has approved access
+            var approvedRequest = await context.CategoryAccessRequests
+                .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Approved");
+            
+            if (approvedRequest != null)
+            {
+                accessRequestMessage = "You already have approved access to this category.";
+                isAccessRequestSuccess = false;
+                return;
+            }
+
+            var newRequest = new CategoryAccessRequests
+            {
+                UserId = currentUser.Id,
+                CategoryId = selectedCategoryId,
+                Reason = accessRequestReason,
+                Status = "Pending",
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUser.Id
+            };
+
+            context.CategoryAccessRequests.Add(newRequest);
+            await context.SaveChangesAsync();
+
+            accessRequestMessage = "Your access request has been submitted successfully. An administrator will review it.";
+            isAccessRequestSuccess = true;
+            
+            // Reset form
+            selectedCategoryId = 0;
+            accessRequestReason = "";
+            
+            // Reload user requests
+            UserAccessRequests = await context.CategoryAccessRequests
+                .Where(r => r.UserId == currentUser.Id)
+                .Include(r => r.Category)
+                .OrderByDescending(r => r.DateCreated)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            accessRequestMessage = "Error submitting request: " + ex.Message;
+            isAccessRequestSuccess = false;
+        }
+    }
 }

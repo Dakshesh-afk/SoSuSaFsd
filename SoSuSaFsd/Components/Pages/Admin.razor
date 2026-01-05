@@ -60,6 +60,77 @@
             color: #000 !important;
             border-bottom: 2px solid #333;
         }
+
+    /* Toggle Switch Styles */
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .3s;
+        border-radius: 22px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .toggle-slider {
+        background-color: #10b981;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(18px);
+    }
+
+    input:disabled + .toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .toggle-cell {
+        width: 120px;
+        min-width: 120px;
+    }
+
+    .status-cell {
+        width: 140px;
+        min-width: 140px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        width: 100px;
+        justify-content: center;
+    }
 </style>
 
 <header class="bg-white border-b-2 border-gray-200 sticky top-0 z-50 py-3">
@@ -117,7 +188,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 @RenderStatCard("Total Users", AllUsers.Count, "bg-blue-600")
                 @RenderStatCard("Pending Reports", Reports.Count(r => r.Status == "Pending"), "bg-amber-500")
-                @RenderStatCard("Category Requests", Verifications.Count(v => v.VRStatus == "Pending"), "bg-green-600")
+                @RenderStatCard("Category Requests", AccessRequests.Count(v => v.Status == "Pending"), "bg-green-600")
                 @RenderStatCard("Categories", AllCategories.Count, "bg-purple-600")
             </div>
         </div>
@@ -160,22 +231,57 @@
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             <div class="p-4 border-b flex justify-between items-center">
                 <h3 class="font-bold text-gray-900">Category Management</h3>
-                <button class="bg-black text-white text-xs font-bold uppercase px-4 py-2 rounded-full">+ Create</button>
+                <button class="bg-black text-white text-xs font-bold uppercase px-4 py-2 rounded-full hover:bg-gray-800 transition-colors">+ Create</button>
             </div>
-            <table class="w-full text-left text-sm text-gray-600">
-                <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
-                    <tr><th class="px-6 py-3">Category Name</th><th class="px-6 py-3">Actions</th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var cat in AllCategories)
-                    {
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-6 py-4 font-bold"># @cat.CategoryName</td>
-                            <td class="px-6 py-4"><button class="text-red-500 font-bold text-xs uppercase">Delete</button></td>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3">Category Name</th>
+                            <th class="px-6 py-3 status-cell">Status</th>
+                            <th class="px-6 py-3 toggle-cell">Verification</th>
+                            <th class="px-6 py-3">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var cat in AllCategories)
+                        {
+                            <tr class="border-b hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <span class="font-bold text-gray-900"># @cat.CategoryName</span>
+                                </td>
+                                <td class="px-6 py-4 status-cell">
+                                    <div class="status-badge">
+                                        @if (cat.IsVerified)
+                                        {
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-green-50 text-green-700 border border-green-200 whitespace-nowrap">
+                                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></span>
+                                                Verified
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-gray-50 text-gray-600 border border-gray-200 whitespace-nowrap">
+                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5 flex-shrink-0"></span>
+                                                Unverified
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 toggle-cell">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked="@cat.IsVerified" @onchange="@(async (e) => await ToggleVerification(cat.Id))" />
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button class="text-red-500 font-bold text-xs uppercase hover:text-red-700 transition-colors">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
 
@@ -197,6 +303,76 @@
             </div>
         </div>
     }
+
+    @if (activeTab == "verifications")
+    {
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b">
+                <h3 class="font-bold text-gray-900">Category Access Requests</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3">User</th>
+                            <th class="px-6 py-3">Category</th>
+                            <th class="px-6 py-3">Reason</th>
+                            <th class="px-6 py-3">Status</th>
+                            <th class="px-6 py-3">Date</th>
+                            <th class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in AccessRequests)
+                        {
+                            <tr class="border-b hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-gray-900">@(request.User?.DisplayName ?? request.User?.UserName ?? "Unknown")</div>
+                                    <div class="text-xs text-gray-400">@request.User?.UserName</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="font-bold text-gray-900"># @(request.Category?.CategoryName ?? "Unknown")</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-gray-600">@(string.IsNullOrEmpty(request.Reason) ? "No reason provided" : request.Reason)</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase 
+                                        @(request.Status == "Approved" ? "bg-green-50 text-green-700" : 
+                                          request.Status == "Rejected" ? "bg-red-50 text-red-700" : 
+                                          "bg-amber-50 text-amber-700")">
+                                        @request.Status
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 text-xs">
+                                    @request.DateCreated.ToString("MMM dd, yyyy")
+                                </td>
+                                <td class="px-6 py-4">
+                                    @if (request.Status == "Pending")
+                                    {
+                                        <div class="flex gap-2">
+                                            <button @onclick="@(async () => await ApproveRequest(request.Id))" class="text-green-500 font-bold text-xs uppercase hover:text-green-700 transition-colors">Approve</button>
+                                            <button @onclick="@(async () => await RejectRequest(request.Id))" class="text-red-500 font-bold text-xs uppercase hover:text-red-700 transition-colors">Reject</button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs">Processed</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!AccessRequests.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">No access requests found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 </main>
 
 @code {
@@ -204,13 +380,18 @@
     private List<Users> AllUsers = new();
     private List<Categories> AllCategories = new();
     private List<MockReport> Reports = new();
-    private List<MockVerification> Verifications = new();
+    private List<CategoryAccessRequests> AccessRequests = new();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
         AllUsers = await context.Users.ToListAsync();
         AllCategories = await context.Categories.ToListAsync();
+        AccessRequests = await context.CategoryAccessRequests
+            .Include(r => r.User)
+            .Include(r => r.Category)
+            .OrderByDescending(r => r.DateCreated)
+            .ToListAsync();
         LoadMockData();
     }
 
@@ -227,10 +408,44 @@
             new MockReport { ReportID = 1, UserID = "5", Reason = "Spam", Status = "Pending" },
             new MockReport { ReportID = 2, UserID = "4", Reason = "Misinformation", Status = "Pending" }
         };
-        Verifications = new List<MockVerification>
+    }
+
+    private async Task ToggleVerification(int categoryId)
+    {
+        try
         {
-            new MockVerification { RequestID = 1, UserID = "4", Reason = "Football Captain", VRStatus = "Pending" }
-        };
+            // Optimistically update the UI first to prevent layout shift
+            var category = AllCategories.FirstOrDefault(c => c.Id == categoryId);
+            bool newValue = false;
+            if (category != null)
+            {
+                newValue = !category.IsVerified;
+                category.IsVerified = newValue;
+                StateHasChanged();
+            }
+
+            using var context = DbFactory.CreateDbContext();
+            var dbCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == categoryId);
+            
+            if (dbCategory != null)
+            {
+                dbCategory.IsVerified = newValue;
+                dbCategory.DateUpdated = DateTime.Now;
+                await context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Revert on error
+            var category = AllCategories.FirstOrDefault(c => c.Id == categoryId);
+            if (category != null)
+            {
+                category.IsVerified = !category.IsVerified;
+                StateHasChanged();
+            }
+            // Handle error - you might want to show a notification here
+            Console.WriteLine($"Error toggling verification: {ex.Message}");
+        }
     }
 
     private RenderFragment RenderStatCard(string title, int value, string bgClass) => __builder =>
@@ -245,5 +460,60 @@
     };
 
     public class MockReport { public int ReportID { get; set; } public string UserID { get; set; } = ""; public string Reason { get; set; } = ""; public string Status { get; set; } = ""; }
-    public class MockVerification { public int RequestID { get; set; } public string UserID { get; set; } = ""; public string Reason { get; set; } = ""; public string VRStatus { get; set; } = ""; }
+
+    private async Task ApproveRequest(int requestId)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var request = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.Id == requestId);
+            
+            if (request != null)
+            {
+                request.Status = "Approved";
+                request.DateUpdated = DateTime.Now;
+                await context.SaveChangesAsync();
+                
+                // Refresh the list
+                AccessRequests = await context.CategoryAccessRequests
+                    .Include(r => r.User)
+                    .Include(r => r.Category)
+                    .OrderByDescending(r => r.DateCreated)
+                    .ToListAsync();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error approving request: {ex.Message}");
+        }
+    }
+
+    private async Task RejectRequest(int requestId)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var request = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.Id == requestId);
+            
+            if (request != null)
+            {
+                request.Status = "Rejected";
+                request.DateUpdated = DateTime.Now;
+                await context.SaveChangesAsync();
+                
+                // Refresh the list
+                AccessRequests = await context.CategoryAccessRequests
+                    .Include(r => r.User)
+                    .Include(r => r.Category)
+                    .OrderByDescending(r => r.DateCreated)
+                    .ToListAsync();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rejecting request: {ex.Message}");
+        }
+    }
 }

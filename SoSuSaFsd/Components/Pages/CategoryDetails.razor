@@ -102,6 +102,11 @@
         cursor: pointer;
     }
 
+        .join-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
     /* --- MAIN LAYOUT --- */
     .main-layout {
         display: flex;
@@ -573,8 +578,44 @@
                     <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">
                         @(isFollowing ? "Unfollow" : "Follow")
                     </button>
-                    <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
+
+                    @* --- LOGIC FOR BUTTONS --- *@
+                    @if (CanUserPost())
+                    {
+                        @* Admin or Approved User *@
+                        <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
+                    }
+                    else if (hasPendingRequest)
+                    {
+                        @* Pending User *@
+                        <button class="join-btn" disabled style="background-color: #888; cursor: default;">Request Pending</button>
+                    }
+                    else if (CurrentCategory?.IsVerified == true)
+                    {
+                        @* New User in Verified Category *@
+                        <button class="join-btn" @onclick="() => showRequestModal = true">Request Access</button>
+                    }
+                    else
+                    {
+                        @* Standard User in Public Category *@
+                        <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
+                    }
                 </div>
+
+                @if (CurrentCategory?.IsVerified == true && !CanUserPost() && !hasPendingRequest)
+                {
+                    <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;">
+                        <strong>⚠️ Verified Category:</strong>
+                        This category is restricted. You must request access to post here.
+                    </div>
+                }
+                else if (hasPendingRequest)
+                {
+                    <div style="color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;">
+                        <strong>ℹ️ Pending:</strong>
+                        Your request to post in this verified category is awaiting admin approval.
+                    </div>
+                }
             </div>
 
             <hr />
@@ -675,6 +716,7 @@
     </aside>
 </div>
 
+@* --- CREATE POST MODAL --- *@
 @if (showPostModal)
 {
     <div class="modal">
@@ -731,6 +773,29 @@
     </div>
 }
 
+@* --- NEW: REQUEST ACCESS MODAL --- *@
+@if (showRequestModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="() => showRequestModal = false">&times;</span>
+            <h2 style="margin-top: 0;">Request Access</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b>
+            </div>
+
+            <textarea class="modal-textarea"
+                      placeholder="Why should you be verified for this category?"
+                      @bind="requestReason"></textarea>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button>
+                <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
+            </div>
+        </div>
+    </div>
+}
+
 <div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
     <div class="modal-content">
         <span class="modal-close" @onclick="() => showCreateConfirm = false">&times;</span>
@@ -757,9 +822,18 @@
     private string searchTerm = "";
     private bool showCreateConfirm = false;
     private bool showPostModal = false;
+
+    // --- NEW: REQUEST ACCESS STATES ---
+    private bool showRequestModal = false;
+    private string requestReason = "";
+    private bool hasApprovedAccess = false;
+    private bool hasPendingRequest = false;
+    // ----------------------------------
+
     private string newPostContent = "";
     private string errorMessage = "";
     private string? currentUserId;
+    private bool isAdmin = false;
 
     // --- NEW CAROUSEL STATE MANAGEMENT ---
     private Dictionary<int, int> _carouselIndices = new();
@@ -803,6 +877,9 @@
     {
         IsLoading = true;
         errorMessage = "";
+        hasApprovedAccess = false;
+        hasPendingRequest = false;
+
         try
         {
             using var context = DbFactory.CreateDbContext();
@@ -821,10 +898,28 @@
             CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
             if (CurrentCategory != null) Title = "#" + CurrentCategory.CategoryName;
 
+            // Check if user is admin
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                isAdmin = user.IsInRole("Admin");
+            }
+
             if (!string.IsNullOrEmpty(currentUserId) && CurrentCategory != null)
             {
                 var existingFollow = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
                 isFollowing = (existingFollow != null);
+
+                // --- NEW: Check for Access Status ---
+                var accessRequest = await context.CategoryAccessRequests
+                    .OrderByDescending(r => r.DateCreated)
+                    .FirstOrDefaultAsync(r => r.UserId == currentUserId && r.CategoryId == CurrentCategory.Id);
+
+                if (accessRequest != null)
+                {
+                    if (accessRequest.Status == "Approved") hasApprovedAccess = true;
+                    if (accessRequest.Status == "Pending") hasPendingRequest = true;
+                }
+                // ------------------------------------
             }
 
             CategoryPosts = await context.Posts
@@ -910,14 +1005,81 @@
         }
     }
 
+    // --- NEW: Handle Access Request Submission ---
+    private async Task HandleSubmitRequest()
+    {
+        if (string.IsNullOrEmpty(currentUserId)) return;
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // Check if already exists to prevent duplicates
+            var exists = await context.CategoryAccessRequests
+                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending");
+
+            if (exists)
+            {
+                errorMessage = "You already have a pending request.";
+                showRequestModal = false;
+                hasPendingRequest = true;
+                return;
+            }
+
+            var request = new CategoryAccessRequests
+            {
+                UserId = currentUserId,
+                CategoryId = Id,
+                Reason = requestReason,
+                Status = "Pending",
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now
+            };
+
+            context.CategoryAccessRequests.Add(request);
+            await context.SaveChangesAsync();
+
+            showRequestModal = false;
+            requestReason = "";
+            hasPendingRequest = true; // Update UI state
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error sending request: " + ex.Message;
+        }
+    }
+    // ---------------------------------------------
+
     private async Task HandleCreatePost()
     {
         if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0) return;
         if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
 
+        // --- UPDATED SECURITY CHECK ---
+        // Check if category is verified and user is NEITHER admin NOR approved
+        if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess)
+        {
+            errorMessage = "This category is verified. You must request access to post here.";
+            return;
+        }
+
         try
         {
             using var context = DbFactory.CreateDbContext();
+
+            // Re-check DB state for security
+            var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
+
+            // Check DB for approved status again to be safe
+            bool dbHasAccess = await context.CategoryAccessRequests
+                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved");
+
+            if (category?.IsVerified == true && !isAdmin && !dbHasAccess)
+            {
+                errorMessage = "This category is verified. You must request access to post here.";
+                return;
+            }
 
             var newPost = new Posts
             {
@@ -955,6 +1117,18 @@
         showPostModal = false;
         newPostContent = "";
         pendingUploads.Clear();
+        errorMessage = "";
+    }
+
+    private bool CanUserPost()
+    {
+        // If category is verified, check for Admin OR Approved Access
+        if (CurrentCategory?.IsVerified == true)
+        {
+            return isAdmin || hasApprovedAccess;
+        }
+        // If category is not verified, anyone can post (if logged in)
+        return !string.IsNullOrEmpty(currentUserId);
     }
 
     private async Task ToggleFollow()
