@@ -13,7 +13,7 @@
 <PageTitle>@Title</PageTitle>
 
 <style>
-    /* --- 1. GLOBAL & LAYOUT --- */
+    /* --- GLOBAL & LAYOUT --- */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #ffffff;
@@ -39,7 +39,7 @@
         margin: 15px 0;
     }
 
-    /* --- 2. HEADER --- */
+    /* Header */
     .site-header {
         background-color: #ffffff;
         border-bottom: 2px solid #333;
@@ -86,7 +86,7 @@
         letter-spacing: -1px;
     }
 
-    /* --- 3. MAIN LAYOUT --- */
+    /* Main Layout */
     .main-layout {
         display: flex;
         justify-content: center;
@@ -98,7 +98,7 @@
         margin-top: 80px;
     }
 
-    /* --- SIDEBAR STYLES --- */
+    /* Sidebars */
     .sidebar {
         width: 240px;
         position: sticky;
@@ -158,17 +158,10 @@
         margin-right: 8px;
     }
 
-    .verified-badge {
-        color: #1da1f2;
-        font-size: 14px;
-        margin-left: 5px;
-        vertical-align: middle;
-    }
-
+    /* --- SEARCH BAR RESTORED STYLE --- */
     .sidebar-footer {
         margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #ddd;
+        padding-top: 0;
     }
 
     .category-search-container {
@@ -206,8 +199,7 @@
             background-color: #000;
         }
 
-
-    /* --- FEED AREA --- */
+    /* Feed & Posts */
     .feed-area {
         width: 600px;
         flex-grow: 0;
@@ -222,7 +214,53 @@
         margin: 0;
     }
 
-    /* --- POST CARD --- */
+    .category-header-card {
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .cat-desc {
+        color: #666;
+        margin-top: 10px;
+        font-size: 15px;
+    }
+
+    .join-btn {
+        background-color: #333;
+        color: white;
+        border: none;
+        padding: 8px 24px;
+        border-radius: 20px;
+        font-weight: bold;
+        margin-top: 0;
+        cursor: pointer;
+    }
+
+    .follow-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-right: 10px;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+    }
+
+        .follow-btn.not-following {
+            background-color: #000;
+            color: white;
+        }
+
+        .follow-btn.following {
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+
     .post-card {
         background-color: #fff;
         padding: 0;
@@ -243,6 +281,7 @@
         background-color: #ddd;
         border-radius: 50%;
         margin-right: 15px;
+        object-fit: cover;
     }
 
     .post-content {
@@ -270,63 +309,11 @@
             color: #000;
         }
 
-    /* --- CATEGORY HEADER SPECIFIC --- */
-    .category-header-card {
-        background-color: #f8f9fa;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .cat-desc {
-        color: #666;
-        margin-top: 10px;
-        font-size: 15px;
-    }
-
-    .join-btn {
-        background-color: #333;
-        color: white;
-        border: none;
-        padding: 8px 24px;
-        border-radius: 20px;
-        font-weight: bold;
-        margin-top: 15px;
-        cursor: pointer;
-    }
-
-    .follow-btn {
-        padding: 8px 20px;
-        border-radius: 20px;
-        font-weight: bold;
-        cursor: pointer;
-        margin-right: 10px;
-        border: 1px solid transparent;
-        transition: all 0.2s;
-    }
-
-        .follow-btn.not-following {
-            background-color: #000;
-            color: white;
-        }
-
-        .follow-btn.following {
-            background-color: #fff;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-
-        .follow-btn:hover {
-            opacity: 0.8;
-        }
-
-    /* --- MODAL STYLES --- */
+    /* Modal */
     .modal {
-        display: none;
+        display: flex;
         position: fixed;
-        z-index: 1000;
+        z-index: 2000;
         left: 0;
         top: 0;
         width: 100%;
@@ -337,28 +324,41 @@
     }
 
     .modal-content {
-        background-color: #fff;
-        margin: auto;
+        background: #fff;
         padding: 25px;
-        border: none;
-        width: 90%;
-        max-width: 450px;
         border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
         position: relative;
         box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
     .modal-close {
-        color: #aaa;
+        position: absolute;
+        top: 15px;
+        right: 20px;
         font-size: 28px;
         font-weight: bold;
         cursor: pointer;
-        line-height: 20px;
+        color: #aaa;
     }
 
         .modal-close:hover {
-            color: black;
+            color: #000;
         }
+
+    .modal-textarea {
+        width: 100%;
+        height: 120px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        resize: none;
+        font-family: inherit;
+        font-size: 15px;
+        box-sizing: border-box;
+        margin: 15px 0;
+    }
 
     .login-btn {
         background-color: #333;
@@ -371,19 +371,11 @@
         font-weight: bold;
     }
 
-        .login-btn:hover {
-            background-color: #000;
-        }
-
         .login-btn.secondary {
             background-color: #fff;
             color: #333;
             border: 1px solid #ccc;
         }
-
-            .login-btn.secondary:hover {
-                background-color: #f0f0f0;
-            }
 </style>
 
 <header class="site-header">
@@ -392,15 +384,12 @@
             <div class="logo-icon"><i class="fas fa-check"></i></div>
             <span class="logo-text">SoSuSa</span>
         </div>
-        <div class="header-right">
-            <button class="join-btn" onclick="location.href='/'">Back Home</button>
-        </div>
+        <button class="join-btn" onclick="location.href='/'">Back Home</button>
     </div>
 </header>
 
 <div class="main-layout">
 
-    @* --- LEFT SIDEBAR: Recently Created (Same as before) --- *@
     <aside class="sidebar sidebar-left">
         <div class="sidebar-section">
             <h3>Recently Created</h3>
@@ -419,37 +408,30 @@
                 else
                 {
                     <AuthorizeView>
-                        <Authorized>
-                            <li>You haven't created any categories yet.</li>
-                        </Authorized>
-                        <NotAuthorized>
-                            <li>Login to see your categories.</li>
-                        </NotAuthorized>
+                        <Authorized><li>You haven't created any categories yet.</li></Authorized>
+                        <NotAuthorized><li>Login to see your categories.</li></NotAuthorized>
                     </AuthorizeView>
                 }
             </ul>
             <hr />
         </div>
 
-        <div class="sidebar-section">
-            <div class="sidebar-footer">
-                <div class="category-search-container">
-                    <input type="text"
-                           placeholder="Find category..."
-                           @bind="searchTerm"
-                           @bind:event="oninput" />
-                    <button type="button"
-                            class="create-cat-btn"
-                            title="Create New Category"
-                            @onclick="HandleCategorySearch">
-                        +
-                    </button>
-                </div>
+        <div class="sidebar-footer">
+            <div class="category-search-container">
+                <input type="text"
+                       placeholder="Find category..."
+                       @bind="searchTerm"
+                       @bind:event="oninput" />
+                <button type="button"
+                        class="create-cat-btn"
+                        title="Create New Category"
+                        @onclick="HandleCategorySearch">
+                    +
+                </button>
             </div>
         </div>
     </aside>
 
-    @* --- CENTER: Feed Area --- *@
     <main class="feed-area">
         @if (CurrentCategory == null)
         {
@@ -460,6 +442,7 @@
                 }
                 else
                 {
+
                     <span>Category not found.</span>
                 }
             </div>
@@ -468,15 +451,12 @@
         {
             <div class="category-header-card">
                 <h1 class="page-title">#@CurrentCategory.CategoryName</h1>
-                <p class="cat-desc">
-                    @(string.IsNullOrEmpty(CurrentCategory.CategoryDescription) ? "No description provided." : CurrentCategory.CategoryDescription)
-                </p>
+                <p class="cat-desc">@(string.IsNullOrEmpty(CurrentCategory.CategoryDescription) ? "No description provided." : CurrentCategory.CategoryDescription)</p>
 
-                @* Error Box *@
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
                     <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 15px 0; border-radius: 5px;">
-                        <strong>System Error:</strong> @errorMessage
+                        <strong>Error:</strong> @errorMessage
                     </div>
                 }
 
@@ -484,37 +464,50 @@
                     <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">
                         @(isFollowing ? "Unfollow" : "Follow")
                     </button>
-
-                    <button class="join-btn">Create Post</button>
+                    <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
                 </div>
             </div>
 
             <hr />
 
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="post-avatar"></div>
-                    <div>
-                        <b>System</b>
-                        <div style="font-size: 12px; color: #888;">Posted in #@CurrentCategory.CategoryName</div>
+            @if (CategoryPosts != null && CategoryPosts.Any())
+            {
+                @foreach (var post in CategoryPosts)
+                {
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
+                            <div>
+                                <b>@(post.User?.UserName ?? "User")</b>
+                                <div style="font-size: 12px; color: #888;">
+                                    @post.DateCreated.ToString("MMM dd, yyyy • HH:mm")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            @post.Content
+                        </div>
+                        <div class="post-actions">
+                            <button class="action-btn">Like</button>
+                            <button class="action-btn">Comment</button>
+                            <button class="action-btn">Share</button>
+                        </div>
                     </div>
+                }
+            }
+            else
+            {
+                <div style="text-align:center; padding:20px; color:#666;">
+                    No posts yet. Be the first to post in <b>#@CurrentCategory.CategoryName</b>!
                 </div>
-                <div class="post-content">
-                    Welcome to the <b>#@CurrentCategory.CategoryName</b> feed! Be the first to post something here.
-                </div>
-                <div class="post-actions">
-                    <button class="action-btn">Like</button>
-                    <button class="action-btn">Comment</button>
-                    <button class="action-btn">Share</button>
-                </div>
-            </div>
+            }
         }
     </main>
 
-    @* --- RIGHT SIDEBAR: FOLLOWED CATEGORIES (UPDATED) --- *@
     <aside class="sidebar sidebar-right">
         <div class="sidebar-section">
-            <h3>Following</h3> <ul class="category-list">
+            <h3>Following</h3>
+            <ul class="category-list">
                 @if (FollowedCategories != null && FollowedCategories.Any())
                 {
                     @foreach (var cat in FollowedCategories)
@@ -529,12 +522,8 @@
                 else
                 {
                     <AuthorizeView>
-                        <Authorized>
-                            <li>You are not following any categories yet.</li>
-                        </Authorized>
-                        <NotAuthorized>
-                            <li>Login to see your followed categories.</li>
-                        </NotAuthorized>
+                        <Authorized><li>You aren't following anything yet.</li></Authorized>
+                        <NotAuthorized><li>Login to see follows.</li></NotAuthorized>
                     </AuthorizeView>
                 }
             </ul>
@@ -543,34 +532,46 @@
 
 </div>
 
-@* Modal for create category *@
+@if (showPostModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="() => showPostModal = false">&times;</span>
+            <h2 style="margin-top: 0;">Create Post</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Posting to <b>#@CurrentCategory?.CategoryName</b>
+            </div>
+
+            <textarea class="modal-textarea"
+                      placeholder="What's on your mind?"
+                      @bind="newPostContent"></textarea>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="login-btn secondary" @onclick="() => showPostModal = false">Cancel</button>
+                <button class="login-btn" @onclick="HandleCreatePost">Post</button>
+            </div>
+        </div>
+    </div>
+}
+
 <div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
     <div class="modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h2 style="margin: 0;">Category Not Found</h2>
-            <span class="modal-close" style="float: none; margin: 0;" @onclick="() => showCreateConfirm = false">&times;</span>
-        </div>
-        <hr />
-        <p style="margin-bottom: 20px; font-size: 16px;">
-            The category <b>#@searchTerm</b> does not exist yet.
-            <br /><br />
-            Would you like to create it?
-        </p>
-        <div style="display: flex; gap: 10px;">
-            <button type="button" class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button>
-            <button type="button" class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">No, Cancel</button>
+        <span class="modal-close" @onclick="() => showCreateConfirm = false">&times;</span>
+        <h2>Category Not Found</h2>
+        <p>Would you like to create <b>#@searchTerm</b>?</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button>
+            <button class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">Cancel</button>
         </div>
     </div>
 </div>
 
 @code {
-    [Parameter]
-    public int Id { get; set; }
+    [Parameter] public int Id { get; set; }
 
     private Categories? CurrentCategory;
+    private List<Posts> CategoryPosts = new();
     private List<Categories> RecentCategories = new();
-
-    // UPDATED LIST NAME
     private List<Categories> FollowedCategories = new();
 
     private bool IsLoading = true;
@@ -578,8 +579,8 @@
     private bool isFollowing = false;
     private string searchTerm = "";
     private bool showCreateConfirm = false;
-
-    // Error handling & User tracking
+    private bool showPostModal = false;
+    private string newPostContent = "";
     private string errorMessage = "";
     private string? currentUserId;
 
@@ -587,22 +588,12 @@
     {
         IsLoading = true;
         errorMessage = "";
-
         try
         {
             using var context = DbFactory.CreateDbContext();
-
-            // 1. Fetch Current Category
-            CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
-            if (CurrentCategory != null)
-            {
-                Title = "#" + CurrentCategory.CategoryName;
-            }
-
-            // 2. Get Logged-in User ID
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            currentUserId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
             if (currentUserId == null && user.Identity?.IsAuthenticated == true)
             {
@@ -612,151 +603,93 @@
                 currentUserId = dbUser?.Id;
             }
 
-            // 3. CHECK FOLLOW STATUS
+            CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
+            if (CurrentCategory != null) Title = "#" + CurrentCategory.CategoryName;
+
             if (!string.IsNullOrEmpty(currentUserId) && CurrentCategory != null)
             {
-                var existingFollow = await context.CategoryFollows
-                    .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
-
+                var existingFollow = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
                 isFollowing = (existingFollow != null);
             }
-            else
-            {
-                isFollowing = false;
-            }
 
-            // 4. Load Sidebars
+            // LOAD POSTS
+            CategoryPosts = await context.Posts
+                .Where(p => p.CategoryId == Id)
+                .Include(p => p.User)
+                .OrderByDescending(p => p.DateCreated)
+                .ToListAsync();
+
             if (!string.IsNullOrEmpty(currentUserId))
             {
-                // Left Sidebar: Recently Created
-                RecentCategories = await context.Categories
-                    .Where(c => c.CreatedBy == currentUserId)
-                    .OrderByDescending(c => c.DateCreated)
-                    .Take(5)
-                    .ToListAsync();
+                RecentCategories = await context.Categories.Where(c => c.CreatedBy == currentUserId).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
+                FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync();
+            }
+        }
+        catch (Exception ex) { errorMessage = "Error loading: " + ex.Message; }
+        finally { IsLoading = false; }
+    }
 
-                // Right Sidebar: FOLLOWED CATEGORIES (NEW LOGIC)
-                // We join CategoryFollows with Categories to get the ones the user follows
-                FollowedCategories = await context.CategoryFollows
-                    .Where(cf => cf.UserId == currentUserId)
-                    .Include(cf => cf.Category) // Ensure we load the category details
-                    .Select(cf => cf.Category!) // Select just the Category object
-                    .ToListAsync();
-            }
-            else
+    private async Task HandleCreatePost()
+    {
+        if (string.IsNullOrWhiteSpace(newPostContent)) return;
+        if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var newPost = new Posts
             {
-                RecentCategories = new List<Categories>();
-                FollowedCategories = new List<Categories>();
-            }
+                Content = newPostContent,
+                CategoryId = Id,
+                UserId = currentUserId,
+                PostStatus = "Published",
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUserId,
+                UpdatedBy = currentUserId
+            };
+            context.Posts.Add(newPost);
+            await context.SaveChangesAsync();
+            newPostContent = "";
+            showPostModal = false;
+            CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).OrderByDescending(p => p.DateCreated).ToListAsync();
         }
-        catch (Exception ex)
-        {
-            errorMessage = "Error loading page: " + ex.Message;
-            Console.WriteLine(ex.ToString());
-        }
-        finally
-        {
-            IsLoading = false;
-        }
+        catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; }
     }
 
     private async Task ToggleFollow()
     {
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            Navigation.NavigateTo("/Account/Login", forceLoad: true);
-            return;
-        }
-
+        if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
         try
         {
             using var context = DbFactory.CreateDbContext();
-
             if (isFollowing)
             {
-                // UNFOLLOW
-                var recordToDelete = await context.CategoryFollows
-                    .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id);
-
-                if (recordToDelete != null)
-                {
-                    context.CategoryFollows.Remove(recordToDelete);
-                    await context.SaveChangesAsync();
-                }
+                var record = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id);
+                if (record != null) context.CategoryFollows.Remove(record);
                 isFollowing = false;
             }
             else
             {
-                // FOLLOW
-                if (Id == 0)
-                {
-                    errorMessage = "Invalid Category ID";
-                    return;
-                }
-
-                var newFollow = new CategoryFollows
-                {
-                    UserId = currentUserId,
-                    CategoryId = Id,
-                    DateCreated = DateTime.Now,
-                    DateUpdated = DateTime.Now,
-                    CreatedBy = currentUserId,
-                    UpdatedBy = currentUserId
-                };
-
-                context.CategoryFollows.Add(newFollow);
-                await context.SaveChangesAsync();
+                context.CategoryFollows.Add(new CategoryFollows { UserId = currentUserId, CategoryId = Id, DateCreated = DateTime.Now, DateUpdated = DateTime.Now });
                 isFollowing = true;
             }
-
-            // RELOAD FOLLOWED LIST
-            // This ensures the sidebar updates immediately after you click the button
-            FollowedCategories = await context.CategoryFollows
-                    .Where(cf => cf.UserId == currentUserId)
-                    .Include(cf => cf.Category)
-                    .Select(cf => cf.Category!)
-                    .ToListAsync();
-
-            errorMessage = "";
+            await context.SaveChangesAsync();
+            FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync();
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"Action Failed: {ex.Message}";
-        }
+        catch (Exception ex) { errorMessage = ex.Message; }
     }
 
-    private void NavigateToCategory(int id)
-    {
-        Navigation.NavigateTo($"/category/{id}", forceLoad: true);
-    }
+    private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}", forceLoad: true);
 
     private async Task HandleCategorySearch()
     {
         if (string.IsNullOrWhiteSpace(searchTerm)) return;
-
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            var existingCategory = await context.Categories
-                .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
-
-            if (existingCategory != null)
-            {
-                Navigation.NavigateTo($"/category/{existingCategory.Id}", forceLoad: true);
-            }
-            else
-            {
-                showCreateConfirm = true;
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = $"Search Error: {ex.Message}";
-        }
+        using var context = DbFactory.CreateDbContext();
+        var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
+        if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}", true);
+        else showCreateConfirm = true;
     }
 
-    private void NavigateToCreate()
-    {
-        Navigation.NavigateTo($"/categories/create?name={searchTerm}");
-    }
+    private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
 }
