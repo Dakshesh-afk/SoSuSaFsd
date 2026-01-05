@@ -146,9 +146,21 @@
             border: 1px solid #ccc;
         }
 
-            .login-btn.secondary:hover {
-                background-color: #f0f0f0;
-            }
+    /* --- ADMIN BUTTON STYLE --- */
+    .admin-btn {
+        background-color: #dc3545;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 15px;
+        border: none;
+        cursor: pointer;
+    }
+
+        .admin-btn:hover {
+            background-color: #bb2d3b;
+        }
 
     /* --- 3. MAIN LAYOUT --- */
     .main-layout {
@@ -162,7 +174,7 @@
         margin-top: 62px;
     }
 
-    /* --- SIDEBAR STYLES --- */
+    /* --- SIDEBAR --- */
     .sidebar {
         width: 240px;
         position: sticky;
@@ -267,7 +279,7 @@
             background-color: #000;
         }
 
-    /* --- FEED AREA --- */
+    /* --- FEED & POSTS --- */
     .feed-area {
         width: 600px;
         flex-grow: 0;
@@ -314,7 +326,6 @@
             border-color: #bbb;
         }
 
-    /* --- POST CARD --- */
     .post-card {
         background-color: #fff;
         padding: 0;
@@ -355,10 +366,6 @@
             text-decoration: none;
         }
 
-            .post-category-tag a:hover {
-                text-decoration: underline;
-            }
-
     .post-content {
         font-size: 16px;
         color: #111;
@@ -366,7 +373,6 @@
         padding: 5px 15px 20px 15px;
     }
 
-    /* --- IMAGE STYLES --- */
     .post-image-container {
         width: 100%;
         max-height: 400px;
@@ -420,11 +426,7 @@
         vertical-align: middle;
     }
 
-        .verified-badge.small {
-            font-size: 12px;
-        }
-
-    /* --- PROFILE & MODAL STYLES --- */
+    /* --- PROFILE, MODAL, AUTH --- */
     .modal {
         display: none;
         position: fixed;
@@ -646,8 +648,15 @@
             <form action="#">
                 <input type="text" id="header-search-input" class="search-bar" placeholder="Search posts...">
             </form>
+
             <AuthorizeView>
                 <Authorized>
+                    @* --- UPDATED ADMIN BUTTON: Forces page refresh --- *@
+                    <AuthorizeView Roles="Admin" Context="innerContext">
+                        <button class="admin-btn" style="margin-right: 10px;" @onclick="NavigateToAdmin">Admin Panel</button>
+                    </AuthorizeView>
+                    @* ------------------------------------------------- *@
+
                     <button class="login-btn" @onclick="ForceLogout">Logout</button>
                 </Authorized>
                 <NotAuthorized>
@@ -781,7 +790,6 @@
             <h1 class="page-title">My Posts</h1>
             <hr />
 
-            @* --- NEW CODE: Display User's Own Posts --- *@
             @if (UserPosts != null && UserPosts.Any())
             {
                 @foreach (var post in UserPosts)
@@ -996,7 +1004,7 @@
     private List<Categories> VerifiedCategories = new();
     private List<Categories> FollowedCategories = new();
     private List<Posts> FeedPosts = new();
-    private List<Posts> UserPosts = new(); // --- NEW: Store User's Own Posts ---
+    private List<Posts> UserPosts = new();
 
     private Users? currentUser;
 
@@ -1046,7 +1054,7 @@
 
                     var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
 
-                    // 1. Fetch Feed Posts (Followed)
+                    // 1. Fetch Feed Posts
                     FeedPosts = await context.Posts
                         .Where(p => followedCategoryIds.Contains(p.CategoryId))
                         .Include(p => p.User)
@@ -1054,7 +1062,7 @@
                         .OrderByDescending(p => p.DateCreated)
                         .ToListAsync();
 
-                    // 2. --- NEW: Fetch User's Own Posts ---
+                    // 2. Fetch User Posts
                     UserPosts = await context.Posts
                         .Where(p => p.UserId == userId)
                         .Include(p => p.User)
@@ -1083,4 +1091,10 @@
     }
 
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
+
+    // --- UPDATED METHOD: Forces full reload for Admin panel ---
+    private void NavigateToAdmin()
+    {
+        Navigation.NavigateTo("admin", forceLoad: true);
+    }
 }

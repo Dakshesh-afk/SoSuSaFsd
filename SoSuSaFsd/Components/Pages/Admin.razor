@@ -1,8 +1,10 @@
 ﻿@page "/admin"
+@layout Layout.EmptyLayout
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using SoSuSaFsd.Domain
 @using SoSuSaFsd.Data
+@using Microsoft.AspNetCore.Components.Web
 
 @* Protect this page so only Admins can see it *@
 @attribute [Authorize(Roles = "Admin")]
@@ -12,16 +14,22 @@
 
 <PageTitle>SoSuSa - Admin Dashboard</PageTitle>
 
-@* Essential: Load Tailwind CSS for your design *@
-<script src="https://cdn.tailwindcss.com"></script>
+@* Load Tailwind CSS in head to prevent FOUC *@
+<HeadContent>
+    <script src="https://cdn.tailwindcss.com"></script>
+</HeadContent>
 
 <style>
-    /* Force scrollbar to prevent layout shift */
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #f9fafb;
+    }
+
     html {
         overflow-y: scroll;
     }
 
-    /* Custom Logo Style */
     .logo-icon {
         width: 40px;
         height: 40px;
@@ -34,7 +42,6 @@
         box-shadow: 2px 2px 0px #999;
     }
 
-    /* Nav Link Styles */
     .nav-link {
         cursor: pointer;
         font-weight: 600;
@@ -53,10 +60,6 @@
             color: #000 !important;
             border-bottom: 2px solid #333;
         }
-
-    .d-none {
-        display: none;
-    }
 </style>
 
 <header class="bg-white border-b-2 border-gray-200 sticky top-0 z-50 py-3">
@@ -93,9 +96,11 @@
                 </div>
                 <div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm border-2 border-gray-200 shadow-sm">AU</div>
             </div>
-            <a href="/" class="text-gray-400 hover:text-red-600 transition-colors" title="Exit to App">
+            @* --- UPDATED EXIT LINK: Forces fresh load for Home --- *@
+            <button @onclick="ExitAdmin" class="text-gray-400 hover:text-red-600 transition-colors bg-transparent border-0 cursor-pointer" title="Exit to App">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
-            </a>
+            </button>
+            @* ----------------------------------------------------- *@
         </div>
     </div>
 </header>
@@ -106,7 +111,6 @@
         <p class="text-gray-500 mt-1 font-medium">Manage your platform's content and settings.</p>
     </div>
 
-    @* --- DASHBOARD VIEW --- *@
     @if (activeTab == "dashboard")
     {
         <div class="space-y-6">
@@ -119,7 +123,6 @@
         </div>
     }
 
-    @* --- USERS VIEW --- *@
     @if (activeTab == "users")
     {
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -135,7 +138,11 @@
                                 <div class="font-bold text-gray-900">@user.DisplayName</div>
                                 <div class="text-xs text-gray-400">@user.UserName</div>
                             </td>
-                            <td class="px-6 py-4"><span class="px-2 py-0.5 border rounded uppercase text-[11px] font-bold">@user.Role</span></td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-0.5 border rounded uppercase text-[11px] font-bold">
+                                    @(!string.IsNullOrEmpty(user.Role) ? user.Role : "User")
+                                </span>
+                            </td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase @(user.IsActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700")">
                                     @(user.IsActive ? "Active" : "Banned")
@@ -148,7 +155,6 @@
         </div>
     }
 
-    @* --- CATEGORIES VIEW --- *@
     @if (activeTab == "categories")
     {
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -173,7 +179,6 @@
         </div>
     }
 
-    @* --- REPORTS VIEW (Mock Data) --- *@
     @if (activeTab == "reports")
     {
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
@@ -196,36 +201,32 @@
 
 @code {
     private string activeTab = "dashboard";
-
-    // Database Data
     private List<Users> AllUsers = new();
     private List<Categories> AllCategories = new();
-
-    // Mock Data (For Reports/Verifications not in DB yet)
     private List<MockReport> Reports = new();
     private List<MockVerification> Verifications = new();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-
-        // 1. Fetch Real Data
         AllUsers = await context.Users.ToListAsync();
         AllCategories = await context.Categories.ToListAsync();
-
-        // 2. Load Mock Data
         LoadMockData();
+    }
+
+    // --- UPDATED METHOD: Exit admin and reload Home cleanly ---
+    private void ExitAdmin()
+    {
+        NavigationManager.NavigateTo("/", forceLoad: true);
     }
 
     private void LoadMockData()
     {
-        // These IDs ("5", "4") are strings, matching the class definition below
         Reports = new List<MockReport>
         {
             new MockReport { ReportID = 1, UserID = "5", Reason = "Spam", Status = "Pending" },
             new MockReport { ReportID = 2, UserID = "4", Reason = "Misinformation", Status = "Pending" }
         };
-
         Verifications = new List<MockVerification>
         {
             new MockVerification { RequestID = 1, UserID = "4", Reason = "Football Captain", VRStatus = "Pending" }
@@ -243,21 +244,6 @@
         </div>
     };
 
-    // Internal Mock Classes
-    // FIX: UserID is now 'string' to handle the string IDs we assign above
-    public class MockReport
-    {
-        public int ReportID { get; set; }
-        public string UserID { get; set; } = "";
-        public string Reason { get; set; } = "";
-        public string Status { get; set; } = "";
-    }
-
-    public class MockVerification
-    {
-        public int RequestID { get; set; }
-        public string UserID { get; set; } = "";
-        public string Reason { get; set; } = "";
-        public string VRStatus { get; set; } = "";
-    }
+    public class MockReport { public int ReportID { get; set; } public string UserID { get; set; } = ""; public string Reason { get; set; } = ""; public string Status { get; set; } = ""; }
+    public class MockVerification { public int RequestID { get; set; } public string UserID { get; set; } = ""; public string Reason { get; set; } = ""; public string VRStatus { get; set; } = ""; }
 }

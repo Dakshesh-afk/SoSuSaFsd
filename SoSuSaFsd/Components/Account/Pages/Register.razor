@@ -1,16 +1,12 @@
 ﻿@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
-@using System.Text
-@using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.WebUtilities
 @using SoSuSaFsd.Domain
 
 @inject UserManager<Users> UserManager
 @inject IUserStore<Users> UserStore
 @inject SignInManager<Users> SignInManager
-@inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject RoleManager<IdentityRole> RoleManager
 
@@ -74,8 +70,6 @@
 </div>
 
 @code {
-    private IEnumerable<IdentityError>? identityErrors;
-
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
 
@@ -96,38 +90,35 @@
         user.UpdatedBy = "System";
         user.IsActive = true;
 
+        // --- KEY FIX: Set custom Role property ---
+        user.Role = "User";
+        // -----------------------------------------
+
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
 
         var result = await UserManager.CreateAsync(user, Input.Password);
 
-        if (!result.Succeeded)
-        {
-            identityErrors = result.Errors;
-            return;
-        }
+        if (!result.Succeeded) return;
+
+        // Ensure "User" role exists in Identity table
         if (!await RoleManager.RoleExistsAsync("User"))
         {
             await RoleManager.CreateAsync(new IdentityRole("User"));
         }
+
+        // Add to Identity Role
         await UserManager.AddToRoleAsync(user, "User");
-        await UserManager.AddClaimAsync(user, new System.Security.Claims.Claim("userId", user.Id));
+
         await SignInManager.SignInAsync(user, isPersistent: false);
         NavigationManager.NavigateTo(ReturnUrl ?? "/");
     }
 
     private Users CreateUser()
     {
-        try
-        {
-            return Activator.CreateInstance<Users>();
-        }
-        catch
-        {
-            throw new InvalidOperationException($"Can't create an instance of '{nameof(Users)}'. " +
-                $"Ensure that '{nameof(Users)}' is not an abstract class and has a parameterless constructor.");
-        }
+        try { return Activator.CreateInstance<Users>(); }
+        catch { throw new InvalidOperationException($"Can't create an instance of '{nameof(Users)}'."); }
     }
 
     private IUserEmailStore<Users> GetEmailStore()
@@ -138,32 +129,16 @@
         }
         return (IUserEmailStore<Users>)UserStore;
     }
+
     public sealed class InputModel
     {
-        [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
-        public string Email { get; set; } = "";
-
-        [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; } = "";
-
-        [DataType(DataType.Password)]
-        [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        public string ConfirmPassword { get; set; } = "";
-        [Required]
-        public string FirstName { get; set; } = "";
-        [Required]
-        public string LastName { get; set; } = "";
-
+        [Required][EmailAddress][Display(Name = "Email")] public string Email { get; set; } = "";
+        [Required][DataType(DataType.Password)][Display(Name = "Password")] public string Password { get; set; } = "";
+        [DataType(DataType.Password)][Display(Name = "Confirm password")][Compare("Password", ErrorMessage = "The password and confirmation password do not match.")] public string ConfirmPassword { get; set; } = "";
+        [Required] public string FirstName { get; set; } = "";
+        [Required] public string LastName { get; set; } = "";
         public string DisplayName { get; set; } = "";
-
         public DateTime DateOfBirth { get; set; } = DateTime.Now;
-
         public string Bio { get; set; } = "";
     }
 }
