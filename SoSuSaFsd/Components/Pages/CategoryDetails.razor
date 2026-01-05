@@ -133,13 +133,6 @@
             text-transform: none;
         }
 
-    .scrollable-list {
-        flex-grow: 1;
-        overflow-y: auto;
-        min-height: 200px;
-        max-height: 300px;
-    }
-
     .category-list li {
         margin-bottom: 10px;
     }
@@ -407,6 +400,7 @@
 
 <div class="main-layout">
 
+    @* --- LEFT SIDEBAR: Recently Created (Same as before) --- *@
     <aside class="sidebar sidebar-left">
         <div class="sidebar-section">
             <h3>Recently Created</h3>
@@ -455,6 +449,7 @@
         </div>
     </aside>
 
+    @* --- CENTER: Feed Area --- *@
     <main class="feed-area">
         @if (CurrentCategory == null)
         {
@@ -465,7 +460,6 @@
                 }
                 else
                 {
-
                     <span>Category not found.</span>
                 }
             </div>
@@ -477,6 +471,14 @@
                 <p class="cat-desc">
                     @(string.IsNullOrEmpty(CurrentCategory.CategoryDescription) ? "No description provided." : CurrentCategory.CategoryDescription)
                 </p>
+
+                @* Error Box *@
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 15px 0; border-radius: 5px;">
+                        <strong>System Error:</strong> @errorMessage
+                    </div>
+                }
 
                 <div style="margin-top: 15px;">
                     <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">
@@ -509,25 +511,31 @@
         }
     </main>
 
+    @* --- RIGHT SIDEBAR: FOLLOWED CATEGORIES (UPDATED) --- *@
     <aside class="sidebar sidebar-right">
         <div class="sidebar-section">
-            <h3>Verified Categories</h3>
-            <ul class="category-list">
-                @if (VerifiedCategories != null)
+            <h3>Following</h3> <ul class="category-list">
+                @if (FollowedCategories != null && FollowedCategories.Any())
                 {
-                    @foreach (var cat in VerifiedCategories)
+                    @foreach (var cat in FollowedCategories)
                     {
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                 <span class="hashtag">#</span> @cat.CategoryName
-                                <i class="fas fa-check-circle verified-badge" title="Verified"></i>
                             </a>
                         </li>
                     }
                 }
                 else
                 {
-                    <li>Loading...</li>
+                    <AuthorizeView>
+                        <Authorized>
+                            <li>You are not following any categories yet.</li>
+                        </Authorized>
+                        <NotAuthorized>
+                            <li>Login to see your followed categories.</li>
+                        </NotAuthorized>
+                    </AuthorizeView>
                 }
             </ul>
         </div>
@@ -535,6 +543,7 @@
 
 </div>
 
+@* Modal for create category *@
 <div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -559,10 +568,10 @@
     public int Id { get; set; }
 
     private Categories? CurrentCategory;
-
-    // --- New Data Lists for Sidebars ---
     private List<Categories> RecentCategories = new();
-    private List<Categories> VerifiedCategories = new();
+
+    // UPDATED LIST NAME
+    private List<Categories> FollowedCategories = new();
 
     private bool IsLoading = true;
     private string Title = "Category";
@@ -570,10 +579,14 @@
     private string searchTerm = "";
     private bool showCreateConfirm = false;
 
+    // Error handling & User tracking
+    private string errorMessage = "";
+    private string? currentUserId;
+
     protected override async Task OnParametersSetAsync()
     {
         IsLoading = true;
-        isFollowing = false;
+        errorMessage = "";
 
         try
         {
@@ -586,42 +599,60 @@
                 Title = "#" + CurrentCategory.CategoryName;
             }
 
-            // 2. Fetch Recently Created (FILTERED BY USER)
+            // 2. Get Logged-in User ID
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            var userId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            currentUserId = user.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-            if (userId == null && user.Identity?.IsAuthenticated == true)
+            if (currentUserId == null && user.Identity?.IsAuthenticated == true)
             {
-                // Fallback lookup if claim is missing but IsAuthenticated is true
                 using var scope = ScopeFactory.CreateScope();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
                 var dbUser = await userManager.GetUserAsync(user);
-                userId = dbUser?.Id;
+                currentUserId = dbUser?.Id;
             }
 
-            if (!string.IsNullOrEmpty(userId))
+            // 3. CHECK FOLLOW STATUS
+            if (!string.IsNullOrEmpty(currentUserId) && CurrentCategory != null)
             {
+                var existingFollow = await context.CategoryFollows
+                    .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
+
+                isFollowing = (existingFollow != null);
+            }
+            else
+            {
+                isFollowing = false;
+            }
+
+            // 4. Load Sidebars
+            if (!string.IsNullOrEmpty(currentUserId))
+            {
+                // Left Sidebar: Recently Created
                 RecentCategories = await context.Categories
-                    .Where(c => c.CreatedBy == userId)
+                    .Where(c => c.CreatedBy == currentUserId)
                     .OrderByDescending(c => c.DateCreated)
                     .Take(5)
+                    .ToListAsync();
+
+                // Right Sidebar: FOLLOWED CATEGORIES (NEW LOGIC)
+                // We join CategoryFollows with Categories to get the ones the user follows
+                FollowedCategories = await context.CategoryFollows
+                    .Where(cf => cf.UserId == currentUserId)
+                    .Include(cf => cf.Category) // Ensure we load the category details
+                    .Select(cf => cf.Category!) // Select just the Category object
                     .ToListAsync();
             }
             else
             {
-                // Not logged in -> Empty list
                 RecentCategories = new List<Categories>();
+                FollowedCategories = new List<Categories>();
             }
-
-            // 3. Fetch "Verified" Categories
-            VerifiedCategories = await context.Categories
-                .Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports")
-                .ToListAsync();
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error loading data: " + ex.Message);
+            errorMessage = "Error loading page: " + ex.Message;
+            Console.WriteLine(ex.ToString());
         }
         finally
         {
@@ -629,9 +660,69 @@
         }
     }
 
-    private void ToggleFollow()
+    private async Task ToggleFollow()
     {
-        isFollowing = !isFollowing;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            Navigation.NavigateTo("/Account/Login", forceLoad: true);
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            if (isFollowing)
+            {
+                // UNFOLLOW
+                var recordToDelete = await context.CategoryFollows
+                    .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id);
+
+                if (recordToDelete != null)
+                {
+                    context.CategoryFollows.Remove(recordToDelete);
+                    await context.SaveChangesAsync();
+                }
+                isFollowing = false;
+            }
+            else
+            {
+                // FOLLOW
+                if (Id == 0)
+                {
+                    errorMessage = "Invalid Category ID";
+                    return;
+                }
+
+                var newFollow = new CategoryFollows
+                {
+                    UserId = currentUserId,
+                    CategoryId = Id,
+                    DateCreated = DateTime.Now,
+                    DateUpdated = DateTime.Now,
+                    CreatedBy = currentUserId,
+                    UpdatedBy = currentUserId
+                };
+
+                context.CategoryFollows.Add(newFollow);
+                await context.SaveChangesAsync();
+                isFollowing = true;
+            }
+
+            // RELOAD FOLLOWED LIST
+            // This ensures the sidebar updates immediately after you click the button
+            FollowedCategories = await context.CategoryFollows
+                    .Where(cf => cf.UserId == currentUserId)
+                    .Include(cf => cf.Category)
+                    .Select(cf => cf.Category!)
+                    .ToListAsync();
+
+            errorMessage = "";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Action Failed: {ex.Message}";
+        }
     }
 
     private void NavigateToCategory(int id)
@@ -660,7 +751,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error searching: {ex.Message}");
+            errorMessage = $"Search Error: {ex.Message}";
         }
     }
 

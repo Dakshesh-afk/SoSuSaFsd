@@ -659,14 +659,11 @@
                 <input type="text" id="header-search-input" class="search-bar" placeholder="Search posts...">
             </form>
 
-            <!-- AUTH BUTTONS TOGGLE -->
             <AuthorizeView>
                 <Authorized>
-                    <!-- LOGOUT: Points to Controller with FORCED navigation -->
                     <button class="login-btn" @onclick="ForceLogout">Logout</button>
                 </Authorized>
                 <NotAuthorized>
-                    <!-- LOGIN: Opens Overlay -->
                     <button class="login-btn" onclick="showLoginOverlay()">Login</button>
                 </NotAuthorized>
             </AuthorizeView>
@@ -723,7 +720,6 @@
             </div>
         </div>
 
-        <!-- PROFILE SIDEBAR -->
         <div id="sidebar-profile" class="section-view">
             <div class="profile-card">
                 <div class="profile-avatar-large"></div>
@@ -818,7 +814,6 @@
                     </form>
                 </div>
             </div>
-            <!-- Other settings forms omitted for brevity but container exists -->
             <div id="settings-form-password" class="settings-content hidden">Password Change</div>
             <div id="settings-form-verification" class="settings-content hidden">Verification</div>
         </div>
@@ -846,10 +841,37 @@
                 }
             </ul>
         </div>
+
+        <div class="sidebar-section">
+            <h3>Following</h3>
+            <ul class="category-list">
+                @if (FollowedCategories != null && FollowedCategories.Any())
+                {
+                    @foreach (var cat in FollowedCategories)
+                    {
+                        <li>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                                <span class="hashtag">#</span> @cat.CategoryName
+                            </a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <AuthorizeView>
+                        <Authorized>
+                            <li>You aren't following anything.</li>
+                        </Authorized>
+                        <NotAuthorized>
+                            <li>Login to see follows.</li>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                }
+            </ul>
+        </div>
     </aside>
 </div>
 
-<!-- MODALS -->
 <div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
     <div class="modal-content">
         <h2>Category Not Found</h2>
@@ -859,7 +881,6 @@
     </div>
 </div>
 
-<!-- LOGIN / REGISTER OVERLAY (Using FORMS for Controller) -->
 <div id="auth-overlay" class="auth-overlay" style="display: @(ShowLoginOverlay ? "flex" : "none")">
     <div class="auth-card">
         <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
@@ -872,7 +893,6 @@
             <div class="error-msg">@ErrorMessage</div>
         }
 
-        <!-- LOGIN FORM -->
         <div id="login-view">
             <form action="api/Account/login" method="post">
                 <div class="auth-input-group">
@@ -888,7 +908,6 @@
             </div>
         </div>
 
-        <!-- REGISTER FORM -->
         <div id="register-view" class="hidden">
             <form action="api/Account/register" method="post">
                 <div class="auth-input-group">
@@ -978,6 +997,9 @@
     private List<Categories> RecentCategories = new();
     private List<Categories> VerifiedCategories = new();
 
+    // NEW: List to hold followed categories
+    private List<Categories> FollowedCategories = new();
+
     // Hold the current user data for Profile UI
     private Users? currentUser;
 
@@ -1030,7 +1052,6 @@
                 // AUTO-FIX: Force logout if Cookie exists but User does not (Ghost Session)
                 if (currentUser == null)
                 {
-                    // Use the forced navigation method
                     ForceLogout();
                     return;
                 }
@@ -1042,6 +1063,13 @@
                         .Where(c => c.CreatedBy == userId)
                         .OrderByDescending(c => c.DateCreated)
                         .Take(5)
+                        .ToListAsync();
+
+                    // NEW QUERY: Get Followed Categories
+                    FollowedCategories = await context.CategoryFollows
+                        .Where(cf => cf.UserId == userId)
+                        .Include(cf => cf.Category)
+                        .Select(cf => cf.Category!)
                         .ToListAsync();
                 }
             }

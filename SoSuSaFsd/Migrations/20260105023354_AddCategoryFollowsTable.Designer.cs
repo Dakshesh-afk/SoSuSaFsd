@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SoSuSaFsd.Data;
 
@@ -11,9 +12,11 @@ using SoSuSaFsd.Data;
 namespace SoSuSaFsd.Migrations
 {
     [DbContext(typeof(SoSuSaFsdContext))]
-    partial class SoSuSaFsdContextModelSnapshot : ModelSnapshot
+    [Migration("20260105023354_AddCategoryFollowsTable")]
+    partial class AddCategoryFollowsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -294,13 +297,9 @@ namespace SoSuSaFsd.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Posts");
                 });
@@ -461,25 +460,6 @@ namespace SoSuSaFsd.Migrations
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.CategoryFollows", b =>
-                {
-                    b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SoSuSaFsd.Domain.Users", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
                 {
                     b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
                         .WithMany()
