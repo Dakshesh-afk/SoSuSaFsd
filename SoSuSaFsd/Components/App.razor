@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="SoSuSaFsd.styles.css" />
 
-
     <HeadOutlet @rendermode="InteractiveServer" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -21,6 +20,108 @@
     <Routes @rendermode="InteractiveServer" />
 
     <script src="_framework/blazor.web.js"></script>
-</body>
 
+    <script>
+        // --- CANVAS CROPPER SCRIPT ---
+        window.generateCroppedImage = async (imgSrc, x, y, scale, cropSize) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = cropSize;
+                    canvas.height = cropSize;
+                    const ctx = canvas.getContext('2d');
+
+                    // Fill background
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fillRect(0, 0, cropSize, cropSize);
+
+                    // Draw image
+                    const sWidth = img.width * scale;
+                    const sHeight = img.height * scale;
+                    const drawX = (cropSize / 2) - (sWidth / 2) + x;
+                    const drawY = (cropSize / 2) - (sHeight / 2) + y;
+
+                    ctx.drawImage(img, drawX, drawY, sWidth, sHeight);
+                    resolve(canvas.toDataURL('image/jpeg', 0.9));
+                };
+                img.src = imgSrc;
+            });
+        };
+
+        // --- UI HELPERS ---
+        function toggleAuthMode() {
+            const loginView = document.getElementById('login-view');
+            const regView = document.getElementById('register-view');
+            if (loginView.classList.contains('hidden')) {
+                loginView.classList.remove('hidden');
+                regView.classList.add('hidden');
+            } else {
+                loginView.classList.add('hidden');
+                regView.classList.remove('hidden');
+            }
+        }
+
+        function showLoginOverlay() {
+            const overlay = document.getElementById('auth-overlay');
+            if(overlay) overlay.style.display = 'flex';
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('register-view').classList.add('hidden');
+        }
+
+        function showSection(sectionName) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.main-nav a').forEach(el => el.classList.remove('active-link'));
+
+            const navTarget = document.getElementById('nav-' + sectionName);
+            if (navTarget) navTarget.classList.add('active-link');
+            else if (sectionName === 'following') {
+                const profileNav = document.getElementById('nav-profile');
+                if(profileNav) profileNav.classList.add('active-link');
+            }
+
+            const sidebarTargetName = (sectionName === 'following') ? 'profile' : sectionName;
+            const sidebarTarget = document.getElementById('sidebar-' + sidebarTargetName);
+            if (sidebarTarget) sidebarTarget.classList.add('active');
+
+            const feedTarget = document.getElementById('feed-' + sectionName);
+            if (feedTarget) feedTarget.classList.add('active');
+
+            // Adjust search bar and right sidebar visibility
+            const headerSearch = document.getElementById('header-search-input');
+            const rightSidebar = document.getElementById('right-sidebar');
+
+            if (sectionName === 'profile' || sectionName === 'following') {
+                if(headerSearch) headerSearch.placeholder = "Search for users...";
+                if(rightSidebar) rightSidebar.style.display = 'none';
+            } else if (sectionName === 'settings') {
+                if(headerSearch) headerSearch.placeholder = "Search posts...";
+                if(rightSidebar) rightSidebar.style.display = 'none';
+                showSettingsForm('profile');
+            } else {
+                if(headerSearch) headerSearch.placeholder = "Search posts...";
+                if(rightSidebar) rightSidebar.style.display = 'flex';
+            }
+        }
+
+        function showSettingsForm(formName) {
+            document.querySelectorAll('.settings-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.category-list a').forEach(el => el.classList.remove('active-setting'));
+            const target = document.getElementById('settings-form-' + formName);
+            if(target) target.style.display = 'block';
+            const link = document.getElementById('set-link-' + formName);
+            if(link) link.classList.add('active-setting');
+        }
+
+        function openReportModal() {
+            const modal = document.getElementById('report-modal');
+            if(modal) modal.style.display = 'flex';
+        }
+
+        function closeReportModal() {
+            const modal = document.getElementById('report-modal');
+            if(modal) modal.style.display = 'none';
+        }
+    </script>
+</body>
 </html>

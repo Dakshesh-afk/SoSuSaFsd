@@ -5,10 +5,7 @@ namespace SoSuSaFsd.Domain
     public class Posts : BaseDomainModel
     {
         public string? Content { get; set; }
-
-        // NEW: Property to store the image file path/URL
-        public string? ImageUrl { get; set; }
-        public string? VideoUrl { get; set; }
+        public List<PostMedia> Media { get; set; } = new();
 
         public string? PostStatus { get; set; }
 

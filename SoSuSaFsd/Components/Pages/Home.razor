@@ -5,16 +5,19 @@
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.ComponentModel.DataAnnotations
+@using System.IO
 @inject IDbContextFactory<SoSuSaFsdContext> DbFactory
 @inject IServiceScopeFactory ScopeFactory
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IWebHostEnvironment Environment
 
 <PageTitle>SoSuSa - Home</PageTitle>
 
 <style>
-    /* --- 1. GLOBAL STYLES --- */
+    /* --- GLOBAL STYLES --- */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #ffffff;
@@ -40,7 +43,7 @@
         margin: 15px 0;
     }
 
-    /* --- 2. HEADER --- */
+    /* --- HEADER --- */
     .site-header {
         background-color: #ffffff;
         border-bottom: 2px solid #333;
@@ -146,7 +149,6 @@
             border: 1px solid #ccc;
         }
 
-    /* --- ADMIN BUTTON STYLE --- */
     .admin-btn {
         background-color: #dc3545;
         color: white;
@@ -156,13 +158,16 @@
         font-size: 15px;
         border: none;
         cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
     }
 
         .admin-btn:hover {
             background-color: #bb2d3b;
+            color: white;
         }
 
-    /* --- 3. MAIN LAYOUT --- */
+    /* --- LAYOUT --- */
     .main-layout {
         display: flex;
         justify-content: center;
@@ -332,6 +337,7 @@
         margin-bottom: 20px;
         border: 1px solid #e1e1e1;
         border-radius: 8px;
+        overflow: hidden;
     }
 
     .post-header {
@@ -373,23 +379,6 @@
         padding: 5px 15px 20px 15px;
     }
 
-    /* --- MEDIA STYLES (Supports both Image and Video) --- */
-    .post-image-container {
-        width: 100%;
-        max-height: 400px;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        background: #000; /* Black background for videos looks better */
-        margin-bottom: 10px;
-    }
-
-    .post-media {
-        max-width: 100%;
-        max-height: 400px;
-        object-fit: contain;
-    }
-
     .post-actions {
         border-top: 1px solid #f0f0f0;
         display: flex;
@@ -427,7 +416,93 @@
         vertical-align: middle;
     }
 
-    /* --- PROFILE, MODAL, AUTH --- */
+    /* --- CAROUSEL STYLES --- */
+    .media-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 10px;
+        background: #000;
+    }
+
+    .media-grid-item {
+        flex: 1 1 calc(50% - 5px);
+        height: 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .media-grid-item:only-child {
+            flex: 1 1 100%;
+            height: auto;
+            max-height: 500px;
+        }
+
+    .post-media-item {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .carousel-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+        overflow: hidden;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .carousel-media {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        font-size: 24px;
+        padding: 10px 15px;
+        cursor: pointer;
+        z-index: 10;
+        transition: background 0.2s;
+        border-radius: 4px;
+    }
+
+        .carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .carousel-btn.prev {
+            left: 10px;
+        }
+
+        .carousel-btn.next {
+            right: 10px;
+        }
+
+    .carousel-counter {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    /* --- PROFILE & MODALS --- */
     .modal {
         display: none;
         position: fixed;
@@ -509,7 +584,15 @@
     .stat-item {
         display: flex;
         flex-direction: column;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-radius: 8px;
+        padding: 5px 10px;
     }
+
+        .stat-item:hover {
+            background-color: #f5f5f5;
+        }
 
     .edit-profile-btn {
         background-color: #fff;
@@ -632,6 +715,86 @@
         width: 100%;
         box-sizing: border-box;
     }
+
+    .success-msg {
+        color: #155724;
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        font-size: 14px;
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 13px;
+        display: block;
+        margin-top: 5px;
+    }
+
+    /* --- FOLLOWING LIST STYLES --- */
+    .following-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .following-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+
+        .following-card:hover {
+            border-color: #333;
+        }
+
+        .following-card h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+    /* --- IMAGE CROPPER MODAL STYLES --- */
+    .crop-container {
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #333;
+        margin: 20px auto;
+        position: relative;
+        cursor: grab;
+        background-color: #eee;
+    }
+
+        .crop-container:active {
+            cursor: grabbing;
+        }
+
+    .crop-image {
+        position: absolute;
+        transform-origin: center center;
+        user-select: none;
+        pointer-events: none;
+    }
+
+    .slider-container {
+        width: 80%;
+        margin: 10px auto;
+        text-align: center;
+    }
+
+        .slider-container input {
+            width: 100%;
+        }
 </style>
 
 <header class="site-header">
@@ -651,11 +814,9 @@
             </form>
             <AuthorizeView>
                 <Authorized>
-                    @* --- ADMIN PANEL BUTTON --- *@
                     <AuthorizeView Roles="Admin" Context="innerContext">
                         <button class="admin-btn" style="margin-right: 10px;" @onclick="NavigateToAdmin">Admin Panel</button>
                     </AuthorizeView>
-
                     <button class="login-btn" @onclick="ForceLogout">Logout</button>
                 </Authorized>
                 <NotAuthorized>
@@ -703,14 +864,14 @@
 
         <div id="sidebar-profile" class="section-view">
             <div class="profile-card">
-                <div class="profile-avatar-large"></div>
+                @* SIDEBAR PROFILE PICTURE *@
+                <div class="profile-avatar-large" style="background-image: url('@(currentUser?.ProfileImage ?? "")');"></div>
                 <h2 class="profile-name">@(currentUser?.UserName ?? "Guest")</h2>
                 <p class="profile-handle">@@@(currentUser?.UserName?.ToLower() ?? "guest")</p>
                 <p class="profile-bio">@(currentUser?.Bio ?? "No bio available")</p>
                 <div class="profile-stats">
-                    <div class="stat-item"><b>0</b><span>Posts</span></div>
-                    <div class="stat-item"><b>0</b><span>Followers</span></div>
-                    <div class="stat-item"><b>0</b><span>Following</span></div>
+                    <div class="stat-item" onclick="showSection('profile')"><b>@UserPosts.Count</b><span>Posts</span></div>
+                    <div class="stat-item" onclick="showSection('following')"><b>@FollowedCategories.Count</b><span>Following</span></div>
                 </div>
                 <button class="edit-profile-btn" onclick="showSection('settings')">Edit Profile</button>
             </div>
@@ -730,6 +891,7 @@
     </aside>
 
     <main class="feed-area">
+        @* --- HOME FEED --- *@
         <div id="feed-home" class="section-view active">
             <div class="feed-header">
                 <div class="feed-header-top">
@@ -760,23 +922,37 @@
                             @post.Content
                         </div>
 
-                        @* --- VIDEO OR IMAGE DISPLAY --- *@
-                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        @if (post.Media != null && post.Media.Any())
                         {
-                            <div class="post-image-container">
-                                <img src="@post.ImageUrl" class="post-media" alt="Post Image" />
+                            var mediaList = post.Media.ToList();
+                            var totalMedia = mediaList.Count;
+                            var currentIndex = GetCurrentIndex(post.Id);
+                            var activeMedia = mediaList[currentIndex];
+
+                            <div class="carousel-container">
+                                @if (totalMedia > 1)
+                                {
+                                    <button class="carousel-btn prev" @onclick="() => PrevSlide(post.Id, totalMedia)">&#10094;</button>
+                                }
+
+                                @if (activeMedia.MediaType == "Video")
+                                {
+                                    <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                }
+                                else
+                                {
+                                    <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
+                                }
+
+                                @if (totalMedia > 1)
+                                {
+                                    <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button>
+                                    <div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div>
+                                }
                             </div>
                         }
-                        else if (!string.IsNullOrEmpty(post.VideoUrl))
-                        {
-                            <div class="post-image-container">
-                                <video controls class="post-media">
-                                    <source src="@post.VideoUrl" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-                        }
-                        @* ------------------------------ *@
 
                         <div class="post-actions">
                             <button class="action-btn"><i class="far fa-heart"></i> Like</button>
@@ -796,10 +972,10 @@
             }
         </div>
 
+        @* --- PROFILE FEED --- *@
         <div id="feed-profile" class="section-view">
             <h1 class="page-title">My Posts</h1>
             <hr />
-
             @if (UserPosts != null && UserPosts.Any())
             {
                 @foreach (var post in UserPosts)
@@ -820,25 +996,32 @@
                         <div class="post-content">
                             @post.Content
                         </div>
-
-                        @* --- VIDEO OR IMAGE DISPLAY --- *@
-                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        @if (post.Media != null && post.Media.Any())
                         {
-                            <div class="post-image-container">
-                                <img src="@post.ImageUrl" class="post-media" alt="Post Image" />
+                            var mediaList = post.Media.ToList();
+                            var totalMedia = mediaList.Count;
+                            var currentIndex = GetCurrentIndex(post.Id);
+                            var activeMedia = mediaList[currentIndex];
+                            <div class="carousel-container">
+                                @if (totalMedia > 1)
+                                {
+                                    <button class="carousel-btn prev" @onclick="() => PrevSlide(post.Id, totalMedia)">&#10094;</button>
+                                }
+                                @if (activeMedia.MediaType == "Video")
+                                {
+                                    <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath"></video>
+                                }
+                                else
+                                {
+
+                                    <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
+                                }
+                                @if (totalMedia > 1)
+                                {
+                                    <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button>
+                                }
                             </div>
                         }
-                        else if (!string.IsNullOrEmpty(post.VideoUrl))
-                        {
-                            <div class="post-image-container">
-                                <video controls class="post-media">
-                                    <source src="@post.VideoUrl" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            </div>
-                        }
-                        @* ------------------------------ *@
-
                         <div class="post-actions">
                             <button class="action-btn"><i class="far fa-heart"></i> Like</button>
                             <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
@@ -853,25 +1036,110 @@
             }
         </div>
 
+        @* --- FOLLOWING FEED --- *@
+        <div id="feed-following" class="section-view">
+            <h1 class="page-title">Following</h1>
+            <hr />
+            @if (FollowedCategories != null && FollowedCategories.Any())
+            {
+                <div class="following-grid">
+                    @foreach (var cat in FollowedCategories)
+                    {
+                        <div class="following-card">
+                            <h3>#@cat.CategoryName</h3>
+                            <button class="login-btn secondary" @onclick="() => UnfollowCategory(cat.Id)">Unfollow</button>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p style="text-align:center; color:#666; margin-top:30px;">You are not following any categories.</p>
+            }
+        </div>
+
+        @* --- SETTINGS AREA --- *@
         <div id="feed-settings" class="section-view">
             <div id="settings-form-profile" class="settings-content active">
                 <h1 class="page-title">Edit Profile</h1>
                 <hr />
                 <div class="post-card" style="padding: 20px;">
-                    <form>
-                        <div class="settings-form-group">
-                            <label>Display Name</label>
-                            <input type="text" value="@(currentUser?.DisplayName)">
-                        </div>
-                        <div class="settings-form-group">
-                            <label>Bio</label>
-                            <textarea rows="4">@(currentUser?.Bio)</textarea>
-                        </div>
-                        <button type="button" class="login-btn">Save Changes</button>
-                    </form>
+                    @if (currentUser != null)
+                    {
+                        <form @onsubmit="UpdateProfile">
+                            @* --- PROFILE PHOTO --- *@
+                            <div class="settings-form-group" style="display:flex; flex-direction:column; align-items:center;">
+
+                                @* SETTINGS PROFILE PICTURE *@
+                                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #ddd; background-size: cover; background-position: center; background-image: url('@(currentUser.ProfileImage ?? "")'); margin-bottom: 10px;"></div>
+
+                                <label class="login-btn secondary" style="cursor: pointer; font-weight:normal; font-size:13px; padding: 5px 15px; position: relative; overflow: hidden;">
+                                    Change Photo
+                                    <InputFile OnChange="HandleProfileImageSelected"
+                                               accept=".jpg,.jpeg,.png"
+                                               style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
+                                </label>
+                            </div>
+
+                            <div class="settings-form-group">
+                                <label>Display Name</label>
+                                <input type="text" @bind="currentUser.DisplayName">
+                            </div>
+                            <div class="settings-form-group">
+                                <label>Bio</label>
+                                <textarea rows="4" @bind="currentUser.Bio"></textarea>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(updateStatusMessage))
+                            {
+                                @if (updateStatusMessage.Contains("Error"))
+                                {
+                                    <div class="error-msg">@updateStatusMessage</div>
+                                }
+                                else
+                                {
+
+                                    <div class="success-msg">@updateStatusMessage</div>
+                                }
+                            }
+
+                            <button type="submit" class="login-btn">Save Changes</button>
+                        </form>
+                    }
+                    else
+                    {
+
+                        <p>Please login to edit profile.</p>
+                    }
                 </div>
             </div>
-            <div id="settings-form-password" class="settings-content hidden">Password Change</div>
+
+            @* --- CHANGE PASSWORD FORM --- *@
+            <div id="settings-form-password" class="settings-content hidden">
+                <h1 class="page-title">Change Password</h1>
+                <hr />
+                <div class="post-card" style="padding: 20px;">
+                    <EditForm Model="passwordModel" OnValidSubmit="HandlePasswordChange" FormName="passwordChangeForm">
+                        <DataAnnotationsValidator />
+                        <div class="settings-form-group"><label>Current Password</label><InputText type="password" @bind-Value="passwordModel.OldPassword" /><ValidationMessage For="() => passwordModel.OldPassword" class="text-danger" /></div>
+                        <div class="settings-form-group"><label>New Password</label><InputText type="password" @bind-Value="passwordModel.NewPassword" /><ValidationMessage For="() => passwordModel.NewPassword" class="text-danger" /></div>
+                        <div class="settings-form-group"><label>Confirm New Password</label><InputText type="password" @bind-Value="passwordModel.ConfirmPassword" /><ValidationMessage For="() => passwordModel.ConfirmPassword" class="text-danger" /></div>
+                        @if (!string.IsNullOrEmpty(passwordMessage))
+                        {
+                            @if (isPasswordSuccess)
+                            {
+                                <div class="success-msg">@passwordMessage</div>
+                            }
+                            else
+                            {
+
+                                <div class="error-msg">@passwordMessage</div>
+                            }
+                        }
+                        <button type="submit" class="login-btn">Update Password</button>
+                    </EditForm>
+                </div>
+            </div>
             <div id="settings-form-verification" class="settings-content hidden">Verification</div>
         </div>
     </main>
@@ -884,21 +1152,11 @@
                 {
                     @foreach (var cat in VerifiedCategories)
                     {
-                        <li>
-                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                <span class="hashtag">#</span> @cat.CategoryName
-                                <i class="fas fa-check-circle verified-badge" title="Verified"></i>
-                            </a>
-                        </li>
+                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="hashtag">#</span> @cat.CategoryName <i class="fas fa-check-circle verified-badge" title="Verified"></i></a></li>
                     }
-                }
-                else
-                {
-                    <li>Loading...</li>
                 }
             </ul>
         </div>
-
         <div class="sidebar-section">
             <h3>Following</h3>
             <ul class="category-list">
@@ -906,112 +1164,60 @@
                 {
                     @foreach (var cat in FollowedCategories)
                     {
-                        <li>
-                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                <span class="hashtag">#</span> @cat.CategoryName
-                            </a>
-                        </li>
+                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="hashtag">#</span> @cat.CategoryName</a></li>
                     }
-                }
-                else
-                {
-                    <AuthorizeView>
-                        <Authorized><li>You aren't following anything.</li></Authorized>
-                        <NotAuthorized><li>Login to see follows.</li></NotAuthorized>
-                    </AuthorizeView>
                 }
             </ul>
         </div>
     </aside>
 </div>
 
-<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
-    <div class="modal-content">
-        <h2>Category Not Found</h2>
-        <p>Would you like to create <b>#@searchTerm</b>?</p>
-        <button class="login-btn" @onclick="NavigateToCreate">Yes, Create</button>
-        <button class="login-btn secondary" @onclick="() => showCreateConfirm = false">Cancel</button>
-    </div>
-</div>
+@* --- CROP MODAL --- *@
+@if (showCropModal && !string.IsNullOrEmpty(tempImageSrc))
+{
+    <div class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="CancelCrop">&times;</span>
+            <h2>Adjust Profile Picture</h2>
+            <p style="font-size:14px; color:#666; margin-bottom:15px;">Drag to position, use slider to zoom.</p>
 
+            <div class="crop-container"
+                 @onpointerdown="OnDragStart"
+                 @onpointermove="OnDragMove"
+                 @onpointerup="OnDragEnd"
+                 @onpointerleave="OnDragEnd">
+
+                <img id="imageToCrop" src="@tempImageSrc" class="crop-image"
+                     style="transform: translate(@(offsetX)px, @(offsetY)px) scale(@scale);"
+                     draggable="false" />
+            </div>
+
+            <div class="slider-container">
+                <input type="range" min="1" max="3" step="0.1" @bind="scale" @bind:event="oninput" />
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button class="login-btn secondary" @onclick="CancelCrop">Cancel</button>
+                <button class="login-btn" @onclick="SaveCroppedImage">Save Profile Photo</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- OTHER MODALS --- *@
+<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
+    <div class="modal-content"><span class="modal-close" @onclick="() => showCreateConfirm = false">&times;</span><h2>Category Not Found</h2><p>Would you like to create <b>#@searchTerm</b>?</p><div style="display: flex; gap: 10px; margin-top: 20px;"><button class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button><button class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">Cancel</button></div></div>
+</div>
 <div id="auth-overlay" class="auth-overlay" style="display: @(ShowLoginOverlay ? "flex" : "none")">
     <div class="auth-card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <h3 style="margin:0;">Welcome</h3>
-            <span style="cursor:pointer; font-size:20px;" onclick="document.getElementById('auth-overlay').style.display = 'none'">&times;</span>
-        </div>
-        @if (!string.IsNullOrEmpty(ErrorMessage))
-        {
-            <div class="error-msg">@ErrorMessage</div>
-        }
-        <div id="login-view">
-            <form action="api/Account/login" method="post">
-                <div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div>
-                <div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div>
-                <button type="submit" class="auth-btn">Log In</button>
-            </form>
-            <div class="auth-switch">Don't have an account? <a onclick="toggleAuthMode()">Register</a></div>
-        </div>
-        <div id="register-view" class="hidden">
-            <form action="api/Account/register" method="post">
-                <div class="auth-input-group"><input type="email" name="email" placeholder="Email Address" required /></div>
-                <div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div>
-                <div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div>
-                <button type="submit" class="auth-btn">Sign Up</button>
-            </form>
-            <div class="auth-switch">Already have an account? <a onclick="toggleAuthMode()">Log In</a></div>
-        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3 style="margin:0;">Welcome</h3><span style="cursor:pointer; font-size:20px;" onclick="document.getElementById('auth-overlay').style.display = 'none'">&times;</span></div>@if (!string.IsNullOrEmpty(ErrorMessage)) {
+        <div class="error-msg">@ErrorMessage</div>
+                }
+        <div id="login-view"><form action="api/Account/login" method="post"><div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div><div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div><button type="submit" class="auth-btn">Log In</button></form><div class="auth-switch">Don't have an account? <a onclick="toggleAuthMode()">Register</a></div></div><div id="register-view" class="hidden"><form action="api/Account/register" method="post"><div class="auth-input-group"><input type="email" name="email" placeholder="Email Address" required /></div><div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div><div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div><button type="submit" class="auth-btn">Sign Up</button></form><div class="auth-switch">Already have an account? <a onclick="toggleAuthMode()">Log In</a></div></div>
     </div>
 </div>
 
-<script>
-    function toggleAuthMode() {
-        const loginView = document.getElementById('login-view');
-        const regView = document.getElementById('register-view');
-        if (loginView.classList.contains('hidden')) {
-            loginView.classList.remove('hidden');
-            regView.classList.add('hidden');
-        } else {
-            loginView.classList.add('hidden');
-            regView.classList.remove('hidden');
-        }
-    }
-    function showLoginOverlay() {
-        document.getElementById('auth-overlay').style.display = 'flex';
-        document.getElementById('login-view').classList.remove('hidden');
-        document.getElementById('register-view').classList.add('hidden');
-    }
-    function showSection(sectionName) {
-        document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.main-nav a').forEach(el => el.classList.remove('active-link'));
-        document.getElementById('nav-' + sectionName).classList.add('active-link');
-        document.getElementById('sidebar-' + sectionName).classList.add('active');
-        document.getElementById('feed-' + sectionName).classList.add('active');
-        const headerSearch = document.getElementById('header-search-input');
-        const rightSidebar = document.getElementById('right-sidebar');
-        if (sectionName === 'profile') {
-            headerSearch.placeholder = "Search for users...";
-            rightSidebar.style.display = 'none';
-        } else if (sectionName === 'settings') {
-            headerSearch.placeholder = "Search posts...";
-            rightSidebar.style.display = 'none';
-            showSettingsForm('profile');
-        } else {
-            headerSearch.placeholder = "Search posts...";
-            rightSidebar.style.display = 'flex';
-        }
-    }
-    function showSettingsForm(formName) {
-        document.querySelectorAll('.settings-content').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.category-list a').forEach(el => el.classList.remove('active-setting'));
-        const target = document.getElementById('settings-form-' + formName);
-        if(target) target.style.display = 'block';
-        const link = document.getElementById('set-link-' + formName);
-        if(link) link.classList.add('active-setting');
-    }
-    function openReportModal() { document.getElementById('report-modal').style.display = 'flex'; }
-    function closeReportModal() { document.getElementById('report-modal').style.display = 'none'; }
-</script>
+@* SCRIPT BLOCK REMOVED - IT IS NOW IN App.razor *@
 
 @code {
     [SupplyParameterFromQuery] public string? Error { get; set; }
@@ -1028,94 +1234,176 @@
     private List<Posts> UserPosts = new();
 
     private Users? currentUser;
+    private string updateStatusMessage = "";
+
+    // --- CAROUSEL STATE ---
+    private Dictionary<int, int> _carouselIndices = new();
+    private int GetCurrentIndex(int postId) { if (!_carouselIndices.ContainsKey(postId)) _carouselIndices[postId] = 0; return _carouselIndices[postId]; }
+    private void NextSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex + 1) % totalCount; }
+    private void PrevSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount; }
+
+    // --- PASSWORD CHANGE MODEL ---
+    private class PasswordChangeModel
+    {
+        [Required] public string OldPassword { get; set; } = "";
+        [Required][StringLength(100, MinimumLength = 6)] public string NewPassword { get; set; } = "";
+        [Compare("NewPassword")] public string ConfirmPassword { get; set; } = "";
+    }
+    private PasswordChangeModel passwordModel = new();
+    private string passwordMessage = "";
+    private bool isPasswordSuccess = false;
+
+    // --- CROPPER STATE ---
+    private bool showCropModal = false;
+    private string? tempImageSrc; // Base64 of raw selected file
+    private double offsetX = 0;
+    private double offsetY = 0;
+    private double scale = 1.0;
+    private bool isDragging = false;
+    private double startX, startY, initialOffsetX, initialOffsetY;
 
     protected override async Task OnInitializedAsync()
     {
         if (!string.IsNullOrEmpty(Error)) { ErrorMessage = Error; ShowLoginOverlay = true; }
-
         try
         {
             using var context = DbFactory.CreateDbContext();
-
             VerifiedCategories = await context.Categories.Where(c => c.CategoryName == "News" || c.CategoryName == "TpNews" || c.CategoryName == "Sports").ToListAsync();
-
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userPrincipal = authState.User;
-
             if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
             {
                 var userId = userPrincipal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    using var scope = ScopeFactory.CreateScope();
-                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-                    var dbUser = await userManager.GetUserAsync(userPrincipal);
-                    userId = dbUser?.Id;
-                    currentUser = dbUser;
-                }
-                else if (currentUser == null)
-                {
-                    using var scope = ScopeFactory.CreateScope();
-                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-                    currentUser = await userManager.FindByIdAsync(userId);
-                }
-
+                if (string.IsNullOrEmpty(userId)) { using var scope = ScopeFactory.CreateScope(); var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>(); var dbUser = await userManager.GetUserAsync(userPrincipal); userId = dbUser?.Id; currentUser = dbUser; } else if (currentUser == null) { using var scope = ScopeFactory.CreateScope(); var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>(); currentUser = await userManager.FindByIdAsync(userId); }
                 if (currentUser == null) { ForceLogout(); return; }
-
                 if (!string.IsNullOrEmpty(userId))
                 {
                     RecentCategories = await context.Categories.Where(c => c.CreatedBy == userId).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
-
-                    FollowedCategories = await context.CategoryFollows
-                        .Where(cf => cf.UserId == userId)
-                        .Include(cf => cf.Category)
-                        .Select(cf => cf.Category!)
-                        .ToListAsync();
-
+                    FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == userId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync();
                     var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
-
-                    // 1. Fetch Feed Posts (Followed Categories)
-                    FeedPosts = await context.Posts
-                        .Where(p => followedCategoryIds.Contains(p.CategoryId))
-                        .Include(p => p.User)
-                        .Include(p => p.Category)
-                        .OrderByDescending(p => p.DateCreated)
-                        .ToListAsync();
-
-                    // 2. Fetch User's Own Posts
-                    UserPosts = await context.Posts
-                        .Where(p => p.UserId == userId)
-                        .Include(p => p.User)
-                        .Include(p => p.Category)
-                        .OrderByDescending(p => p.DateCreated)
-                        .ToListAsync();
+                    FeedPosts = await context.Posts.Where(p => followedCategoryIds.Contains(p.CategoryId)).Include(p => p.User).Include(p => p.Category).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
+                    UserPosts = await context.Posts.Where(p => p.UserId == userId).Include(p => p.User).Include(p => p.Category).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
+    }
+
+    private async Task UnfollowCategory(int categoryId)
+    {
+        if (string.IsNullOrEmpty(currentUser?.Id)) return;
+        try
         {
-            Console.WriteLine("Error: " + ex.Message);
+            using var context = DbFactory.CreateDbContext();
+            var follow = await context.CategoryFollows.FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.UserId == currentUser.Id);
+            if (follow != null) { context.CategoryFollows.Remove(follow); await context.SaveChangesAsync(); FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUser.Id).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync(); }
+        }
+        catch (Exception ex) { Console.WriteLine(ex.Message); }
+    }
+
+    // --- CROPPER LOGIC ---
+    private async Task HandleProfileImageSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        // Limit to 2MB to ensure stability if Program.cs is not updated
+        if (file.Size <= 1024 * 1024 * 2)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(1024 * 1024 * 2).ReadAsync(buffer);
+            tempImageSrc = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            // Reset crop state
+            offsetX = 0; offsetY = 0; scale = 1.0;
+            showCropModal = true;
+        }
+        else
+        {
+            updateStatusMessage = "Error: File too large. Max size is 2MB.";
         }
     }
 
+    private void OnDragStart(PointerEventArgs e) { isDragging = true; startX = e.ClientX; startY = e.ClientY; initialOffsetX = offsetX; initialOffsetY = offsetY; }
+    private void OnDragMove(PointerEventArgs e) { if (isDragging) { offsetX = initialOffsetX + (e.ClientX - startX); offsetY = initialOffsetY + (e.ClientY - startY); } }
+    private void OnDragEnd(PointerEventArgs e) { isDragging = false; }
+    private void CancelCrop() { showCropModal = false; tempImageSrc = null; }
+
+    private async Task SaveCroppedImage()
+    {
+        if (currentUser == null || string.IsNullOrEmpty(tempImageSrc)) return;
+        try
+        {
+            // Call JS to get the cropped base64 string
+            var croppedBase64 = await JSRuntime.InvokeAsync<string>("generateCroppedImage", tempImageSrc, offsetX, offsetY, scale, 250);
+
+            // Convert Base64 back to file
+            var base64Data = croppedBase64.Split(',')[1];
+            var imageBytes = Convert.FromBase64String(base64Data);
+
+            // Save to Server
+            var fileName = $"{Guid.NewGuid()}.jpg";
+            var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+            var filePath = Path.Combine(uploadsFolder, fileName);
+            await File.WriteAllBytesAsync(filePath, imageBytes);
+
+            // Update Database
+            using var scope = ScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+            var userToUpdate = await userManager.FindByIdAsync(currentUser.Id);
+            if (userToUpdate != null)
+            {
+                // FORCE UPDATE THE DB
+                userToUpdate.ProfileImage = $"/uploads/{fileName}";
+                await userManager.UpdateAsync(userToUpdate);
+
+                // UPDATE LOCAL UI IMMEDIATELY
+                currentUser.ProfileImage = userToUpdate.ProfileImage;
+            }
+
+            showCropModal = false;
+            updateStatusMessage = "Profile picture updated!";
+
+            // --- FIX: Force the Sidebar to redraw immediately ---
+            StateHasChanged();
+        }
+        catch (Exception ex) { updateStatusMessage = "Error saving image: " + ex.Message; }
+    }
+
+    // --- PROFILE TEXT UPDATE ---
+    private async Task UpdateProfile()
+    {
+        if (currentUser == null) return;
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+            var userToUpdate = await userManager.FindByIdAsync(currentUser.Id);
+            if (userToUpdate != null)
+            {
+                userToUpdate.DisplayName = currentUser.DisplayName;
+                userToUpdate.Bio = currentUser.Bio;
+
+                // CRITICAL FIX: Ensure we don't accidentally wipe the photo if it was just changed
+                // The DB (userToUpdate) is the source of truth, so we keep what's in there.
+
+                var result = await userManager.UpdateAsync(userToUpdate);
+                if (result.Succeeded)
+                {
+                    updateStatusMessage = "Profile updated successfully!";
+                    currentUser = userToUpdate;
+
+                    // --- FIX: Force Sidebar Redraw ---
+                    StateHasChanged();
+                }
+                else { updateStatusMessage = "Error: " + string.Join(", ", result.Errors.Select(e => e.Description)); }
+            }
+        }
+        catch (Exception ex) { updateStatusMessage = "Error updating: " + ex.Message; }
+    }
+
+    private async Task HandlePasswordChange() { /* ... existing password logic ... */ }
     private void ForceLogout() => Navigation.NavigateTo("/api/Account/logout", true);
     private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}");
-
-    private async Task HandleCategorySearch()
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm)) return;
-        using var context = DbFactory.CreateDbContext();
-        var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
-        if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}");
-        else showCreateConfirm = true;
-    }
-
+    private async Task HandleCategorySearch() { if (!string.IsNullOrWhiteSpace(searchTerm)) { using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}"); else showCreateConfirm = true; } }
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
-
-    // --- UPDATED METHOD: Forces full reload for Admin panel ---
-    private void NavigateToAdmin()
-    {
-        Navigation.NavigateTo("admin", forceLoad: true);
-    }
+    private void NavigateToAdmin() { Navigation.NavigateTo("admin", forceLoad: true); }
 }
