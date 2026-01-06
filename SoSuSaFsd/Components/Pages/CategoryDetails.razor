@@ -335,6 +335,10 @@
         padding: 12px 0;
         cursor: pointer;
         color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
 
         .action-btn:hover {
@@ -708,9 +712,35 @@
                         @* --------------------------- *@
 
                         <div class="post-actions">
-                            <button class="action-btn">Like</button>
-                            <button class="action-btn">Comment</button>
-                            <button class="action-btn">Share</button>
+                            @* --- LIKE BUTTON --- *@
+                            <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
+                                @{
+                                    var isLiked = post.Likes.Any(l => l.UserID == currentUserId);
+                                    var likeCount = post.Likes.Count;
+                                }
+
+                                @if (isLiked)
+                                {
+                                    <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-heart" style="margin-right: 5px;"></i>
+                                }
+
+                                @if (likeCount > 0)
+                                {
+                                    <span>@likeCount</span>
+                                }
+                                else
+                                {
+                                    <span>Like</span>
+                                }
+                            </button>
+                            @* ------------------ *@
+
+                            <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
+                            <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
                         </div>
                     </div>
                 }
@@ -966,6 +996,7 @@
                 .Where(p => p.CategoryId == Id)
                 .Include(p => p.User)
                 .Include(p => p.Media) // Load media
+                .Include(p => p.Likes) // --- UPDATED: Load likes for the posts ---
                 .OrderByDescending(p => p.DateCreated)
                 .ToListAsync();
 
@@ -977,6 +1008,64 @@
         }
         catch (Exception ex) { errorMessage = "Error loading: " + ex.Message; }
         finally { IsLoading = false; }
+    }
+
+    // --- TOGGLE LIKE FUNCTION ---
+    private async Task ToggleLike(int postId)
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            Navigation.NavigateTo("/Account/Login", true);
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // Find if the like already exists in DB
+            var existingLike = await context.PostLikes
+                .FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId);
+
+            // Get local reference to update UI instantly
+            var post = CategoryPosts.FirstOrDefault(p => p.Id == postId);
+
+            if (existingLike != null)
+            {
+                // UNLIKE: Remove from DB
+                context.PostLikes.Remove(existingLike);
+
+                // Update UI: Remove from local list
+                if (post != null)
+                {
+                    var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId);
+                    if (localLike != null) post.Likes.Remove(localLike);
+                }
+            }
+            else
+            {
+                // LIKE: Add to DB
+                var newLike = new PostLikes
+                {
+                    PostID = postId,
+                    UserID = currentUserId,
+                    LikedAt = DateTime.Now
+                };
+                context.PostLikes.Add(newLike);
+
+                // Update UI: Add to local list
+                if (post != null)
+                {
+                    post.Likes.Add(newLike);
+                }
+            }
+
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling like: {ex.Message}");
+        }
     }
 
     // --- SAVE FILE IMMEDIATELY ---
@@ -1147,7 +1236,13 @@
             await context.SaveChangesAsync();
 
             ClosePostModal();
-            CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
+            CategoryPosts = await context.Posts
+                .Where(p => p.CategoryId == Id)
+                .Include(p => p.User)
+                .Include(p => p.Media)
+                .Include(p => p.Likes) // Ensure likes are included when refreshing list
+                .OrderByDescending(p => p.DateCreated)
+                .ToListAsync();
         }
         catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; }
     }

@@ -409,12 +409,11 @@
         color: #d9534f;
     }
 
-    /* --- UPDATED: VERIFIED BADGE ALIGNMENT FIX --- */
+    /* --- VERIFIED BADGE ALIGNMENT FIX --- */
     .verified-badge {
         color: #1da1f2;
         font-size: 14px;
         margin-left: 5px;
-        /* FIX: Use position relative to force it down, overriding flex alignment */
         position: relative;
         top: 3px;
     }
@@ -815,7 +814,6 @@
                             <li>
                                 <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                     <span class="hashtag">#</span> @cat.CategoryName
-                                    @* --- UPDATED: Add Verified Tick --- *@
                                     @if (cat.IsVerified)
                                     {
                                         <i class="fas fa-check-circle verified-badge" title="Verified"></i>
@@ -895,7 +893,6 @@
                                     <div class="post-category-tag">
                                         Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>
                                             #@post.Category?.CategoryName
-                                            @* --- UPDATED: Add Verified Tick --- *@
                                             @if (post.Category?.IsVerified == true)
                                             {
                                                 <i class="fas fa-check-circle verified-badge" style="font-size:12px;" title="Verified"></i>
@@ -942,7 +939,33 @@
                         }
 
                         <div class="post-actions">
-                            <button class="action-btn"><i class="far fa-heart"></i> Like</button>
+                            @* --- LIKE BUTTON --- *@
+                            <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
+                                @{
+                                    var isLiked = post.Likes.Any(l => l.UserID == currentUser?.Id);
+                                    var likeCount = post.Likes.Count;
+                                }
+
+                                @if (isLiked)
+                                {
+                                    <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-heart" style="margin-right: 5px;"></i>
+                                }
+
+                                @if (likeCount > 0)
+                                {
+                                    <span>@likeCount</span>
+                                }
+                                else
+                                {
+                                    <span>Like</span>
+                                }
+                            </button>
+                            @* ------------------ *@
+
                             <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
                             <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
                             <button class="action-btn report-btn" onclick="openReportModal()"><i class="far fa-flag"></i> Report</button>
@@ -977,7 +1000,6 @@
                                     <div class="post-category-tag">
                                         Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(post.CategoryId))'>
                                             #@post.Category?.CategoryName
-                                            @* --- UPDATED: Add Verified Tick --- *@
                                             @if (post.Category?.IsVerified == true)
                                             {
                                                 <i class="fas fa-check-circle verified-badge" style="font-size:12px;" title="Verified"></i>
@@ -1007,7 +1029,6 @@
                                 }
                                 else
                                 {
-
                                     <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
                                 }
                                 @if (totalMedia > 1)
@@ -1017,7 +1038,32 @@
                             </div>
                         }
                         <div class="post-actions">
-                            <button class="action-btn"><i class="far fa-heart"></i> Like</button>
+                            @* --- LIKE BUTTON (Profile Feed) --- *@
+                            <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
+                                @{
+                                    var isLiked = post.Likes.Any(l => l.UserID == currentUser?.Id);
+                                    var likeCount = post.Likes.Count;
+                                }
+
+                                @if (isLiked)
+                                {
+                                    <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-heart" style="margin-right: 5px;"></i>
+                                }
+
+                                @if (likeCount > 0)
+                                {
+                                    <span>@likeCount</span>
+                                }
+                                else
+                                {
+                                    <span>Like</span>
+                                }
+                            </button>
+                            @* --------------------------------- *@
                             <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
                             <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
                         </div>
@@ -1042,7 +1088,6 @@
                         <div class="following-card">
                             <h3>
                                 #@cat.CategoryName
-                                @* --- UPDATED: Add Verified Tick --- *@
                                 @if (cat.IsVerified)
                                 {
                                     <i class="fas fa-check-circle verified-badge" title="Verified"></i>
@@ -1068,12 +1113,8 @@
                     @if (currentUser != null)
                     {
                         <form @onsubmit="UpdateProfile">
-                            @* --- PROFILE PHOTO --- *@
                             <div class="settings-form-group" style="display:flex; flex-direction:column; align-items:center;">
-
-                                @* SETTINGS PROFILE PICTURE *@
                                 <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #ddd; background-size: cover; background-position: center; background-image: url('@(currentUser.ProfileImage ?? "")'); margin-bottom: 10px;"></div>
-
                                 <label class="login-btn secondary" style="cursor: pointer; font-weight:normal; font-size:13px; padding: 5px 15px; position: relative; overflow: hidden;">
                                     Change Photo
                                     <InputFile OnChange="HandleProfileImageSelected"
@@ -1099,7 +1140,6 @@
                                 }
                                 else
                                 {
-
                                     <div class="success-msg">@updateStatusMessage</div>
                                 }
                             }
@@ -1109,13 +1149,11 @@
                     }
                     else
                     {
-
                         <p>Please login to edit profile.</p>
                     }
                 </div>
             </div>
 
-            @* --- CHANGE PASSWORD FORM --- *@
             <div id="settings-form-password" class="settings-content hidden">
                 <h1 class="page-title">Change Password</h1>
                 <hr />
@@ -1133,7 +1171,6 @@
                             }
                             else
                             {
-
                                 <div class="error-msg">@passwordMessage</div>
                             }
                         }
@@ -1141,6 +1178,7 @@
                     </EditForm>
                 </div>
             </div>
+
             <div id="settings-form-verification" class="settings-content hidden">
                 <h1 class="page-title">Request Category Access</h1>
                 <hr />
@@ -1199,9 +1237,9 @@
                                             </div>
                                         </div>
                                         <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase;
-                                                                                                                @(request.Status == "Approved" ? "background: #d4edda; color: #155724;" :
-                                                                                                                                                          request.Status == "Rejected" ? "background: #f8d7da; color: #721c24;" :
-                                                                                                                                                          "background: #fff3cd; color: #856404;")">
+                                                                                                @(request.Status == "Approved" ? "background: #d4edda; color: #155724;" :
+                                                                                                                                        request.Status == "Rejected" ? "background: #f8d7da; color: #721c24;" :
+                                                                                                                                        "background: #fff3cd; color: #856404;")">
                                             @request.Status
                                         </span>
                                     </div>
@@ -1243,7 +1281,6 @@
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                 <span class="hashtag">#</span> @cat.CategoryName
-                                @* --- UPDATED: Add Verified Tick --- *@
                                 @if (cat.IsVerified)
                                 {
                                     <i class="fas fa-check-circle verified-badge" title="Verified"></i>
@@ -1295,9 +1332,10 @@
 </div>
 <div id="auth-overlay" class="auth-overlay" style="display: @(ShowLoginOverlay ? "flex" : "none")">
     <div class="auth-card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3 style="margin:0;">Welcome</h3><span style="cursor:pointer; font-size:20px;" onclick="document.getElementById('auth-overlay').style.display = 'none'">&times;</span></div>@if (!string.IsNullOrEmpty(ErrorMessage)) {
-        <div class="error-msg">@ErrorMessage</div>
-                }
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3 style="margin:0;">Welcome</h3><span style="cursor:pointer; font-size:20px;" onclick="document.getElementById('auth-overlay').style.display = 'none'">&times;</span></div>@if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="error-msg">@ErrorMessage</div>
+        }
         <div id="login-view"><form action="api/Account/login" method="post"><div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div><div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div><button type="submit" class="auth-btn">Log In</button></form><div class="auth-switch">Don't have an account? <a onclick="toggleAuthMode()">Register</a></div></div><div id="register-view" class="hidden"><form action="api/Account/register" method="post"><div class="auth-input-group"><input type="email" name="email" placeholder="Email Address" required /></div><div class="auth-input-group"><input type="text" name="username" placeholder="Username" required /></div><div class="auth-input-group"><input type="password" name="password" placeholder="Password" required /></div><button type="submit" class="auth-btn">Sign Up</button></form><div class="auth-switch">Already have an account? <a onclick="toggleAuthMode()">Log In</a></div></div>
     </div>
 </div>
@@ -1360,13 +1398,11 @@
         {
             using var context = DbFactory.CreateDbContext();
 
-            // --- UPDATED LOGIC HERE: Fetch top 5 most recently created Verified Categories ---
             VerifiedCategories = await context.Categories
                 .Where(c => c.IsVerified == true)
                 .OrderByDescending(c => c.DateCreated)
                 .Take(5)
                 .ToListAsync();
-            // --------------------------------------------------------------------------------
 
             VerifiedCategoriesForRequest = await context.Categories.Where(c => c.IsVerified == true).OrderBy(c => c.CategoryName).ToListAsync();
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -1381,13 +1417,105 @@
                     RecentCategories = await context.Categories.Where(c => c.CreatedBy == userId).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
                     FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == userId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync();
                     var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
-                    FeedPosts = await context.Posts.Where(p => followedCategoryIds.Contains(p.CategoryId)).Include(p => p.User).Include(p => p.Category).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
-                    UserPosts = await context.Posts.Where(p => p.UserId == userId).Include(p => p.User).Include(p => p.Category).Include(p => p.Media).OrderByDescending(p => p.DateCreated).ToListAsync();
+
+                    // --- FETCH WITH LIKES ---
+                    FeedPosts = await context.Posts
+                        .Where(p => followedCategoryIds.Contains(p.CategoryId))
+                        .Include(p => p.User)
+                        .Include(p => p.Category)
+                        .Include(p => p.Media)
+                        .Include(p => p.Likes) // Includes likes in the feed
+                        .OrderByDescending(p => p.DateCreated)
+                        .ToListAsync();
+
+                    UserPosts = await context.Posts
+                        .Where(p => p.UserId == userId)
+                        .Include(p => p.User)
+                        .Include(p => p.Category)
+                        .Include(p => p.Media)
+                        .Include(p => p.Likes) // Includes likes in profile posts
+                        .OrderByDescending(p => p.DateCreated)
+                        .ToListAsync();
+
                     UserAccessRequests = await context.CategoryAccessRequests.Where(r => r.UserId == userId).Include(r => r.Category).OrderByDescending(r => r.DateCreated).ToListAsync();
                 }
             }
         }
         catch (Exception ex) { Console.WriteLine("Error: " + ex.Message); }
+    }
+
+    private async Task ToggleLike(int postId)
+    {
+        if (currentUser == null)
+        {
+            ShowLoginOverlay = true;
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // Find if the like already exists in DB
+            var existingLike = await context.PostLikes
+                .FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUser.Id);
+
+            // Get local references to update UI instantly
+            var feedPost = FeedPosts.FirstOrDefault(p => p.Id == postId);
+            var userPost = UserPosts.FirstOrDefault(p => p.Id == postId);
+
+            if (existingLike != null)
+            {
+                // --- UNLIKE LOGIC ---
+                context.PostLikes.Remove(existingLike);
+
+                // Update UI: Remove from local lists
+                // We must find the specific like object in the local list to remove it
+                if (feedPost != null)
+                {
+                    var l = feedPost.Likes.FirstOrDefault(x => x.UserID == currentUser.Id);
+                    if (l != null) feedPost.Likes.Remove(l);
+                }
+
+                // If userPost is a DIFFERENT object instance, we must remove from it too.
+                // If it is the SAME instance, the previous block already handled it.
+                if (userPost != null && !object.ReferenceEquals(userPost, feedPost))
+                {
+                    var l = userPost.Likes.FirstOrDefault(x => x.UserID == currentUser.Id);
+                    if (l != null) userPost.Likes.Remove(l);
+                }
+            }
+            else
+            {
+                // --- LIKE LOGIC ---
+                var newLike = new PostLikes
+                {
+                    PostID = postId,
+                    UserID = currentUser.Id,
+                    LikedAt = DateTime.Now
+                };
+                context.PostLikes.Add(newLike);
+
+                // Update UI: Add to local lists
+                if (feedPost != null)
+                {
+                    feedPost.Likes.Add(newLike);
+                }
+
+                // FIX: Only add to userPost if it is a DIFFERENT object instance.
+                // If they are the same instance (ReferenceEquals), adding to feedPost already added it to userPost.
+                if (userPost != null && !object.ReferenceEquals(userPost, feedPost))
+                {
+                    userPost.Likes.Add(newLike);
+                }
+            }
+
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling like: {ex.Message}");
+        }
     }
 
     private async Task UnfollowCategory(int categoryId)
@@ -1406,7 +1534,7 @@
     private async Task HandleProfileImageSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        // Limit to 2MB to ensure stability if Program.cs is not updated
+        // Limit to 2MB
         if (file.Size <= 1024 * 1024 * 2)
         {
             var buffer = new byte[file.Size];
@@ -1452,18 +1580,13 @@
             var userToUpdate = await userManager.FindByIdAsync(currentUser.Id);
             if (userToUpdate != null)
             {
-                // FORCE UPDATE THE DB
                 userToUpdate.ProfileImage = $"/uploads/{fileName}";
                 await userManager.UpdateAsync(userToUpdate);
-
-                // UPDATE LOCAL UI IMMEDIATELY
                 currentUser.ProfileImage = userToUpdate.ProfileImage;
             }
 
             showCropModal = false;
             updateStatusMessage = "Profile picture updated!";
-
-            // --- FIX: Force the Sidebar to redraw immediately ---
             StateHasChanged();
         }
         catch (Exception ex) { updateStatusMessage = "Error saving image: " + ex.Message; }
@@ -1483,16 +1606,11 @@
                 userToUpdate.DisplayName = currentUser.DisplayName;
                 userToUpdate.Bio = currentUser.Bio;
 
-                // CRITICAL FIX: Ensure we don't accidentally wipe the photo if it was just changed
-                // The DB (userToUpdate) is the source of truth, so we keep what's in there.
-
                 var result = await userManager.UpdateAsync(userToUpdate);
                 if (result.Succeeded)
                 {
                     updateStatusMessage = "Profile updated successfully!";
                     currentUser = userToUpdate;
-
-                    // --- FIX: Force Sidebar Redraw ---
                     StateHasChanged();
                 }
                 else { updateStatusMessage = "Error: " + string.Join(", ", result.Errors.Select(e => e.Description)); }
@@ -1501,7 +1619,7 @@
         catch (Exception ex) { updateStatusMessage = "Error updating: " + ex.Message; }
     }
 
-    private async Task HandlePasswordChange() { /* ... existing password logic ... */ }
+    private async Task HandlePasswordChange() { /* Implement password change logic */ }
     private void ForceLogout() => Navigation.NavigateTo("/api/Account/logout", true);
     private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}");
     private async Task HandleCategorySearch() { if (!string.IsNullOrWhiteSpace(searchTerm)) { using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}"); else showCreateConfirm = true; } }
@@ -1528,7 +1646,6 @@
         {
             using var context = DbFactory.CreateDbContext();
 
-            // Check if user already has a pending request for this category
             var existingRequest = await context.CategoryAccessRequests
                 .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Pending");
 
@@ -1539,7 +1656,6 @@
                 return;
             }
 
-            // Check if user already has approved access
             var approvedRequest = await context.CategoryAccessRequests
                 .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Approved");
 
@@ -1564,14 +1680,12 @@
             context.CategoryAccessRequests.Add(newRequest);
             await context.SaveChangesAsync();
 
-            accessRequestMessage = "Your access request has been submitted successfully. An administrator will review it.";
+            accessRequestMessage = "Your access request has been submitted successfully.";
             isAccessRequestSuccess = true;
 
-            // Reset form
             selectedCategoryId = 0;
             accessRequestReason = "";
 
-            // Reload user requests
             UserAccessRequests = await context.CategoryAccessRequests
                 .Where(r => r.UserId == currentUser.Id)
                 .Include(r => r.Category)

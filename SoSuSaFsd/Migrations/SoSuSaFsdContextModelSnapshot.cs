@@ -309,6 +309,31 @@ namespace SoSuSaFsd.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("SoSuSaFsd.Domain.PostLikes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LikedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PostID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostID");
+
+                    b.ToTable("PostLikes");
+                });
+
             modelBuilder.Entity("SoSuSaFsd.Domain.PostMedia", b =>
                 {
                     b.Property<int>("Id")
@@ -570,6 +595,17 @@ namespace SoSuSaFsd.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SoSuSaFsd.Domain.PostLikes", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("SoSuSaFsd.Domain.PostMedia", b =>
                 {
                     b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
@@ -602,6 +638,8 @@ namespace SoSuSaFsd.Migrations
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
                 {
+                    b.Navigation("Likes");
+
                     b.Navigation("Media");
                 });
 #pragma warning restore 612, 618

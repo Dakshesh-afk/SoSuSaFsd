@@ -16,5 +16,6 @@ namespace SoSuSaFsd.Domain
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public virtual Categories? Category { get; set; }
+        public virtual ICollection<PostLikes> Likes { get; set; } = new List<PostLikes>();
     }
 }
