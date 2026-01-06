@@ -240,7 +240,6 @@
         font-weight: 800;
         color: #222;
         margin: 0;
-        /* Ensure badge aligns nicely */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -274,11 +273,9 @@
             border: 1px solid #ccc;
         }
 
-    /* --- VERIFIED BADGE --- */
     .verified-badge {
         color: #1da1f2;
-        font-size: 24px; /* Larger for header */
-        /* Header badge position fix */
+        font-size: 24px;
         position: relative;
         top: 5px;
     }
@@ -287,7 +284,6 @@
         color: #1da1f2;
         font-size: 14px;
         margin-left: 5px;
-        /* Sidebar badge position fix */
         position: relative;
         top: 3px;
     }
@@ -346,11 +342,11 @@
             color: #000;
         }
 
-    /* --- NEW CAROUSEL STYLES --- */
+    /* --- CAROUSEL --- */
     .carousel-container {
         position: relative;
         width: 100%;
-        height: 400px; /* Fixed height for consistency */
+        height: 400px;
         overflow: hidden;
         background: #000;
         display: flex;
@@ -403,6 +399,90 @@
         font-size: 13px;
         font-weight: bold;
     }
+
+    /* --- COMMENT SECTION STYLES (NEW) --- */
+    .comment-section {
+        background-color: #f9f9f9;
+        border-top: 1px solid #eee;
+        padding: 15px;
+    }
+
+    .comment-list {
+        margin-bottom: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .comment-item {
+        display: flex;
+        margin-bottom: 12px;
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #ddd;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+
+    .comment-bubble {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 8px 12px;
+        border: 1px solid #eee;
+        flex-grow: 1;
+    }
+
+    .comment-user {
+        font-weight: bold;
+        font-size: 13px;
+        margin-right: 5px;
+        color: #000;
+    }
+
+    .comment-date {
+        font-size: 11px;
+        color: #888;
+    }
+
+    .comment-text {
+        font-size: 14px;
+        color: #333;
+        margin-top: 2px;
+        line-height: 1.4;
+    }
+
+    .comment-input-area {
+        display: flex;
+        gap: 10px;
+    }
+
+    .comment-input {
+        flex-grow: 1;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .comment-send-btn {
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 15px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+        .comment-send-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
 
     /* --- MODAL --- */
     .modal {
@@ -474,7 +554,6 @@
             border: 1px solid #ccc;
         }
 
-    /* --- UPLOAD PREVIEW STYLES --- */
     .preview-container {
         display: flex;
         flex-wrap: wrap;
@@ -520,7 +599,6 @@
             background: red;
         }
 
-    /* Loading Overlay */
     .upload-loading {
         font-size: 12px;
         color: #666;
@@ -551,7 +629,6 @@
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
                                 <span class="hashtag">#</span> @cat.CategoryName
-                                @* --- ADDED: Sidebar Verified Tick --- *@
                                 @if (cat.IsVerified)
                                 {
                                     <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
@@ -596,7 +673,6 @@
         else
         {
             <div class="category-header-card">
-                @* --- UPDATED: Header Verified Tick --- *@
                 <h1 class="page-title">
                     #@CurrentCategory.CategoryName
                     @if (CurrentCategory.IsVerified)
@@ -608,52 +684,36 @@
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 15px 0; border-radius: 5px;">
-                        <strong>Error:</strong> @errorMessage
-                    </div>
+                    <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 15px 0; border-radius: 5px;"><strong>Error:</strong> @errorMessage</div>
                 }
 
                 <div style="margin-top: 15px;">
-                    <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">
-                        @(isFollowing ? "Unfollow" : "Follow")
-                    </button>
-
-                    @* --- LOGIC FOR BUTTONS --- *@
+                    <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">@(isFollowing ? "Unfollow" : "Follow")</button>
                     @if (CanUserPost())
                     {
-                        @* Admin or Approved User *@
                         <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
                     }
                     else if (hasPendingRequest)
                     {
-                        @* Pending User *@
                         <button class="join-btn" disabled style="background-color: #888; cursor: default;">Request Pending</button>
                     }
                     else if (CurrentCategory?.IsVerified == true)
                     {
-                        @* New User in Verified Category *@
                         <button class="join-btn" @onclick="() => showRequestModal = true">Request Access</button>
                     }
                     else
                     {
-                        @* Standard User in Public Category *@
                         <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
                     }
                 </div>
 
                 @if (CurrentCategory?.IsVerified == true && !CanUserPost() && !hasPendingRequest)
                 {
-                    <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;">
-                        <strong>⚠️ Verified Category:</strong>
-                        This category is restricted. You must request access to post here.
-                    </div>
+                    <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;"><strong>⚠️ Verified Category:</strong> This category is restricted. You must request access to post here.</div>
                 }
                 else if (hasPendingRequest)
                 {
-                    <div style="color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;">
-                        <strong>ℹ️ Pending:</strong>
-                        Your request to post in this verified category is awaiting admin approval.
-                    </div>
+                    <div style="color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;"><strong>ℹ️ Pending:</strong> Your request to post in this verified category is awaiting admin approval.</div>
                 }
             </div>
 
@@ -668,16 +728,11 @@
                             <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
                             <div>
                                 <b>@(post.User?.UserName ?? "User")</b>
-                                <div style="font-size: 12px; color: #888;">
-                                    @post.DateCreated.ToString("MMM dd, yyyy • HH:mm")
-                                </div>
+                                <div style="font-size: 12px; color: #888;">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
                             </div>
                         </div>
-                        <div class="post-content">
-                            @post.Content
-                        </div>
+                        <div class="post-content">@post.Content</div>
 
-                        @* --- NEW CAROUSEL DISPLAY --- *@
                         @if (post.Media != null && post.Media.Any())
                         {
                             var mediaList = post.Media.ToList();
@@ -690,58 +745,89 @@
                                 {
                                     <button class="carousel-btn prev" @onclick="() => PrevSlide(post.Id, totalMedia)">&#10094;</button>
                                 }
-
                                 @if (activeMedia.MediaType == "Video")
                                 {
-                                    <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">
-                                        Your browser does not support the video tag.
-                                    </video>
+                                    <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">Your browser does not support the video tag.</video>
                                 }
                                 else
                                 {
+
                                     <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
                                 }
-
                                 @if (totalMedia > 1)
                                 {
                                     <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button>
                                     <div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div>
-                                }
+                 }
                             </div>
                         }
-                        @* --------------------------- *@
 
                         <div class="post-actions">
-                            @* --- LIKE BUTTON --- *@
                             <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
                                 @{
                                     var isLiked = post.Likes.Any(l => l.UserID == currentUserId);
                                     var likeCount = post.Likes.Count;
                                 }
-
                                 @if (isLiked)
                                 {
                                     <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
                                 }
                                 else
                                 {
+
                                     <i class="far fa-heart" style="margin-right: 5px;"></i>
                                 }
-
                                 @if (likeCount > 0)
                                 {
                                     <span>@likeCount</span>
                                 }
                                 else
                                 {
+
                                     <span>Like</span>
                                 }
                             </button>
-                            @* ------------------ *@
 
-                            <button class="action-btn"><i class="far fa-comment"></i> Comment</button>
-                            <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
+                            @* --- MODIFIED COMMENT BUTTON --- *@
+                            <button class="action-btn" @onclick="() => ToggleComments(post.Id)">
+                                <i class="far fa-comment"></i> Comment
+                            </button>
+                            @* ------------------------------- *@
+
+                            <button class="action-btn">Share</button>
                         </div>
+
+                        @* --- COMMENT SECTION --- *@
+                        @if (_showComments.ContainsKey(post.Id) && _showComments[post.Id])
+                        {
+                            <div class="comment-section">
+                                <div class="comment-list">
+                                    @if (_postComments.ContainsKey(post.Id) && _postComments[post.Id] != null)
+                                    {
+                                        foreach (var comment in _postComments[post.Id])
+                                        {
+                                            <div class="comment-item">
+                                                <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
+                                                <div class="comment-bubble">
+                                                    <div>
+                                                        <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
+                                                        <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                                    </div>
+                                                    <div class="comment-text">@comment.Content</div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                                <div class="comment-input-area">
+                                    <input type="text" class="comment-input" placeholder="Write a comment..."
+                                           value="@(_commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "")"
+                                           @onchange="@(e => UpdateCommentDraft(post.Id, e.Value?.ToString()))" />
+                                    <button class="comment-send-btn" @onclick="() => SubmitComment(post.Id)">Post</button>
+                                </div>
+                            </div>
+                        }
+                        @* ----------------------- *@
                     </div>
                 }
             }
@@ -762,19 +848,13 @@
                 {
                     @foreach (var cat in FollowedCategories)
                     {
-                        <li>
-                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                <span class="hashtag">#</span> @cat.CategoryName
-                                @* --- ADDED: Sidebar Verified Tick --- *@
-                                @if (cat.IsVerified)
-                                {
-                                    <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
-                                }
-                            </a>
-                        </li>
+                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="hashtag">#</span> @cat.CategoryName @if (cat.IsVerified) {
+                        <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
                     }
+    </a></li>
                 }
-                else
+                                }
+                                else
                 {
                     <AuthorizeView>
                         <Authorized><li>You aren't following anything yet.</li></Authorized>
@@ -793,71 +873,50 @@
         <div class="modal-content">
             <span class="modal-close" @onclick="ClosePostModal">&times;</span>
             <h2 style="margin-top: 0;">Create Post</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
-                Posting to <b>#@CurrentCategory?.CategoryName</b>
-            </div>
-
-            <textarea class="modal-textarea"
-                      placeholder="What's on your mind?"
-                      @bind="newPostContent"></textarea>
-
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
+            <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
             <div class="file-input-wrapper">
-                <label style="font-weight:bold; display:block; margin-bottom:5px;">
-                    Add Media (Images or Videos):
-                    @if (isUploading)
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Images or Videos): @if (isUploading) {
+                <span class="upload-loading">Uploading... please wait.</span>
+            }
+</label>
+            <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
+        </div>
+        <div class="preview-container">
+            @for (int i = 0; i < pendingUploads.Count; i++)
+            {
+                var index = i; var file = pendingUploads[i];
+                <div class="preview-item">
+                    <button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>
+                    @if (file.MediaType == "Video")
                     {
-                        <span class="upload-loading">Uploading... please wait.</span>
+                        <video class="preview-media" src="@file.SavedPath"></video>
                     }
-                </label>
-                @* --- IMPORTANT: 'multiple' attribute allows selecting multiple files --- *@
-                <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
-            </div>
+                    else
+                    {
 
-            @* --- PREVIEW SECTION WITH REMOVE BUTTONS --- *@
-            <div class="preview-container">
-                @for (int i = 0; i < pendingUploads.Count; i++)
-                {
-                    var index = i; // Local copy for closure
-                    var file = pendingUploads[i];
-                    <div class="preview-item">
-                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>
-                        @if (file.MediaType == "Video")
-                        {
-                            <video class="preview-media" src="@file.SavedPath"></video>
-                        }
-                        else
-                        {
-                            <img class="preview-media" src="@file.SavedPath" alt="Preview" />
-                        }
-                    </div>
-                }
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
-                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
-                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">
-                    @(isUploading ? "Uploading..." : "Post")
-                </button>
-            </div>
+                        <img class="preview-media" src="@file.SavedPath" alt="Preview" />
+                    }
+                </div>
+            }
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+            <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
+            <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
         </div>
     </div>
+</div>
 }
 
-@* --- NEW: REQUEST ACCESS MODAL --- *@
+@* --- REQUEST ACCESS MODAL --- *@
 @if (showRequestModal)
 {
     <div class="modal">
         <div class="modal-content">
             <span class="modal-close" @onclick="() => showRequestModal = false">&times;</span>
             <h2 style="margin-top: 0;">Request Access</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
-                Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b>
-            </div>
-
-            <textarea class="modal-textarea"
-                      placeholder="Why should you be verified for this category?"
-                      @bind="requestReason"></textarea>
-
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div>
+            <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
                 <button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button>
                 <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
@@ -893,63 +952,36 @@
     private bool showCreateConfirm = false;
     private bool showPostModal = false;
 
-    // --- NEW: REQUEST ACCESS STATES ---
     private bool showRequestModal = false;
     private string requestReason = "";
     private bool hasApprovedAccess = false;
     private bool hasPendingRequest = false;
-    // ----------------------------------
 
     private string newPostContent = "";
     private string errorMessage = "";
     private string? currentUserId;
     private bool isAdmin = false;
+    private Users? currentUser; // To store full user object for comment posting
 
-    // --- NEW CAROUSEL STATE MANAGEMENT ---
     private Dictionary<int, int> _carouselIndices = new();
+    private int GetCurrentIndex(int postId) { if (!_carouselIndices.ContainsKey(postId)) _carouselIndices[postId] = 0; return _carouselIndices[postId]; }
+    private void NextSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex + 1) % totalCount; }
+    private void PrevSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount; }
 
-    private int GetCurrentIndex(int postId)
-    {
-        if (!_carouselIndices.ContainsKey(postId))
-        {
-            _carouselIndices[postId] = 0;
-        }
-        return _carouselIndices[postId];
-    }
+    // --- COMMENT STATE ---
+    private Dictionary<int, bool> _showComments = new();
+    private Dictionary<int, List<Comments>> _postComments = new();
+    private Dictionary<int, string> _commentDrafts = new();
 
-    private void NextSlide(int postId, int totalCount)
-    {
-        var currentIndex = GetCurrentIndex(postId);
-        _carouselIndices[postId] = (currentIndex + 1) % totalCount;
-    }
-
-    private void PrevSlide(int postId, int totalCount)
-    {
-        var currentIndex = GetCurrentIndex(postId);
-        _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount;
-    }
-    // ------------------------------------
-
-    // --- SAFE UPLOAD STORAGE ---
-    private class PendingFile
-    {
-        public string SavedPath { get; set; } = "";
-        public string MediaType { get; set; } = "";
-        public string PhysicalPath { get; set; } = "";
-    }
+    private class PendingFile { public string SavedPath { get; set; } = ""; public string MediaType { get; set; } = ""; public string PhysicalPath { get; set; } = ""; }
     private List<PendingFile> pendingUploads = new();
-
     private bool isUploading = false;
-    private const long MaxFileSize = 1024 * 1024 * 200; // 200 MB
+    private const long MaxFileSize = 1024 * 1024 * 200;
     private const int MaxAllowedFiles = 10;
 
     protected override async Task OnParametersSetAsync()
     {
-        IsLoading = true;
-        errorMessage = "";
-        hasApprovedAccess = false;
-        hasPendingRequest = false;
-
+        IsLoading = true; errorMessage = ""; hasApprovedAccess = false; hasPendingRequest = false;
         try
         {
             using var context = DbFactory.CreateDbContext();
@@ -963,42 +995,30 @@
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
                 var dbUser = await userManager.GetUserAsync(user);
                 currentUserId = dbUser?.Id;
+                currentUser = dbUser; // Store full user object
             }
+            else if (currentUserId != null)
+            {
+                // If we got ID from claims, ensure we have the full user object for comments
+                using var scope = ScopeFactory.CreateScope();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+                currentUser = await userManager.FindByIdAsync(currentUserId);
+            }
+
 
             CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
             if (CurrentCategory != null) Title = "#" + CurrentCategory.CategoryName;
-
-            // Check if user is admin
-            if (user.Identity?.IsAuthenticated == true)
-            {
-                isAdmin = user.IsInRole("Admin");
-            }
+            if (user.Identity?.IsAuthenticated == true) isAdmin = user.IsInRole("Admin");
 
             if (!string.IsNullOrEmpty(currentUserId) && CurrentCategory != null)
             {
                 var existingFollow = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
                 isFollowing = (existingFollow != null);
-
-                // --- NEW: Check for Access Status ---
-                var accessRequest = await context.CategoryAccessRequests
-                    .OrderByDescending(r => r.DateCreated)
-                    .FirstOrDefaultAsync(r => r.UserId == currentUserId && r.CategoryId == CurrentCategory.Id);
-
-                if (accessRequest != null)
-                {
-                    if (accessRequest.Status == "Approved") hasApprovedAccess = true;
-                    if (accessRequest.Status == "Pending") hasPendingRequest = true;
-                }
-                // ------------------------------------
+                var accessRequest = await context.CategoryAccessRequests.OrderByDescending(r => r.DateCreated).FirstOrDefaultAsync(r => r.UserId == currentUserId && r.CategoryId == CurrentCategory.Id);
+                if (accessRequest != null) { if (accessRequest.Status == "Approved") hasApprovedAccess = true; if (accessRequest.Status == "Pending") hasPendingRequest = true; }
             }
 
-            CategoryPosts = await context.Posts
-                .Where(p => p.CategoryId == Id)
-                .Include(p => p.User)
-                .Include(p => p.Media) // Load media
-                .Include(p => p.Likes) // --- UPDATED: Load likes for the posts ---
-                .OrderByDescending(p => p.DateCreated)
-                .ToListAsync();
+            CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).Include(p => p.Likes).OrderByDescending(p => p.DateCreated).ToListAsync();
 
             if (!string.IsNullOrEmpty(currentUserId))
             {
@@ -1010,295 +1030,96 @@
         finally { IsLoading = false; }
     }
 
-    // --- TOGGLE LIKE FUNCTION ---
     private async Task ToggleLike(int postId)
     {
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            Navigation.NavigateTo("/Account/Login", true);
-            return;
-        }
-
+        if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
         try
         {
             using var context = DbFactory.CreateDbContext();
-
-            // Find if the like already exists in DB
-            var existingLike = await context.PostLikes
-                .FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId);
-
-            // Get local reference to update UI instantly
+            var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId);
             var post = CategoryPosts.FirstOrDefault(p => p.Id == postId);
-
             if (existingLike != null)
             {
-                // UNLIKE: Remove from DB
                 context.PostLikes.Remove(existingLike);
-
-                // Update UI: Remove from local list
-                if (post != null)
-                {
-                    var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId);
-                    if (localLike != null) post.Likes.Remove(localLike);
-                }
+                if (post != null) { var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId); if (localLike != null) post.Likes.Remove(localLike); }
             }
             else
             {
-                // LIKE: Add to DB
-                var newLike = new PostLikes
-                {
-                    PostID = postId,
-                    UserID = currentUserId,
-                    LikedAt = DateTime.Now
-                };
+                var newLike = new PostLikes { PostID = postId, UserID = currentUserId, LikedAt = DateTime.Now };
                 context.PostLikes.Add(newLike);
-
-                // Update UI: Add to local list
-                if (post != null)
-                {
-                    post.Likes.Add(newLike);
-                }
+                if (post != null) post.Likes.Add(newLike);
             }
-
             await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error toggling like: {ex.Message}");
-        }
-    }
-
-    // --- SAVE FILE IMMEDIATELY ---
-    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
-    {
-        errorMessage = "";
-        isUploading = true;
-
-        try
-        {
-            var newFiles = e.GetMultipleFiles(MaxAllowedFiles);
-            var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            foreach (var file in newFiles)
-            {
-                if (pendingUploads.Count >= MaxAllowedFiles) break;
-
-                if (file.Size <= MaxFileSize)
-                {
-                    try
-                    {
-                        var extension = Path.GetExtension(file.Name).ToLower();
-                        bool isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov");
-
-                        var fileName = $"{Guid.NewGuid()}{extension}";
-                        var physicalPath = Path.Combine(uploadsFolder, fileName);
-                        var webPath = $"/uploads/{fileName}";
-
-                        await using var fileStream = new FileStream(physicalPath, FileMode.Create);
-                        await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream);
-
-                        pendingUploads.Add(new PendingFile
-                        {
-                            SavedPath = webPath,
-                            PhysicalPath = physicalPath,
-                            MediaType = isVideo ? "Video" : "Image"
-                        });
-                    }
-                    catch (Exception ex) { errorMessage = $"Error reading {file.Name}: {ex.Message}"; }
-                }
-                else { errorMessage = $"File {file.Name} is too large."; }
-            }
-        }
-        finally
-        {
-            isUploading = false;
-        }
-    }
-
-    private void RemoveFile(int index)
-    {
-        if (index >= 0 && index < pendingUploads.Count)
-        {
-            var file = pendingUploads[index];
-            try
-            {
-                if (System.IO.File.Exists(file.PhysicalPath))
-                {
-                    System.IO.File.Delete(file.PhysicalPath);
-                }
-            }
-            catch { }
-
-            pendingUploads.RemoveAt(index);
-        }
-    }
-
-    // --- NEW: Handle Access Request Submission ---
-    private async Task HandleSubmitRequest()
-    {
-        if (string.IsNullOrEmpty(currentUserId)) return;
-
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-
-            // Check if already exists to prevent duplicates
-            var exists = await context.CategoryAccessRequests
-                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending");
-
-            if (exists)
-            {
-                errorMessage = "You already have a pending request.";
-                showRequestModal = false;
-                hasPendingRequest = true;
-                return;
-            }
-
-            var request = new CategoryAccessRequests
-            {
-                UserId = currentUserId,
-                CategoryId = Id,
-                Reason = requestReason,
-                Status = "Pending",
-                DateCreated = DateTime.Now,
-                DateUpdated = DateTime.Now
-            };
-
-            context.CategoryAccessRequests.Add(request);
-            await context.SaveChangesAsync();
-
-            showRequestModal = false;
-            requestReason = "";
-            hasPendingRequest = true; // Update UI state
             StateHasChanged();
         }
-        catch (Exception ex)
-        {
-            errorMessage = "Error sending request: " + ex.Message;
-        }
+        catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); }
     }
-    // ---------------------------------------------
 
-    private async Task HandleCreatePost()
+    // --- COMMENT LOGIC ---
+    private async Task ToggleComments(int postId)
     {
-        if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0) return;
-        if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
+        if (!_showComments.ContainsKey(postId)) _showComments[postId] = false;
+        _showComments[postId] = !_showComments[postId];
 
-        // --- UPDATED SECURITY CHECK ---
-        // Check if category is verified and user is NEITHER admin NOR approved
-        if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess)
+        if (_showComments[postId])
         {
-            errorMessage = "This category is verified. You must request access to post here.";
-            return;
+            if (!_postComments.ContainsKey(postId) || _postComments[postId] == null)
+            {
+                try
+                {
+                    using var context = DbFactory.CreateDbContext();
+                    var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync();
+                    _postComments[postId] = comments;
+                }
+                catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); }
+            }
         }
+        StateHasChanged();
+    }
+
+    private void UpdateCommentDraft(int postId, string? value)
+    {
+        if (value != null) _commentDrafts[postId] = value;
+    }
+
+    private async Task SubmitComment(int postId)
+    {
+        if (currentUser == null) { Navigation.NavigateTo("/Account/Login", true); return; }
+        if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId])) return;
+
+        var content = _commentDrafts[postId];
 
         try
         {
             using var context = DbFactory.CreateDbContext();
-
-            // Re-check DB state for security
-            var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
-
-            // Check DB for approved status again to be safe
-            bool dbHasAccess = await context.CategoryAccessRequests
-                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved");
-
-            if (category?.IsVerified == true && !isAdmin && !dbHasAccess)
+            var newComment = new Comments
             {
-                errorMessage = "This category is verified. You must request access to post here.";
-                return;
-            }
-
-            var newPost = new Posts
-            {
-                Content = newPostContent,
-                CategoryId = Id,
-                UserId = currentUserId,
-                PostStatus = "Published",
+                PostID = postId,
+                UserID = currentUser.Id,
+                Content = content,
                 DateCreated = DateTime.Now,
                 DateUpdated = DateTime.Now,
-                CreatedBy = currentUserId,
-                UpdatedBy = currentUserId,
-                Media = new List<PostMedia>()
+                CreatedBy = currentUser.Id
             };
-
-            foreach (var file in pendingUploads)
-            {
-                newPost.Media.Add(new PostMedia
-                {
-                    MediaPath = file.SavedPath,
-                    MediaType = file.MediaType
-                });
-            }
-
-            context.Posts.Add(newPost);
+            context.Comments.Add(newComment);
             await context.SaveChangesAsync();
-
-            ClosePostModal();
-            CategoryPosts = await context.Posts
-                .Where(p => p.CategoryId == Id)
-                .Include(p => p.User)
-                .Include(p => p.Media)
-                .Include(p => p.Likes) // Ensure likes are included when refreshing list
-                .OrderByDescending(p => p.DateCreated)
-                .ToListAsync();
+            _commentDrafts[postId] = "";
+            newComment.User = currentUser;
+            if (!_postComments.ContainsKey(postId)) _postComments[postId] = new List<Comments>();
+            _postComments[postId].Add(newComment);
+            StateHasChanged();
         }
-        catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; }
+        catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); }
     }
 
-    private void ClosePostModal()
-    {
-        showPostModal = false;
-        newPostContent = "";
-        pendingUploads.Clear();
-        errorMessage = "";
-    }
-
-    private bool CanUserPost()
-    {
-        // If category is verified, check for Admin OR Approved Access
-        if (CurrentCategory?.IsVerified == true)
-        {
-            return isAdmin || hasApprovedAccess;
-        }
-        // If category is not verified, anyone can post (if logged in)
-        return !string.IsNullOrEmpty(currentUserId);
-    }
-
-    private async Task ToggleFollow()
-    {
-        if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            if (isFollowing)
-            {
-                var record = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id);
-                if (record != null) context.CategoryFollows.Remove(record);
-                isFollowing = false;
-            }
-            else
-            {
-                context.CategoryFollows.Add(new CategoryFollows { UserId = currentUserId, CategoryId = Id, DateCreated = DateTime.Now, DateUpdated = DateTime.Now });
-                isFollowing = true;
-            }
-            await context.SaveChangesAsync();
-            FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync();
-        }
-        catch (Exception ex) { errorMessage = ex.Message; }
-    }
-
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e) { errorMessage = ""; isUploading = true; try { var newFiles = e.GetMultipleFiles(MaxAllowedFiles); var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads"); if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder); foreach (var file in newFiles) { if (pendingUploads.Count >= MaxAllowedFiles) break; if (file.Size <= MaxFileSize) { try { var extension = Path.GetExtension(file.Name).ToLower(); bool isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov"); var fileName = $"{Guid.NewGuid()}{extension}"; var physicalPath = Path.Combine(uploadsFolder, fileName); var webPath = $"/uploads/{fileName}"; await using var fileStream = new FileStream(physicalPath, FileMode.Create); await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream); pendingUploads.Add(new PendingFile { SavedPath = webPath, PhysicalPath = physicalPath, MediaType = isVideo ? "Video" : "Image" }); } catch (Exception ex) { errorMessage = $"Error reading {file.Name}: {ex.Message}"; } } else { errorMessage = $"File {file.Name} is too large."; } } } finally { isUploading = false; } }
+    private void RemoveFile(int index) { if (index >= 0 && index < pendingUploads.Count) { var file = pendingUploads[index]; try { if (System.IO.File.Exists(file.PhysicalPath)) { System.IO.File.Delete(file.PhysicalPath); } } catch { } pendingUploads.RemoveAt(index); } }
+    private async Task HandleSubmitRequest() { if (string.IsNullOrEmpty(currentUserId)) return; try { using var context = DbFactory.CreateDbContext(); var exists = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending"); if (exists) { errorMessage = "You already have a pending request."; showRequestModal = false; hasPendingRequest = true; return; } var request = new CategoryAccessRequests { UserId = currentUserId, CategoryId = Id, Reason = requestReason, Status = "Pending", DateCreated = DateTime.Now, DateUpdated = DateTime.Now }; context.CategoryAccessRequests.Add(request); await context.SaveChangesAsync(); showRequestModal = false; requestReason = ""; hasPendingRequest = true; StateHasChanged(); } catch (Exception ex) { errorMessage = "Error sending request: " + ex.Message; } }
+    private async Task HandleCreatePost() { if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0) return; if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } try { using var context = DbFactory.CreateDbContext(); var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id); bool dbHasAccess = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved"); if (category?.IsVerified == true && !isAdmin && !dbHasAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } var newPost = new Posts { Content = newPostContent, CategoryId = Id, UserId = currentUserId, PostStatus = "Published", DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUserId, UpdatedBy = currentUserId, Media = new List<PostMedia>() }; foreach (var file in pendingUploads) { newPost.Media.Add(new PostMedia { MediaPath = file.SavedPath, MediaType = file.MediaType }); } context.Posts.Add(newPost); await context.SaveChangesAsync(); ClosePostModal(); CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).Include(p => p.Likes).OrderByDescending(p => p.DateCreated).ToListAsync(); } catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; } }
+    private void ClosePostModal() { showPostModal = false; newPostContent = ""; pendingUploads.Clear(); errorMessage = ""; }
+    private bool CanUserPost() { if (CurrentCategory?.IsVerified == true) { return isAdmin || hasApprovedAccess; } return !string.IsNullOrEmpty(currentUserId); }
+    private async Task ToggleFollow() { if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } try { using var context = DbFactory.CreateDbContext(); if (isFollowing) { var record = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id); if (record != null) context.CategoryFollows.Remove(record); isFollowing = false; } else { context.CategoryFollows.Add(new CategoryFollows { UserId = currentUserId, CategoryId = Id, DateCreated = DateTime.Now, DateUpdated = DateTime.Now }); isFollowing = true; } await context.SaveChangesAsync(); FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync(); } catch (Exception ex) { errorMessage = ex.Message; } }
     private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}", forceLoad: true);
-
-    private async Task HandleCategorySearch()
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm)) return;
-        using var context = DbFactory.CreateDbContext();
-        var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
-        if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}", true);
-        else showCreateConfirm = true;
-    }
-
+    private async Task HandleCategorySearch() { if (string.IsNullOrWhiteSpace(searchTerm)) return; using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}", true); else showCreateConfirm = true; }
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
 }
