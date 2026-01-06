@@ -12,8 +12,8 @@ using SoSuSaFsd.Data;
 namespace SoSuSaFsd.Migrations
 {
     [DbContext(typeof(SoSuSaFsdContext))]
-    [Migration("20260105023354_AddCategoryFollowsTable")]
-    partial class AddCategoryFollowsTable
+    [Migration("20260106061700_InitialSetup_WithReports")]
+    partial class InitialSetup_WithReports
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -184,12 +184,58 @@ namespace SoSuSaFsd.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.CategoryAccessRequests", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CategoryAccessRequests");
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.CategoryFollows", b =>
@@ -259,11 +305,64 @@ namespace SoSuSaFsd.Migrations
 
                     b.Property<string>("UserID")
                         .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.PostLikes", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("LikedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PostID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserID")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Comments");
+                    b.HasIndex("PostID");
+
+                    b.ToTable("PostLikes");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.PostMedia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("MediaPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostMedia");
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
@@ -297,11 +396,65 @@ namespace SoSuSaFsd.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Reports", b =>
+                {
+                    b.Property<int>("ReportID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReportID"));
+
+                    b.Property<int?>("CategoryID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CommentID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PostID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReporterID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TargetUserID")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ReportID");
+
+                    b.HasIndex("CategoryID");
+
+                    b.HasIndex("CommentID");
+
+                    b.HasIndex("PostID");
+
+                    b.HasIndex("ReporterID");
+
+                    b.HasIndex("TargetUserID");
+
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Users", b =>
@@ -459,6 +612,25 @@ namespace SoSuSaFsd.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SoSuSaFsd.Domain.CategoryAccessRequests", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoSuSaFsd.Domain.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SoSuSaFsd.Domain.CategoryFollows", b =>
                 {
                     b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
@@ -476,6 +648,100 @@ namespace SoSuSaFsd.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Comments", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.PostLikes", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.PostMedia", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
+                        .WithMany("Media")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoSuSaFsd.Domain.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Reports", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryID");
+
+                    b.HasOne("SoSuSaFsd.Domain.Comments", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentID");
+
+                    b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostID");
+
+                    b.HasOne("SoSuSaFsd.Domain.Users", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoSuSaFsd.Domain.Users", "TargetUser")
+                        .WithMany()
+                        .HasForeignKey("TargetUserID");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("TargetUser");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
+                {
+                    b.Navigation("Likes");
+
+                    b.Navigation("Media");
                 });
 #pragma warning restore 612, 618
         }

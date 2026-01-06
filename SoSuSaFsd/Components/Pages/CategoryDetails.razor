@@ -400,7 +400,7 @@
         font-weight: bold;
     }
 
-    /* --- COMMENT SECTION STYLES (NEW) --- */
+    /* --- COMMENT SECTION --- */
     .comment-section {
         background-color: #f9f9f9;
         border-top: 1px solid #eee;
@@ -665,7 +665,6 @@
                 }
                 else
                 {
-
                     <span>Category not found.</span>
                 }
             </div>
@@ -751,14 +750,13 @@
                                 }
                                 else
                                 {
-
                                     <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
                                 }
                                 @if (totalMedia > 1)
                                 {
                                     <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button>
                                     <div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div>
-                 }
+                                }
                             </div>
                         }
 
@@ -774,7 +772,6 @@
                                 }
                                 else
                                 {
-
                                     <i class="far fa-heart" style="margin-right: 5px;"></i>
                                 }
                                 @if (likeCount > 0)
@@ -783,18 +780,20 @@
                                 }
                                 else
                                 {
-
                                     <span>Like</span>
                                 }
                             </button>
 
-                            @* --- MODIFIED COMMENT BUTTON --- *@
                             <button class="action-btn" @onclick="() => ToggleComments(post.Id)">
                                 <i class="far fa-comment"></i> Comment
                             </button>
-                            @* ------------------------------- *@
 
                             <button class="action-btn">Share</button>
+
+                            @* --- REPORT BUTTON --- *@
+                            <button class="action-btn" style="color: #666; font-size: 14px; font-weight: 500;" @onclick="@(() => OpenReportModal(post.Id))" title="Report Post">
+                                Report
+                            </button>
                         </div>
 
                         @* --- COMMENT SECTION --- *@
@@ -827,7 +826,6 @@
                                 </div>
                             </div>
                         }
-                        @* ----------------------- *@
                     </div>
                 }
             }
@@ -848,13 +846,18 @@
                 {
                     @foreach (var cat in FollowedCategories)
                     {
-                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="hashtag">#</span> @cat.CategoryName @if (cat.IsVerified) {
-                        <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
-                    }
-    </a></li>
-                }
+                        <li>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                                <span class="hashtag">#</span> @cat.CategoryName
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
                                 }
-                                else
+                            </a>
+                        </li>
+                    }
+                }
+                else
                 {
                     <AuthorizeView>
                         <Authorized><li>You aren't following anything yet.</li></Authorized>
@@ -876,36 +879,38 @@
             <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
             <div class="file-input-wrapper">
-                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Images or Videos): @if (isUploading) {
-                <span class="upload-loading">Uploading... please wait.</span>
-            }
-</label>
-            <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
-        </div>
-        <div class="preview-container">
-            @for (int i = 0; i < pendingUploads.Count; i++)
-            {
-                var index = i; var file = pendingUploads[i];
-                <div class="preview-item">
-                    <button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>
-                    @if (file.MediaType == "Video")
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">
+                    Add Media (Images or Videos):
+                    @if (isUploading)
                     {
-                        <video class="preview-media" src="@file.SavedPath"></video>
+                        <span class="upload-loading">Uploading... please wait.</span>
                     }
-                    else
-                    {
-
-                        <img class="preview-media" src="@file.SavedPath" alt="Preview" />
-                    }
-                </div>
-            }
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
-            <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
-            <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
+                </label>
+                <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
+            </div>
+            <div class="preview-container">
+                @for (int i = 0; i < pendingUploads.Count; i++)
+                {
+                    var index = i; var file = pendingUploads[i];
+                    <div class="preview-item">
+                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>
+                        @if (file.MediaType == "Video")
+                        {
+                            <video class="preview-media" src="@file.SavedPath"></video>
+                        }
+                        else
+                        {
+                            <img class="preview-media" src="@file.SavedPath" alt="Preview" />
+                        }
+                    </div>
+                }
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
+                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
+            </div>
         </div>
     </div>
-</div>
 }
 
 @* --- REQUEST ACCESS MODAL --- *@
@@ -921,6 +926,74 @@
                 <button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button>
                 <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
             </div>
+        </div>
+    </div>
+}
+
+@* --- REPORT POST MODAL --- *@
+@if (showReportModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="() => showReportModal = false">&times;</span>
+            <h2 style="margin-top: 0; color: #dc3545;">Report Content</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Help us keep the community safe. Why are you reporting this post?
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label>
+                <select class="modal-textarea" style="height: 40px;" @bind="reportReasonSelection">
+                    <option value="Spam">Spam</option>
+                    <option value="Harassment">Harassment or Bullying</option>
+                    <option value="Misinformation">Misinformation</option>
+                    <option value="Hate Speech">Hate Speech</option>
+                    <option value="Inappropriate">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label>
+                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="reportReasonDetails"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="() => showReportModal = false">Cancel</button>
+                <button class="login-btn" style="background-color: #dc3545;" @onclick="SubmitReport">Submit Report</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- NOTIFICATION MODAL (UPDATED) --- *@
+@if (showNotificationModal)
+{
+    <div class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <span class="modal-close" @onclick="CloseNotification">&times;</span>
+
+            <div style="margin-bottom: 15px;">
+                @if (notificationType == "success")
+                {
+                    <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i>
+                    <h2 style="margin: 10px 0; color: #28a745;">Success</h2>
+                }
+                else if (notificationType == "info")
+                {
+                    <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i>
+                    <h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2>
+                }
+                else
+                {
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i>
+                    <h2 style="margin: 10px 0; color: #dc3545;">Error</h2>
+                }
+            </div>
+
+            <p style="font-size: 16px; margin-bottom: 25px;">@notificationMessage</p>
+
+            <button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button>
         </div>
     </div>
 }
@@ -961,7 +1034,18 @@
     private string errorMessage = "";
     private string? currentUserId;
     private bool isAdmin = false;
-    private Users? currentUser; // To store full user object for comment posting
+    private Users? currentUser;
+
+    // --- REPORTING STATE ---
+    private bool showReportModal = false;
+    private int reportPostId = 0;
+    private string reportReasonSelection = "Spam";
+    private string reportReasonDetails = "";
+
+    // --- NOTIFICATION MODAL STATE ---
+    private bool showNotificationModal = false;
+    private string notificationMessage = "";
+    private string notificationType = "success"; // "success", "error", or "info"
 
     private Dictionary<int, int> _carouselIndices = new();
     private int GetCurrentIndex(int postId) { if (!_carouselIndices.ContainsKey(postId)) _carouselIndices[postId] = 0; return _carouselIndices[postId]; }
@@ -995,16 +1079,14 @@
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
                 var dbUser = await userManager.GetUserAsync(user);
                 currentUserId = dbUser?.Id;
-                currentUser = dbUser; // Store full user object
+                currentUser = dbUser;
             }
             else if (currentUserId != null)
             {
-                // If we got ID from claims, ensure we have the full user object for comments
                 using var scope = ScopeFactory.CreateScope();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
                 currentUser = await userManager.FindByIdAsync(currentUserId);
             }
-
 
             CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
             if (CurrentCategory != null) Title = "#" + CurrentCategory.CategoryName;
@@ -1028,6 +1110,116 @@
         }
         catch (Exception ex) { errorMessage = "Error loading: " + ex.Message; }
         finally { IsLoading = false; }
+    }
+
+    // --- HELPER FOR NOTIFICATION MODAL ---
+    private void ShowNotification(string message, string type)
+    {
+        notificationMessage = message;
+        notificationType = type;
+        showNotificationModal = true;
+    }
+
+    private void CloseNotification()
+    {
+        showNotificationModal = false;
+        notificationMessage = "";
+    }
+
+    // --- UPDATED REPORT LOGIC ---
+    private void OpenReportModal(int postId)
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            Navigation.NavigateTo("/Account/Login", true);
+            return;
+        }
+
+        // Just open the modal. Check logic happens on Submit.
+        reportPostId = postId;
+        reportReasonSelection = "Spam";
+        reportReasonDetails = "";
+        showReportModal = true;
+    }
+
+    private async Task SubmitReport()
+    {
+        // 1. Safety check
+        if (reportPostId == 0 || string.IsNullOrEmpty(currentUserId))
+        {
+            ShowNotification("Session error. Please refresh and try again.", "error");
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            // CHECK DUPLICATES BEFORE SUBMITTING
+            var existingReport = await context.Reports.FirstOrDefaultAsync(r =>
+                r.PostID == reportPostId &&
+                r.ReporterID == currentUserId);
+
+            if (existingReport != null)
+            {
+                // CLOSE MODAL, BUT DO NOT RENDER YET
+                showReportModal = false;
+
+                // ShowToast handles the render for both closing the modal and showing the toast
+                if (existingReport.Status == "Dismissed")
+                {
+                    ShowNotification("An Admin has already dismissed your report for this post.", "error");
+                }
+                else
+                {
+                    ShowNotification("You have already reported this post.", "error");
+                }
+                return;
+            }
+
+            // NEW CHECK: Check if ANY other report on this post is already "Dismissed"
+            // This means admins have already reviewed this content.
+            bool isAlreadyDismissed = await context.Reports.AnyAsync(r =>
+                r.PostID == reportPostId &&
+                r.Status == "Dismissed");
+
+            // IF NO DUPLICATE, PROCEED
+            string finalReason = reportReasonSelection;
+            if (!string.IsNullOrWhiteSpace(reportReasonDetails))
+            {
+                finalReason = $"{reportReasonSelection}: {reportReasonDetails}";
+            }
+
+            var newReport = new Reports
+            {
+                PostID = reportPostId,
+                ReporterID = currentUserId,
+                Reason = finalReason,
+                Status = "Pending",
+                DateCreated = DateTime.Now
+            };
+
+            context.Reports.Add(newReport);
+            await context.SaveChangesAsync();
+
+            // CLOSE MODAL
+            showReportModal = false;
+
+            if (isAlreadyDismissed)
+            {
+                // Show INFO type notification
+                ShowNotification("Report submitted, but this content has already been reviewed and dismissed by admins.", "info");
+            }
+            else
+            {
+                // Show SUCCESS type notification
+                ShowNotification("Report submitted successfully.", "success");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification("Error sending report: " + ex.Message, "error");
+        }
     }
 
     private async Task ToggleLike(int postId)
@@ -1055,7 +1247,6 @@
         catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); }
     }
 
-    // --- COMMENT LOGIC ---
     private async Task ToggleComments(int postId)
     {
         if (!_showComments.ContainsKey(postId)) _showComments[postId] = false;

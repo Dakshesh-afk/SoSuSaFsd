@@ -302,9 +302,11 @@ namespace SoSuSaFsd.Migrations
 
                     b.Property<string>("UserID")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserID");
 
                     b.ToTable("Comments");
                 });
@@ -400,6 +402,56 @@ namespace SoSuSaFsd.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Reports", b =>
+                {
+                    b.Property<int>("ReportID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReportID"));
+
+                    b.Property<int?>("CategoryID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CommentID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PostID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReporterID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TargetUserID")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ReportID");
+
+                    b.HasIndex("CategoryID");
+
+                    b.HasIndex("CommentID");
+
+                    b.HasIndex("PostID");
+
+                    b.HasIndex("ReporterID");
+
+                    b.HasIndex("TargetUserID");
+
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Users", b =>
@@ -595,6 +647,17 @@ namespace SoSuSaFsd.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SoSuSaFsd.Domain.Comments", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Users", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SoSuSaFsd.Domain.PostLikes", b =>
                 {
                     b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
@@ -634,6 +697,41 @@ namespace SoSuSaFsd.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SoSuSaFsd.Domain.Reports", b =>
+                {
+                    b.HasOne("SoSuSaFsd.Domain.Categories", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryID");
+
+                    b.HasOne("SoSuSaFsd.Domain.Comments", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentID");
+
+                    b.HasOne("SoSuSaFsd.Domain.Posts", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostID");
+
+                    b.HasOne("SoSuSaFsd.Domain.Users", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SoSuSaFsd.Domain.Users", "TargetUser")
+                        .WithMany()
+                        .HasForeignKey("TargetUserID");
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Reporter");
+
+                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
