@@ -15,31 +15,18 @@
 <PageTitle>@Title</PageTitle>
 
 <style>
-    /* --- GLOBAL & LAYOUT --- */
+    /* --- GLOBAL STYLES --- */
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background-color: #ffffff;
         margin: 0;
         color: #333;
+        overflow: hidden; /* CRITICAL: Prevents window scroll */
     }
 
-    a {
-        text-decoration: none;
-        color: #333;
-        cursor: pointer;
-    }
-
-    ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    hr {
-        border: 0;
-        border-top: 1px solid #ddd;
-        margin: 15px 0;
-    }
+    a { text-decoration: none; color: #333; cursor: pointer; }
+    ul { list-style-type: none; padding: 0; margin: 0; }
+    hr { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
 
     /* --- HEADER --- */
     .site-header {
@@ -47,564 +34,184 @@
         border-bottom: 2px solid #333;
         padding: 10px 0;
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 1000;
-        height: 62px;
-        box-sizing: border-box;
+        top: 0; left: 0; width: 100%; z-index: 1000;
+        height: 62px; box-sizing: border-box;
     }
 
-    .header-container {
-        width: 95%;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        height: 100%;
-    }
-
-    .logo-area {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .logo-icon {
-        width: 40px;
-        height: 40px;
-        background-color: #333;
-        color: white;
-        border-radius: 50% 50% 50% 4px;
-        margin-right: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-
-    .logo-text {
-        font-size: 32px;
-        font-weight: 700;
-        color: #333;
-        letter-spacing: -1px;
-    }
-
-    .join-btn {
-        background-color: #333;
-        color: white;
-        border: none;
-        padding: 8px 24px;
-        border-radius: 20px;
-        font-weight: bold;
-        margin-top: 0;
-        cursor: pointer;
-    }
-
-        .join-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+    .header-container { width: 95%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 100%; }
+    .logo-area { display: flex; align-items: center; text-decoration: none; cursor: pointer; }
+    .logo-icon { width: 40px; height: 40px; background-color: #333; color: white; border-radius: 50% 50% 50% 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 2px 2px 0px #999; }
+    .logo-text { font-size: 32px; font-weight: 700; color: #333; letter-spacing: -1px; }
 
     /* --- MAIN LAYOUT --- */
     .main-layout {
         display: flex;
         justify-content: center;
         width: 100%;
-        max-width: 1100px;
-        margin: 0 auto 20px auto;
-        min-height: 80vh;
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 100vh;
         gap: 0;
-        margin-top: 62px;
     }
 
+    /* --- SIDEBAR BASE --- */
     .sidebar {
-        width: 240px;
-        position: sticky;
-        top: 60px;
-        height: calc(100vh - 60px);
+        width: 280px;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        padding-top: 22px;
+        padding-top: 72px;
         box-sizing: border-box;
-        overflow-y: auto;
+        z-index: 900;
     }
 
+    /* --- LEFT SIDEBAR (FOLLOWING + SEARCH) --- */
     .sidebar-left {
         border-right: 1px solid #ddd;
-        padding-right: 20px;
+        padding-right: 0;
+        overflow: hidden !important;
+        background-color: #f5f5f5;
     }
 
-    .sidebar-right {
-        border-left: 1px solid #ddd;
-        padding-left: 20px;
-    }
-
-    .sidebar-section {
-        margin-bottom: 20px;
+    .sidebar-left .sidebar-section.scrollable-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 0;
         padding-bottom: 10px;
+        padding-left: 20px;
+        padding-right: 10px;
     }
 
-        .sidebar-section h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-transform: none;
-        }
+    .sidebar-left .sidebar-section.scrollable-list::-webkit-scrollbar { width: 6px; }
+    .sidebar-left .sidebar-section.scrollable-list::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
 
-    .category-link {
-        font-size: 16px;
-        color: #555;
-        display: flex;
-        align-items: center;
-        padding: 5px 0;
-        transition: color 0.2s;
-        cursor: pointer;
-    }
-
-        .category-link:hover {
-            color: #000;
-            text-decoration: underline;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
-
-    .hashtag {
-        color: #999;
-        font-weight: normal;
-        margin-right: 8px;
+    /* Sticky Title for Left Sidebar */
+    .sidebar-left .sidebar-section.scrollable-list h3 {
+        position: sticky;
+        top: 0;
+        background-color: #f5f5f5;
+        margin-bottom: 0;
+        padding-bottom: 15px;
+        padding-top: 5px;
+        z-index: 10;
+        font-size: 18px;
+        color: #333;
+        font-weight: bold;
     }
 
     .sidebar-footer {
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #ddd;
-    }
-
-    .category-search-container {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
-
-        .category-search-container input {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            width: 100%;
-        }
-
-    .create-cat-btn {
-        background-color: #333;
-        color: white;
-        border: none;
-        width: 34px;
-        height: 34px;
-        border-radius: 4px;
-        font-size: 20px;
-        line-height: 1;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         flex-shrink: 0;
+        padding: 15px 20px 25px 20px;
+        background-color: transparent;
+        border-top: 1px solid #f9f9f9;
     }
 
-        .create-cat-btn:hover {
-            background-color: #000;
-        }
+    /* --- RIGHT SIDEBAR (VERIFIED + RECENT) --- */
+    .sidebar-right {
+        border-left: 1px solid #ddd;
+        padding-left: 20px;
+        overflow-y: hidden !important; /* No main scrollbar */
+    }
+
+    .sidebar-right .sidebar-section {
+        margin-bottom: 40px;
+        padding-bottom: 10px;
+    }
+
+    .sidebar-section h3 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+
+    /* --- SEARCH INPUT --- */
+    .category-search-container {
+        display: flex; gap: 5px; align-items: center;
+        background-color: #ffffff; border: 1px solid #ccc;
+        border-radius: 30px; padding: 5px 8px; transition: border-color 0.2s;
+    }
+    .category-search-container:focus-within { border-color: #333; }
+    .category-search-container input { flex-grow: 1; padding: 8px 10px; border: none; background: transparent; font-size: 14px; width: 100%; min-width: 0; outline: none; }
+    .create-cat-btn { background-color: #333; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .create-cat-btn:hover { background-color: #000; }
+
+    /* --- LINKS (PILL STYLE) --- */
+    .category-link {
+        font-size: 16px; color: #555; display: flex; align-items: center;
+        justify-content: space-between; padding: 5px 12px; transition: all 0.2s;
+        cursor: pointer; border-radius: 30px; margin-bottom: 2px;
+    }
+    .category-link:hover { color: #000; text-decoration: none; background-color: #f0f0f0; }
+    .hashtag { color: #999; font-weight: normal; margin-right: 8px; }
+    .link-text-wrapper { display: flex; align-items: center; }
 
     /* --- FEED AREA --- */
     .feed-area {
         width: 600px;
         flex-grow: 0;
-        padding-top: 20px;
+        padding-top: 72px;
         margin: 0 40px;
-    }
-
-    .category-header-card {
-        background-color: #f8f9fa;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .page-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: #222;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .cat-desc {
-        color: #666;
-        margin-top: 10px;
-        font-size: 15px;
-    }
-
-    .follow-btn {
-        padding: 8px 20px;
-        border-radius: 20px;
-        font-weight: bold;
-        cursor: pointer;
-        margin-right: 10px;
-        border: 1px solid transparent;
-        transition: all 0.2s;
-    }
-
-        .follow-btn.not-following {
-            background-color: #000;
-            color: white;
-        }
-
-        .follow-btn.following {
-            background-color: #fff;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-
-    .verified-badge {
-        color: #1da1f2;
-        font-size: 24px;
-        position: relative;
-        top: 5px;
-    }
-
-    .verified-badge-small {
-        color: #1da1f2;
-        font-size: 14px;
-        margin-left: 5px;
-        position: relative;
-        top: 3px;
-    }
-
-    /* --- POST CARD --- */
-    .post-card {
-        background-color: #fff;
-        padding: 0;
-        margin-bottom: 20px;
-        border: 1px solid #e1e1e1;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .post-header {
-        display: flex;
-        align-items: center;
-        padding: 15px;
-    }
-
-    .post-avatar {
-        width: 48px;
-        height: 48px;
-        background-color: #ddd;
-        border-radius: 50%;
-        margin-right: 15px;
-        object-fit: cover;
-    }
-
-    .post-content {
-        padding: 5px 15px 20px 15px;
-        font-size: 16px;
-        line-height: 1.6;
-    }
-
-    .post-actions {
-        border-top: 1px solid #f0f0f0;
-        display: flex;
-    }
-
-    .action-btn {
-        flex-grow: 1;
-        background: none;
-        border: none;
-        padding: 12px 0;
-        cursor: pointer;
-        color: #666;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-        .action-btn:hover {
-            background-color: #f9f9f9;
-            color: #000;
-        }
-
-    /* --- CAROUSEL --- */
-    .carousel-container {
-        position: relative;
-        width: 100%;
-        height: 400px;
-        overflow: hidden;
-        background: #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .carousel-media {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        display: block;
-    }
-
-    .carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        font-size: 24px;
-        padding: 10px 15px;
-        cursor: pointer;
-        z-index: 10;
-        transition: background 0.2s;
-        border-radius: 4px;
-    }
-
-        .carousel-btn:hover {
-            background: rgba(0, 0, 0, 0.8);
-        }
-
-        .carousel-btn.prev {
-            left: 10px;
-        }
-
-        .carousel-btn.next {
-            right: 10px;
-        }
-
-    .carousel-counter {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        padding: 5px 12px;
-        border-radius: 15px;
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-    /* --- COMMENT SECTION --- */
-    .comment-section {
-        background-color: #f9f9f9;
-        border-top: 1px solid #eee;
-        padding: 15px;
-    }
-
-    .comment-list {
-        margin-bottom: 15px;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-
-    .comment-item {
-        display: flex;
-        margin-bottom: 12px;
-    }
-
-    .comment-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background-color: #ddd;
-        margin-right: 10px;
-        object-fit: cover;
-    }
-
-    .comment-bubble {
-        background-color: #fff;
-        border-radius: 12px;
-        padding: 8px 12px;
-        border: 1px solid #eee;
-        flex-grow: 1;
-    }
-
-    .comment-user {
-        font-weight: bold;
-        font-size: 13px;
-        margin-right: 5px;
-        color: #000;
-    }
-
-    .comment-date {
-        font-size: 11px;
-        color: #888;
-    }
-
-    .comment-text {
-        font-size: 14px;
-        color: #333;
-        margin-top: 2px;
-        line-height: 1.4;
-    }
-
-    .comment-input-area {
-        display: flex;
-        gap: 10px;
-    }
-
-    .comment-input {
-        flex-grow: 1;
-        padding: 8px 12px;
-        border-radius: 20px;
-        border: 1px solid #ccc;
-        font-size: 14px;
-        outline: none;
-    }
-
-    .comment-send-btn {
-        background-color: #333;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        padding: 6px 15px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: bold;
-    }
-
-        .comment-send-btn:disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
-
-    /* --- MODAL --- */
-    .modal {
-        display: flex;
-        position: fixed;
-        z-index: 2000;
-        left: 0;
-        top: 0;
-        width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-content {
-        background: #fff;
-        padding: 25px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 500px;
-        position: relative;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        max-height: 90vh;
         overflow-y: auto;
-    }
-
-    .modal-close {
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        color: #aaa;
-    }
-
-    .modal-textarea {
-        width: 100%;
-        height: 100px;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        resize: none;
-        font-family: inherit;
-        font-size: 15px;
+        padding-bottom: 50px;
         box-sizing: border-box;
-        margin: 10px 0;
     }
+    .feed-area::-webkit-scrollbar { width: 0px; background: transparent; }
 
-    .file-input-wrapper {
-        margin: 10px 0;
-    }
+    /* --- OTHER COMPONENTS --- */
+    .category-header-card { background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center; }
+    .page-title { font-size: 32px; font-weight: 800; color: #222; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .cat-desc { color: #666; margin-top: 10px; font-size: 15px; }
 
-    .login-btn {
-        background-color: #333;
-        color: white;
-        padding: 8px 20px;
-        border: none;
-        border-radius: 20px;
-        font-size: 15px;
-        cursor: pointer;
-        font-weight: bold;
-    }
+    .login-btn { background-color: #333; color: white; padding: 8px 20px; border: none; border-radius: 20px; font-size: 15px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+    .login-btn:hover { background-color: #000; }
+    .login-btn.secondary { background-color: #fff; color: #333; border: 1px solid #ccc; }
+    .follow-btn { padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-right: 10px; border: 1px solid transparent; transition: all 0.2s; }
+    .follow-btn.not-following { background-color: #000; color: white; }
+    .follow-btn.following { background-color: #fff; color: #333; border: 1px solid #ccc; }
+    .verified-badge { color: #1da1f2; font-size: 24px; position: relative; top: 5px; }
+    .verified-badge-small { color: #1da1f2; font-size: 14px; margin-left: 5px; } /* Removed top positioning for sidebar alignment */
 
-        .login-btn.secondary {
-            background-color: #fff;
-            color: #333;
-            border: 1px solid #ccc;
-        }
+    .post-card { background-color: #fff; padding: 0; margin-bottom: 20px; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden; }
+    .post-header { display: flex; align-items: center; padding: 15px; }
+    .post-avatar { width: 48px; height: 48px; background-color: #ddd; border-radius: 50%; margin-right: 15px; object-fit: cover; }
+    .post-content { font-size: 16px; color: #111; line-height: 1.6; padding: 5px 15px 20px 15px; }
+    .post-actions { border-top: 1px solid #f0f0f0; display: flex; }
+    .action-btn { flex-grow: 1; background: none; border: none; font-size: 14px; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 0; transition: background-color 0.2s; }
+    .action-btn:hover { background-color: #f9f9f9; color: #333; }
 
-    .preview-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 15px;
-    }
-
-    .preview-item {
-        width: 100px;
-        height: 100px;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid #ddd;
-        position: relative;
-        background: #f0f0f0;
-    }
-
-    .preview-media {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .remove-media-btn {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        background: rgba(0,0,0,0.7);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-    }
-
-        .remove-media-btn:hover {
-            background: red;
-        }
-
-    .upload-loading {
-        font-size: 12px;
-        color: #666;
-        font-style: italic;
-        margin-left: 10px;
-    }
+    /* Carousel, Comments, Modals (Same as before) */
+    .carousel-container { position: relative; width: 100%; height: 400px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
+    .carousel-media { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.5); color: white; border: none; font-size: 24px; padding: 10px 15px; cursor: pointer; z-index: 10; transition: background 0.2s; border-radius: 4px; }
+    .carousel-btn:hover { background: rgba(0, 0, 0, 0.8); }
+    .carousel-btn.prev { left: 10px; }
+    .carousel-btn.next { right: 10px; }
+    .carousel-counter { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; padding: 5px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; }
+    .comment-section { background-color: #f9f9f9; border-top: 1px solid #eee; padding: 15px; }
+    .comment-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; }
+    .comment-item { display: flex; margin-bottom: 12px; }
+    .comment-avatar { width: 32px; height: 32px; border-radius: 50%; background-color: #ddd; margin-right: 10px; object-fit: cover; }
+    .comment-bubble { background-color: #fff; border-radius: 12px; padding: 8px 12px; border: 1px solid #eee; flex-grow: 1; }
+    .comment-user { font-weight: bold; font-size: 13px; margin-right: 5px; color: #000; }
+    .comment-date { font-size: 11px; color: #888; }
+    .comment-text { font-size: 14px; color: #333; margin-top: 2px; line-height: 1.4; }
+    .comment-input-area { display: flex; gap: 10px; }
+    .comment-input { flex-grow: 1; padding: 8px 12px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; outline: none; }
+    .comment-send-btn { background-color: #333; color: white; border: none; border-radius: 20px; padding: 6px 15px; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .comment-send-btn:disabled { opacity: 0.5; cursor: default; }
+    .modal { display: flex; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+    .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+    .modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
+    .modal-textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; font-size: 15px; box-sizing: border-box; margin: 10px 0; }
+    .file-input-wrapper { margin: 10px 0; }
+    .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+    .preview-item { width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; position: relative; background: #f0f0f0; }
+    .preview-media { width: 100%; height: 100%; object-fit: cover; }
+    .remove-media-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
+    .remove-media-btn:hover { background: red; }
+    .upload-loading { font-size: 12px; color: #666; font-style: italic; margin-left: 10px; }
 </style>
 
 <header class="site-header">
@@ -613,22 +220,23 @@
             <div class="logo-icon"><i class="fas fa-check"></i></div>
             <span class="logo-text">SoSuSa</span>
         </div>
-        <button class="join-btn" onclick="location.href='/'">Back Home</button>
+        <button class="login-btn" onclick="location.href='/'">Back Home</button>
     </div>
 </header>
 
 <div class="main-layout">
+    @* --- LEFT SIDEBAR: FOLLOWING + SEARCH (Matching Home) --- *@
     <aside class="sidebar sidebar-left">
-        <div class="sidebar-section">
-            <h3>Recently Created</h3>
+        <div class="sidebar-section scrollable-list">
+            <h3>Following</h3>
             <ul class="category-list">
-                @if (RecentCategories != null && RecentCategories.Any())
+                @if (FollowedCategories != null && FollowedCategories.Any())
                 {
-                    @foreach (var cat in RecentCategories)
+                    @foreach (var cat in FollowedCategories)
                     {
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                <span class="hashtag">#</span> @cat.CategoryName
+                                <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
                                 @if (cat.IsVerified)
                                 {
                                     <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
@@ -640,21 +248,28 @@
                 else
                 {
                     <AuthorizeView>
-                        <Authorized><li>You haven't created any categories yet.</li></Authorized>
-                        <NotAuthorized><li>Login to see your categories.</li></NotAuthorized>
+                        <Authorized>
+                            <li style="padding-left:10px; color:#666; font-size:14px;">You aren't following anything yet.</li>
+                        </Authorized>
+                        <NotAuthorized>
+                            <li style="padding-left:10px; color:#666; font-size:14px;">Login to see follows.</li>
+                        </NotAuthorized>
                     </AuthorizeView>
                 }
             </ul>
-            <hr />
         </div>
+        
         <div class="sidebar-footer">
             <div class="category-search-container">
                 <input type="text" placeholder="Find category..." @bind="searchTerm" @bind:event="oninput" />
-                <button type="button" class="create-cat-btn" title="Create New Category" @onclick="HandleCategorySearch">+</button>
+                <button type="button" class="create-cat-btn" title="Create New Category" @onclick="HandleCategorySearch">
+                    <i class="fas fa-plus"></i>
+                </button>
             </div>
         </div>
     </aside>
 
+    @* --- CENTER FEED --- *@
     <main class="feed-area">
         @if (CurrentCategory == null)
         {
@@ -690,19 +305,19 @@
                     <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">@(isFollowing ? "Unfollow" : "Follow")</button>
                     @if (CanUserPost())
                     {
-                        <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
+                        <button class="login-btn" @onclick="() => showPostModal = true">Create Post</button>
                     }
                     else if (hasPendingRequest)
                     {
-                        <button class="join-btn" disabled style="background-color: #888; cursor: default;">Request Pending</button>
+                        <button class="login-btn" disabled style="background-color: #888; cursor: default;">Request Pending</button>
                     }
                     else if (CurrentCategory?.IsVerified == true)
                     {
-                        <button class="join-btn" @onclick="() => showRequestModal = true">Request Access</button>
+                        <button class="login-btn" @onclick="() => showRequestModal = true">Request Access</button>
                     }
                     else
                     {
-                        <button class="join-btn" @onclick="() => showPostModal = true">Create Post</button>
+                        <button class="login-btn" @onclick="() => showPostModal = true">Create Post</button>
                     }
                 </div>
 
@@ -731,19 +346,14 @@
                             </div>
                         </div>
                         <div class="post-content">@post.Content</div>
-
                         @if (post.Media != null && post.Media.Any())
                         {
                             var mediaList = post.Media.ToList();
                             var totalMedia = mediaList.Count;
                             var currentIndex = GetCurrentIndex(post.Id);
                             var activeMedia = mediaList[currentIndex];
-
                             <div class="carousel-container">
-                                @if (totalMedia > 1)
-                                {
-                                    <button class="carousel-btn prev" @onclick="() => PrevSlide(post.Id, totalMedia)">&#10094;</button>
-                                }
+                                @if (totalMedia > 1) { <button class="carousel-btn prev" @onclick="() => PrevSlide(post.Id, totalMedia)">&#10094;</button> }
                                 @if (activeMedia.MediaType == "Video")
                                 {
                                     <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">Your browser does not support the video tag.</video>
@@ -752,51 +362,19 @@
                                 {
                                     <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
                                 }
-                                @if (totalMedia > 1)
-                                {
-                                    <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button>
-                                    <div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div>
-                                }
+                                @if (totalMedia > 1) { <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button><div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div> }
                             </div>
                         }
-
                         <div class="post-actions">
                             <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
-                                @{
-                                    var isLiked = post.Likes.Any(l => l.UserID == currentUserId);
-                                    var likeCount = post.Likes.Count;
-                                }
-                                @if (isLiked)
-                                {
-                                    <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
-                                }
-                                else
-                                {
-                                    <i class="far fa-heart" style="margin-right: 5px;"></i>
-                                }
-                                @if (likeCount > 0)
-                                {
-                                    <span>@likeCount</span>
-                                }
-                                else
-                                {
-                                    <span>Like</span>
-                                }
+                                @{ var isLiked = post.Likes.Any(l => l.UserID == currentUserId); var likeCount = post.Likes.Count; }
+                                @if (isLiked) { <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i> } else { <i class="far fa-heart" style="margin-right: 5px;"></i> }
+                                @if (likeCount > 0) { <span>@likeCount</span> } else { <span>Like</span> }
                             </button>
-
-                            <button class="action-btn" @onclick="() => ToggleComments(post.Id)">
-                                <i class="far fa-comment"></i> Comment
-                            </button>
-
-                            <button class="action-btn">Share</button>
-
-                            @* --- REPORT BUTTON --- *@
-                            <button class="action-btn" style="color: #666; font-size: 14px; font-weight: 500;" @onclick="@(() => OpenReportModal(post.Id))" title="Report Post">
-                                Report
-                            </button>
+                            <button class="action-btn" @onclick="() => ToggleComments(post.Id)"><i class="far fa-comment"></i> Comment</button>
+                            <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
+                            <button class="action-btn" style="color: #666;" @onclick="@(() => OpenReportModal(post.Id))" title="Report Post"><i class="far fa-flag"></i> Report</button>
                         </div>
-
-                        @* --- COMMENT SECTION --- *@
                         @if (_showComments.ContainsKey(post.Id) && _showComments[post.Id])
                         {
                             <div class="comment-section">
@@ -808,10 +386,7 @@
                                             <div class="comment-item">
                                                 <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
                                                 <div class="comment-bubble">
-                                                    <div>
-                                                        <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
-                                                        <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
-                                                    </div>
+                                                    <div><span class="comment-user">@(comment.User?.UserName ?? "User")</span><span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span></div>
                                                     <div class="comment-text">@comment.Content</div>
                                                 </div>
                                             </div>
@@ -819,9 +394,7 @@
                                     }
                                 </div>
                                 <div class="comment-input-area">
-                                    <input type="text" class="comment-input" placeholder="Write a comment..."
-                                           value="@(_commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "")"
-                                           @onchange="@(e => UpdateCommentDraft(post.Id, e.Value?.ToString()))" />
+                                    <input type="text" class="comment-input" placeholder="Write a comment..." value="@(_commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "")" @onchange="@(e => UpdateCommentDraft(post.Id, e.Value?.ToString()))" />
                                     <button class="comment-send-btn" @onclick="() => SubmitComment(post.Id)">Post</button>
                                 </div>
                             </div>
@@ -831,28 +404,41 @@
             }
             else
             {
-                <div style="text-align:center; padding:20px; color:#666;">
-                    No posts yet. Be the first to post in <b>#@CurrentCategory.CategoryName</b>!
-                </div>
+                <div style="text-align:center; padding:20px; color:#666;">No posts yet. Be the first to post in <b>#@CurrentCategory.CategoryName</b>!</div>
             }
         }
     </main>
 
+    @* --- RIGHT SIDEBAR: VERIFIED + RECENTLY CREATED (Matching Home) --- *@
     <aside class="sidebar sidebar-right">
         <div class="sidebar-section">
-            <h3>Following</h3>
+            <h3>Verified Categories</h3>
             <ul class="category-list">
-                @if (FollowedCategories != null && FollowedCategories.Any())
+                @if (VerifiedCategories != null)
                 {
-                    @foreach (var cat in FollowedCategories)
+                    @foreach (var cat in VerifiedCategories)
                     {
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                <span class="hashtag">#</span> @cat.CategoryName
-                                @if (cat.IsVerified)
-                                {
-                                    <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
-                                }
+                                <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
+                                <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
+                            </a>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+        <div class="sidebar-section">
+            <h3>Recently Created</h3>
+            <ul class="category-list">
+                @if (RecentCategories != null && RecentCategories.Any())
+                {
+                    @foreach (var cat in RecentCategories)
+                    {
+                        <li>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                                <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
+                                @if (cat.IsVerified) { <i class="fas fa-check-circle verified-badge-small" title="Verified"></i> }
                             </a>
                         </li>
                     }
@@ -860,8 +446,8 @@
                 else
                 {
                     <AuthorizeView>
-                        <Authorized><li>You aren't following anything yet.</li></Authorized>
-                        <NotAuthorized><li>Login to see follows.</li></NotAuthorized>
+                        <Authorized><li style="padding-left:10px; color:#666; font-size:14px;">You haven't created any categories yet.</li></Authorized>
+                        <NotAuthorized><li style="padding-left:10px; color:#666; font-size:14px;">Login to see your categories.</li></NotAuthorized>
                     </AuthorizeView>
                 }
             </ul>
@@ -869,154 +455,23 @@
     </aside>
 </div>
 
-@* --- CREATE POST MODAL --- *@
-@if (showPostModal)
-{
-    <div class="modal">
-        <div class="modal-content">
-            <span class="modal-close" @onclick="ClosePostModal">&times;</span>
-            <h2 style="margin-top: 0;">Create Post</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
-            <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
-            <div class="file-input-wrapper">
-                <label style="font-weight:bold; display:block; margin-bottom:5px;">
-                    Add Media (Images or Videos):
-                    @if (isUploading)
-                    {
-                        <span class="upload-loading">Uploading... please wait.</span>
-                    }
-                </label>
-                <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
-            </div>
-            <div class="preview-container">
-                @for (int i = 0; i < pendingUploads.Count; i++)
-                {
-                    var index = i; var file = pendingUploads[i];
-                    <div class="preview-item">
-                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>
-                        @if (file.MediaType == "Video")
-                        {
-                            <video class="preview-media" src="@file.SavedPath"></video>
-                        }
-                        else
-                        {
-                            <img class="preview-media" src="@file.SavedPath" alt="Preview" />
-                        }
-                    </div>
-                }
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
-                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
-                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
-            </div>
-        </div>
-    </div>
-}
-
-@* --- REQUEST ACCESS MODAL --- *@
-@if (showRequestModal)
-{
-    <div class="modal">
-        <div class="modal-content">
-            <span class="modal-close" @onclick="() => showRequestModal = false">&times;</span>
-            <h2 style="margin-top: 0;">Request Access</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div>
-            <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
-                <button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button>
-                <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
-            </div>
-        </div>
-    </div>
-}
-
-@* --- REPORT POST MODAL --- *@
-@if (showReportModal)
-{
-    <div class="modal">
-        <div class="modal-content">
-            <span class="modal-close" @onclick="() => showReportModal = false">&times;</span>
-            <h2 style="margin-top: 0; color: #dc3545;">Report Content</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
-                Help us keep the community safe. Why are you reporting this post?
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label>
-                <select class="modal-textarea" style="height: 40px;" @bind="reportReasonSelection">
-                    <option value="Spam">Spam</option>
-                    <option value="Harassment">Harassment or Bullying</option>
-                    <option value="Misinformation">Misinformation</option>
-                    <option value="Hate Speech">Hate Speech</option>
-                    <option value="Inappropriate">Inappropriate Content</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label>
-                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="reportReasonDetails"></textarea>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
-                <button class="login-btn secondary" @onclick="() => showReportModal = false">Cancel</button>
-                <button class="login-btn" style="background-color: #dc3545;" @onclick="SubmitReport">Submit Report</button>
-            </div>
-        </div>
-    </div>
-}
-
-@* --- NOTIFICATION MODAL (UPDATED) --- *@
-@if (showNotificationModal)
-{
-    <div class="modal">
-        <div class="modal-content" style="text-align: center; max-width: 400px;">
-            <span class="modal-close" @onclick="CloseNotification">&times;</span>
-
-            <div style="margin-bottom: 15px;">
-                @if (notificationType == "success")
-                {
-                    <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i>
-                    <h2 style="margin: 10px 0; color: #28a745;">Success</h2>
-                }
-                else if (notificationType == "info")
-                {
-                    <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i>
-                    <h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2>
-                }
-                else
-                {
-                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i>
-                    <h2 style="margin: 10px 0; color: #dc3545;">Error</h2>
-                }
-            </div>
-
-            <p style="font-size: 16px; margin-bottom: 25px;">@notificationMessage</p>
-
-            <button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button>
-        </div>
-    </div>
-}
-
-<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
-    <div class="modal-content">
-        <span class="modal-close" @onclick="() => showCreateConfirm = false">&times;</span>
-        <h2>Category Not Found</h2>
-        <p>Would you like to create <b>#@searchTerm</b>?</p>
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button>
-            <button class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">Cancel</button>
-        </div>
-    </div>
-</div>
+@* --- MODALS (Create Post, Request Access, Report, Notification) --- *@
+@if (showPostModal) { <div class="modal"><div class="modal-content"><span class="modal-close" @onclick="ClosePostModal">&times;</span><h2 style="margin-top: 0;">Create Post</h2><div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div><textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea><div class="file-input-wrapper"><label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Images or Videos): @if (isUploading) { <span class="upload-loading">Uploading... please wait.</span> }</label><InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" /></div><div class="preview-container">@for (int i = 0; i < pendingUploads.Count; i++) { var index = i; var file = pendingUploads[i]; <div class="preview-item"><button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>@if (file.MediaType == "Video") { <video class="preview-media" src="@file.SavedPath"></video> } else { <img class="preview-media" src="@file.SavedPath" alt="Preview" /> }</div> }</div><div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;"><button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button><button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button></div></div></div> }
+@if (showRequestModal) { <div class="modal"><div class="modal-content"><span class="modal-close" @onclick="() => showRequestModal = false">&times;</span><h2 style="margin-top: 0;">Request Access</h2><div style="font-size: 14px; color: #666; margin-bottom: 10px;">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div><textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea><div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;"><button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button><button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button></div></div></div> }
+@if (showReportModal) { <div class="modal"><div class="modal-content"><span class="modal-close" @onclick="() => showReportModal = false">&times;</span><h2 style="margin-top: 0; color: #dc3545;">Report Content</h2><div style="font-size: 14px; color: #666; margin-bottom: 10px;">Help us keep the community safe. Why are you reporting this post?</div><div style="margin-bottom: 15px;"><label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label><select class="modal-textarea" style="height: 40px;" @bind="reportReasonSelection"><option value="Spam">Spam</option><option value="Harassment">Harassment or Bullying</option><option value="Misinformation">Misinformation</option><option value="Hate Speech">Hate Speech</option><option value="Inappropriate">Inappropriate Content</option><option value="Other">Other</option></select></div><div style="margin-bottom: 15px;"><label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label><textarea class="modal-textarea" placeholder="Please provide more details..." @bind="reportReasonDetails"></textarea></div><div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;"><button class="login-btn secondary" @onclick="() => showReportModal = false">Cancel</button><button class="login-btn" style="background-color: #dc3545;" @onclick="SubmitReport">Submit Report</button></div></div></div> }
+@if (showNotificationModal) { <div class="modal"><div class="modal-content" style="text-align: center; max-width: 400px;"><span class="modal-close" @onclick="CloseNotification">&times;</span><div style="margin-bottom: 15px;">@if (notificationType == "success") { <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i><h2 style="margin: 10px 0; color: #28a745;">Success</h2> } else if (notificationType == "info") { <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i><h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2> } else { <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i><h2 style="margin: 10px 0; color: #dc3545;">Error</h2> }</div><p style="font-size: 16px; margin-bottom: 25px;">@notificationMessage</p><button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button></div></div> }
+<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")"><div class="modal-content"><span class="modal-close" @onclick="() => showCreateConfirm = false">&times;</span><h2>Category Not Found</h2><p>Would you like to create <b>#@searchTerm</b>?</p><div style="display: flex; gap: 10px; margin-top: 20px;"><button class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button><button class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">Cancel</button></div></div></div>
 
 @code {
     [Parameter] public int Id { get; set; }
 
     private Categories? CurrentCategory;
     private List<Posts> CategoryPosts = new();
+    
+    // --- SIDEBAR DATA (Added VerifiedCategories to match Home) ---
     private List<Categories> RecentCategories = new();
     private List<Categories> FollowedCategories = new();
+    private List<Categories> VerifiedCategories = new();
 
     private bool IsLoading = true;
     private string Title = "Category";
@@ -1024,39 +479,29 @@
     private string searchTerm = "";
     private bool showCreateConfirm = false;
     private bool showPostModal = false;
-
     private bool showRequestModal = false;
     private string requestReason = "";
     private bool hasApprovedAccess = false;
     private bool hasPendingRequest = false;
-
     private string newPostContent = "";
     private string errorMessage = "";
     private string? currentUserId;
     private bool isAdmin = false;
     private Users? currentUser;
-
-    // --- REPORTING STATE ---
     private bool showReportModal = false;
     private int reportPostId = 0;
     private string reportReasonSelection = "Spam";
     private string reportReasonDetails = "";
-
-    // --- NOTIFICATION MODAL STATE ---
     private bool showNotificationModal = false;
     private string notificationMessage = "";
-    private string notificationType = "success"; // "success", "error", or "info"
-
+    private string notificationType = "success";
     private Dictionary<int, int> _carouselIndices = new();
     private int GetCurrentIndex(int postId) { if (!_carouselIndices.ContainsKey(postId)) _carouselIndices[postId] = 0; return _carouselIndices[postId]; }
     private void NextSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex + 1) % totalCount; }
     private void PrevSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount; }
-
-    // --- COMMENT STATE ---
     private Dictionary<int, bool> _showComments = new();
     private Dictionary<int, List<Comments>> _postComments = new();
     private Dictionary<int, string> _commentDrafts = new();
-
     private class PendingFile { public string SavedPath { get; set; } = ""; public string MediaType { get; set; } = ""; public string PhysicalPath { get; set; } = ""; }
     private List<PendingFile> pendingUploads = new();
     private bool isUploading = false;
@@ -1088,6 +533,9 @@
                 currentUser = await userManager.FindByIdAsync(currentUserId);
             }
 
+            // Load verified categories (for Right Sidebar)
+            VerifiedCategories = await context.Categories.Where(c => c.IsVerified == true).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
+
             CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
             if (CurrentCategory != null) Title = "#" + CurrentCategory.CategoryName;
             if (user.Identity?.IsAuthenticated == true) isAdmin = user.IsInRole("Admin");
@@ -1112,197 +560,14 @@
         finally { IsLoading = false; }
     }
 
-    // --- HELPER FOR NOTIFICATION MODAL ---
-    private void ShowNotification(string message, string type)
-    {
-        notificationMessage = message;
-        notificationType = type;
-        showNotificationModal = true;
-    }
-
-    private void CloseNotification()
-    {
-        showNotificationModal = false;
-        notificationMessage = "";
-    }
-
-    // --- UPDATED REPORT LOGIC ---
-    private void OpenReportModal(int postId)
-    {
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            Navigation.NavigateTo("/Account/Login", true);
-            return;
-        }
-
-        // Just open the modal. Check logic happens on Submit.
-        reportPostId = postId;
-        reportReasonSelection = "Spam";
-        reportReasonDetails = "";
-        showReportModal = true;
-    }
-
-    private async Task SubmitReport()
-    {
-        // 1. Safety check
-        if (reportPostId == 0 || string.IsNullOrEmpty(currentUserId))
-        {
-            ShowNotification("Session error. Please refresh and try again.", "error");
-            return;
-        }
-
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-
-            // CHECK DUPLICATES BEFORE SUBMITTING
-            var existingReport = await context.Reports.FirstOrDefaultAsync(r =>
-                r.PostID == reportPostId &&
-                r.ReporterID == currentUserId);
-
-            if (existingReport != null)
-            {
-                // CLOSE MODAL, BUT DO NOT RENDER YET
-                showReportModal = false;
-
-                // ShowToast handles the render for both closing the modal and showing the toast
-                if (existingReport.Status == "Dismissed")
-                {
-                    ShowNotification("An Admin has already dismissed your report for this post.", "error");
-                }
-                else
-                {
-                    ShowNotification("You have already reported this post.", "error");
-                }
-                return;
-            }
-
-            // NEW CHECK: Check if ANY other report on this post is already "Dismissed"
-            // This means admins have already reviewed this content.
-            bool isAlreadyDismissed = await context.Reports.AnyAsync(r =>
-                r.PostID == reportPostId &&
-                r.Status == "Dismissed");
-
-            // IF NO DUPLICATE, PROCEED
-            string finalReason = reportReasonSelection;
-            if (!string.IsNullOrWhiteSpace(reportReasonDetails))
-            {
-                finalReason = $"{reportReasonSelection}: {reportReasonDetails}";
-            }
-
-            var newReport = new Reports
-            {
-                PostID = reportPostId,
-                ReporterID = currentUserId,
-                Reason = finalReason,
-                Status = "Pending",
-                DateCreated = DateTime.Now
-            };
-
-            context.Reports.Add(newReport);
-            await context.SaveChangesAsync();
-
-            // CLOSE MODAL
-            showReportModal = false;
-
-            if (isAlreadyDismissed)
-            {
-                // Show INFO type notification
-                ShowNotification("Report submitted, but this content has already been reviewed and dismissed by admins.", "info");
-            }
-            else
-            {
-                // Show SUCCESS type notification
-                ShowNotification("Report submitted successfully.", "success");
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowNotification("Error sending report: " + ex.Message, "error");
-        }
-    }
-
-    private async Task ToggleLike(int postId)
-    {
-        if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; }
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId);
-            var post = CategoryPosts.FirstOrDefault(p => p.Id == postId);
-            if (existingLike != null)
-            {
-                context.PostLikes.Remove(existingLike);
-                if (post != null) { var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId); if (localLike != null) post.Likes.Remove(localLike); }
-            }
-            else
-            {
-                var newLike = new PostLikes { PostID = postId, UserID = currentUserId, LikedAt = DateTime.Now };
-                context.PostLikes.Add(newLike);
-                if (post != null) post.Likes.Add(newLike);
-            }
-            await context.SaveChangesAsync();
-            StateHasChanged();
-        }
-        catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); }
-    }
-
-    private async Task ToggleComments(int postId)
-    {
-        if (!_showComments.ContainsKey(postId)) _showComments[postId] = false;
-        _showComments[postId] = !_showComments[postId];
-
-        if (_showComments[postId])
-        {
-            if (!_postComments.ContainsKey(postId) || _postComments[postId] == null)
-            {
-                try
-                {
-                    using var context = DbFactory.CreateDbContext();
-                    var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync();
-                    _postComments[postId] = comments;
-                }
-                catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); }
-            }
-        }
-        StateHasChanged();
-    }
-
-    private void UpdateCommentDraft(int postId, string? value)
-    {
-        if (value != null) _commentDrafts[postId] = value;
-    }
-
-    private async Task SubmitComment(int postId)
-    {
-        if (currentUser == null) { Navigation.NavigateTo("/Account/Login", true); return; }
-        if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId])) return;
-
-        var content = _commentDrafts[postId];
-
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            var newComment = new Comments
-            {
-                PostID = postId,
-                UserID = currentUser.Id,
-                Content = content,
-                DateCreated = DateTime.Now,
-                DateUpdated = DateTime.Now,
-                CreatedBy = currentUser.Id
-            };
-            context.Comments.Add(newComment);
-            await context.SaveChangesAsync();
-            _commentDrafts[postId] = "";
-            newComment.User = currentUser;
-            if (!_postComments.ContainsKey(postId)) _postComments[postId] = new List<Comments>();
-            _postComments[postId].Add(newComment);
-            StateHasChanged();
-        }
-        catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); }
-    }
-
+    private void ShowNotification(string message, string type) { notificationMessage = message; notificationType = type; showNotificationModal = true; }
+    private void CloseNotification() { showNotificationModal = false; notificationMessage = ""; }
+    private void OpenReportModal(int postId) { if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } reportPostId = postId; reportReasonSelection = "Spam"; reportReasonDetails = ""; showReportModal = true; }
+    private async Task SubmitReport() { if (reportPostId == 0 || string.IsNullOrEmpty(currentUserId)) { ShowNotification("Session error. Please refresh and try again.", "error"); return; } try { using var context = DbFactory.CreateDbContext(); var existingReport = await context.Reports.FirstOrDefaultAsync(r => r.PostID == reportPostId && r.ReporterID == currentUserId); if (existingReport != null) { showReportModal = false; if (existingReport.Status == "Dismissed") ShowNotification("An Admin has already dismissed your report for this post.", "error"); else ShowNotification("You have already reported this post.", "error"); return; } bool isAlreadyDismissed = await context.Reports.AnyAsync(r => r.PostID == reportPostId && r.Status == "Dismissed"); string finalReason = reportReasonSelection; if (!string.IsNullOrWhiteSpace(reportReasonDetails)) finalReason = $"{reportReasonSelection}: {reportReasonDetails}"; var newReport = new Reports { PostID = reportPostId, ReporterID = currentUserId, Reason = finalReason, Status = "Pending", DateCreated = DateTime.Now }; context.Reports.Add(newReport); await context.SaveChangesAsync(); showReportModal = false; if (isAlreadyDismissed) ShowNotification("Report submitted, but this content has already been reviewed and dismissed by admins.", "info"); else ShowNotification("Report submitted successfully.", "success"); } catch (Exception ex) { ShowNotification("Error sending report: " + ex.Message, "error"); } }
+    private async Task ToggleLike(int postId) { if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } try { using var context = DbFactory.CreateDbContext(); var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId); var post = CategoryPosts.FirstOrDefault(p => p.Id == postId); if (existingLike != null) { context.PostLikes.Remove(existingLike); if (post != null) { var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId); if (localLike != null) post.Likes.Remove(localLike); } } else { var newLike = new PostLikes { PostID = postId, UserID = currentUserId, LikedAt = DateTime.Now }; context.PostLikes.Add(newLike); if (post != null) post.Likes.Add(newLike); } await context.SaveChangesAsync(); StateHasChanged(); } catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); } }
+    private async Task ToggleComments(int postId) { if (!_showComments.ContainsKey(postId)) _showComments[postId] = false; _showComments[postId] = !_showComments[postId]; if (_showComments[postId]) { if (!_postComments.ContainsKey(postId) || _postComments[postId] == null) { try { using var context = DbFactory.CreateDbContext(); var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync(); _postComments[postId] = comments; } catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); } } } StateHasChanged(); }
+    private void UpdateCommentDraft(int postId, string? value) { if (value != null) _commentDrafts[postId] = value; }
+    private async Task SubmitComment(int postId) { if (currentUser == null) { Navigation.NavigateTo("/Account/Login", true); return; } if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId])) return; var content = _commentDrafts[postId]; try { using var context = DbFactory.CreateDbContext(); var newComment = new Comments { PostID = postId, UserID = currentUser.Id, Content = content, DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUser.Id }; context.Comments.Add(newComment); await context.SaveChangesAsync(); _commentDrafts[postId] = ""; newComment.User = currentUser; if (!_postComments.ContainsKey(postId)) _postComments[postId] = new List<Comments>(); _postComments[postId].Add(newComment); StateHasChanged(); } catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); } }
     private async Task HandleFilesSelected(InputFileChangeEventArgs e) { errorMessage = ""; isUploading = true; try { var newFiles = e.GetMultipleFiles(MaxAllowedFiles); var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads"); if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder); foreach (var file in newFiles) { if (pendingUploads.Count >= MaxAllowedFiles) break; if (file.Size <= MaxFileSize) { try { var extension = Path.GetExtension(file.Name).ToLower(); bool isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov"); var fileName = $"{Guid.NewGuid()}{extension}"; var physicalPath = Path.Combine(uploadsFolder, fileName); var webPath = $"/uploads/{fileName}"; await using var fileStream = new FileStream(physicalPath, FileMode.Create); await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream); pendingUploads.Add(new PendingFile { SavedPath = webPath, PhysicalPath = physicalPath, MediaType = isVideo ? "Video" : "Image" }); } catch (Exception ex) { errorMessage = $"Error reading {file.Name}: {ex.Message}"; } } else { errorMessage = $"File {file.Name} is too large."; } } } finally { isUploading = false; } }
     private void RemoveFile(int index) { if (index >= 0 && index < pendingUploads.Count) { var file = pendingUploads[index]; try { if (System.IO.File.Exists(file.PhysicalPath)) { System.IO.File.Delete(file.PhysicalPath); } } catch { } pendingUploads.RemoveAt(index); } }
     private async Task HandleSubmitRequest() { if (string.IsNullOrEmpty(currentUserId)) return; try { using var context = DbFactory.CreateDbContext(); var exists = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending"); if (exists) { errorMessage = "You already have a pending request."; showRequestModal = false; hasPendingRequest = true; return; } var request = new CategoryAccessRequests { UserId = currentUserId, CategoryId = Id, Reason = requestReason, Status = "Pending", DateCreated = DateTime.Now, DateUpdated = DateTime.Now }; context.CategoryAccessRequests.Add(request); await context.SaveChangesAsync(); showRequestModal = false; requestReason = ""; hasPendingRequest = true; StateHasChanged(); } catch (Exception ex) { errorMessage = "Error sending request: " + ex.Message; } }

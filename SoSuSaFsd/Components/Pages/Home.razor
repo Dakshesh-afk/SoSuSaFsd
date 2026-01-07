@@ -23,6 +23,7 @@
         background-color: #ffffff;
         margin: 0;
         color: #333;
+        overflow: hidden; /* Prevents window scroll */
     }
 
     a {
@@ -167,111 +168,120 @@
             color: white;
         }
 
-    /* --- LAYOUT --- */
+    /* --- LAYOUT UPDATES --- */
     .main-layout {
         display: flex;
         justify-content: center;
         width: 100%;
-        max-width: 1100px;
-        margin: 0 auto 20px auto;
-        min-height: 80vh;
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 100vh;
         gap: 0;
-        margin-top: 62px;
+        margin-top: 0;
     }
 
     .sidebar {
-        width: 240px;
-        position: sticky;
-        top: 60px;
-        height: calc(100vh - 60px);
+        width: 280px;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        padding-top: 22px;
+        padding-top: 72px;
+        margin-top: 0;
         box-sizing: border-box;
-        overflow-y: auto;
+        z-index: 900;
     }
 
+    /* --- UPDATED LEFT SIDEBAR STYLES --- */
     .sidebar-left {
         border-right: 1px solid #ddd;
-        padding-right: 20px;
+        padding-right: 0; /* Changed from 20px to 0 to keep scrollbar at edge */
+        overflow: hidden !important;
     }
 
-    .sidebar-right {
-        border-left: 1px solid #ddd;
-        padding-left: 20px;
-    }
-
-    .sidebar-section {
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-    }
-
-        .sidebar-section h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-transform: none;
+        .sidebar-left .section-view {
+            display: none;
         }
 
-    .category-link {
-        font-size: 16px;
-        color: #555;
-        display: flex;
-        align-items: center;
-        padding: 5px 0;
-        transition: color 0.2s;
-        cursor: pointer;
-    }
+            .sidebar-left .section-view.active {
+                display: flex;
+                height: 100%;
+                flex-direction: column;
+            }
 
-        .category-link:hover {
-            color: #000;
-            text-decoration: underline;
-            background-color: #f9f9f9;
-            border-radius: 4px;
+        /* Updated scrollable list with internal padding */
+        .sidebar-left .sidebar-section.scrollable-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 0;
+
+            padding-bottom: 10px;
+            padding-left: 20px; /* NEW: Content padding */
+            padding-right: 10px; /* NEW: Space before scrollbar */
         }
 
-        .category-link.active-setting {
-            font-weight: bold;
-            color: #000;
-        }
+            .sidebar-left .sidebar-section.scrollable-list::-webkit-scrollbar {
+                width: 6px; /* Slightly wider for usability */
+            }
 
-    .hashtag {
-        color: #999;
-        font-weight: normal;
-        margin-right: 8px;
-    }
+            .sidebar-left .sidebar-section.scrollable-list::-webkit-scrollbar-thumb {
+                background-color: #ccc;
+                border-radius: 4px;
+            }
 
+    /* Updated Sidebar Footer (Search Box) */
     .sidebar-footer {
-        margin-top: 15px;
-        padding-top: 15px;
-        border-top: 1px solid #ddd;
+        flex-shrink: 0;
+        padding: 15px 20px 25px 20px; /* Align with list content */
+        background-color: transparent;
+        border-top: 1px solid #f9f9f9; /* Subtle separator */
     }
 
+    /* --- STICKY FOLLOWING TITLE --- */
+    .sidebar-left .sidebar-section.scrollable-list h3 {
+        position: sticky;
+        top: 0;
+        background-color: #f5f5f5; 
+        margin-bottom: 0;
+        padding-bottom: 15px;
+        padding-top: 5px;
+        z-index: 10;
+    }
+
+    /* --- UPDATED SEARCH INPUT --- */
     .category-search-container {
         display: flex;
-        gap: 10px;
+        gap: 5px;
         align-items: center;
+        background-color: #ffffff; /* Changed to White */
+        border: 1px solid #ccc; /* Added Border */
+        border-radius: 30px;
+        padding: 5px 8px;
+        transition: border-color 0.2s;
     }
+
+        .category-search-container:focus-within {
+            border-color: #333; /* Highlight on focus */
+        }
 
         .category-search-container input {
             flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 8px 10px;
+            border: none;
+            background: transparent;
             font-size: 14px;
             width: 100%;
+            min-width: 0;
+            outline: none;
         }
 
     .create-cat-btn {
         background-color: #333;
         color: white;
         border: none;
-        width: 34px;
-        height: 34px;
-        border-radius: 4px;
-        font-size: 20px;
-        line-height: 1;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 14px;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -283,13 +293,80 @@
             background-color: #000;
         }
 
+    /* RIGHT SIDEBAR STYLES */
+    .sidebar-right {
+        border-left: 1px solid #ddd;
+        padding-left: 20px;
+        overflow-y: hidden !important;
+    }
+
+        .sidebar-right .sidebar-section {
+            margin-bottom: 40px;
+            padding-bottom: 10px;
+        }
+
+    .sidebar-section h3 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 15px;
+        font-weight: bold;
+        text-transform: none;
+    }
+
+    /* --- UPDATED CATEGORY LINK (Pill Style) --- */
+    .category-link {
+        font-size: 16px;
+        color: #555;
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* Allow badges to align right */
+        padding: 5px 12px; /* Increased padding */
+        transition: all 0.2s;
+        cursor: pointer;
+        border-radius: 30px; /* Rounded corners */
+        margin-bottom: 2px;
+    }
+
+        .category-link:hover {
+            color: #000;
+            text-decoration: none;
+            background-color: #f0f0f0; /* Pill background on hover */
+        }
+
+        .category-link.active-setting {
+            font-weight: bold;
+            color: #000;
+            background-color: #e8e8e8;
+        }
+
+    .hashtag {
+        color: #999;
+        font-weight: normal;
+        margin-right: 8px;
+    }
+
+    /* Wrapper for text inside link to keep hashtag and text together */
+    .link-text-wrapper {
+        display: flex;
+        align-items: center;
+    }
+
     /* --- FEED & POSTS --- */
     .feed-area {
         width: 600px;
         flex-grow: 0;
-        padding-top: 20px;
+        padding-top:72px;
         margin: 0 40px;
+        height: 100%;
+        overflow-y: auto;
+        padding-bottom: 50px;
+        box-sizing: border-box;
     }
+
+        .feed-area::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
 
     .feed-header {
         display: flex;
@@ -407,8 +484,7 @@
         color: #1da1f2;
         font-size: 14px;
         margin-left: 5px;
-        position: relative;
-        top: 3px;
+        /* Removed position relative to work better with flex */
     }
 
     /* --- COMMENT SECTION STYLES --- */
@@ -495,7 +571,7 @@
             cursor: default;
         }
 
-    /* --- CAROUSEL STYLES --- */
+    /* --- CAROUSEL & PROFILE & MODALS --- */
     .carousel-container {
         position: relative;
         width: 100%;
@@ -553,7 +629,6 @@
         font-weight: bold;
     }
 
-    /* --- PROFILE & MODALS --- */
     .modal {
         display: none;
         position: fixed;
@@ -945,18 +1020,19 @@
 </header>
 
 <div class="main-layout">
+    @* --- LEFT SIDEBAR (FOLLOWING + PINNED SEARCH) --- *@
     <aside class="sidebar sidebar-left">
         <div id="sidebar-home" class="section-view active">
-            <div class="sidebar-section">
-                <h3>Recently Created</h3>
+            <div class="sidebar-section scrollable-list">
+                <h3>Following</h3>
                 <ul class="category-list">
-                    @if (RecentCategories != null && RecentCategories.Any())
+                    @if (FollowedCategories != null && FollowedCategories.Any())
                     {
-                        @foreach (var cat in RecentCategories)
+                        @foreach (var cat in FollowedCategories)
                         {
                             <li>
                                 <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                    <span class="hashtag">#</span> @cat.CategoryName
+                                    <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
                                     @if (cat.IsVerified)
                                     {
                                         <i class="fas fa-check-circle verified-badge" title="Verified"></i>
@@ -967,18 +1043,17 @@
                     }
                     else
                     {
-                        <AuthorizeView>
-                            <Authorized><li>You haven't created any categories yet.</li></Authorized>
-                            <NotAuthorized><li>Login to see your categories.</li></NotAuthorized>
-                        </AuthorizeView>
+                        <p style="color:#666; font-size:14px; margin-top:5px; padding-left:10px;">You are not following any categories.</p>
                     }
                 </ul>
-                <hr />
             </div>
+
             <div class="sidebar-footer">
                 <div class="category-search-container">
-                    <input type="text" placeholder="Find category..." @bind="searchTerm" @bind:event="oninput" />
-                    <button type="button" class="create-cat-btn" title="Create New Category" @onclick="HandleCategorySearch">+</button>
+                    <input type="text" placeholder="Search/Create categories" @bind="searchTerm" @bind:event="oninput" />
+                    <button type="button" class="create-cat-btn" title="Search or Create Category" @onclick="HandleCategorySearch">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1109,13 +1184,11 @@
                             </button>
 
                             <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
-                            @* --- REPORT BUTTON (Home Feed) --- *@
                             <button class="action-btn" style="color: #666; font-size: 14px;" @onclick="() => OpenReportModal(post.Id)" title="Report Post">
                                 <i class="far fa-flag"></i> Report
                             </button>
                         </div>
 
-                        @* --- COMMENT SECTION --- *@
                         @if (_showComments.ContainsKey(post.Id) && _showComments[post.Id])
                         {
                             <div class="comment-section">
@@ -1241,13 +1314,11 @@
                             </button>
 
                             <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
-                            @* --- REPORT BUTTON (Profile Feed) --- *@
                             <button class="action-btn" style="color: #666; font-size: 14px;" @onclick="() => OpenReportModal(post.Id)" title="Report Post">
                                 <i class="far fa-flag"></i> Report
                             </button>
                         </div>
 
-                        @* --- COMMENT SECTION --- *@
                         @if (_showComments.ContainsKey(post.Id) && _showComments[post.Id])
                         {
                             <div class="comment-section">
@@ -1286,7 +1357,7 @@
             }
         </div>
 
-        @* --- FOLLOWING FEED --- *@
+        @* --- FOLLOWING FEED (Center Content) --- *@
         <div id="feed-following" class="section-view">
             <h1 class="page-title">Following</h1>
             <hr />
@@ -1297,16 +1368,17 @@
                     {
                         <div class="following-card">
                             <h3>
-                                #@cat.CategoryName @if (cat.IsVerified){
-                                <i class="fas fa-check-circle verified-badge" title="Verified"></i>
-                            }
-                        </h3>
-                        <button class="login-btn secondary" @onclick="() => UnfollowCategory(cat.Id)">Unfollow</button>
-                    </div>
-                }
-            </div>
-                        }
-                        else
+                                #@cat.CategoryName @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                                }
+                            </h3>
+                            <button class="login-btn secondary" @onclick="() => UnfollowCategory(cat.Id)">Unfollow</button>
+                        </div>
+                    }
+                </div>
+            }
+            else
             {
                 <p style="text-align:center; color:#666; margin-top:30px;">You are not following any categories.</p>
             }
@@ -1420,6 +1492,7 @@
         </div>
     </main>
 
+    @* --- RIGHT SIDEBAR (VERIFIED + RECENTLY CREATED) --- *@
     <aside class="sidebar sidebar-right" id="right-sidebar">
         <div class="sidebar-section">
             <h3>Verified Categories</h3>
@@ -1428,27 +1501,35 @@
                 {
                     @foreach (var cat in VerifiedCategories)
                     {
-                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="hashtag">#</span> @cat.CategoryName <i class="fas fa-check-circle verified-badge" title="Verified"></i></a></li>
+                        <li><a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'><span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span> <i class="fas fa-check-circle verified-badge" title="Verified"></i></a></li>
                     }
                 }
             </ul>
         </div>
         <div class="sidebar-section">
-            <h3>Following</h3>
+            <h3>Recently Created</h3>
             <ul class="category-list">
-                @if (FollowedCategories != null && FollowedCategories.Any())
+                @if (RecentCategories != null && RecentCategories.Any())
                 {
-                    @foreach (var cat in FollowedCategories)
+                    @foreach (var cat in RecentCategories)
                     {
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
-                                <span class="hashtag">#</span> @cat.CategoryName @if (cat.IsVerified){
-                                <i class="fas fa-check-circle verified-badge" title="Verified"></i>
-                            }
-                        </a>
-                    </li>
-                }
+                                <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
                                 }
+                            </a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <AuthorizeView>
+                        <Authorized><li style="color:#666; padding-left:10px;">No categories created yet.</li></Authorized>
+                        <NotAuthorized><li style="color:#666; padding-left:10px;">Login to see your categories.</li></NotAuthorized>
+                    </AuthorizeView>
                 }
             </ul>
         </div>
@@ -1611,8 +1692,6 @@
             reg.classList.remove('hidden');
         }
     }
-
-    // Removed the dummy 'openReportModal' js function since we are using Blazor logic now
 
     window.generateCroppedImage = (imageSrc, offsetX, offsetY, scale, size) => {
         return new Promise((resolve) => {
