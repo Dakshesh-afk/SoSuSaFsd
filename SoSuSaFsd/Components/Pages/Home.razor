@@ -213,7 +213,6 @@
             flex-grow: 1;
             overflow-y: auto;
             margin-bottom: 0;
-
             padding-bottom: 10px;
             padding-left: 20px; /* NEW: Content padding */
             padding-right: 10px; /* NEW: Space before scrollbar */
@@ -240,7 +239,7 @@
     .sidebar-left .sidebar-section.scrollable-list h3 {
         position: sticky;
         top: 0;
-        background-color: #f5f5f5; 
+        background-color: #f5f5f5;
         margin-bottom: 0;
         padding-bottom: 15px;
         padding-top: 5px;
@@ -355,7 +354,7 @@
     .feed-area {
         width: 600px;
         flex-grow: 0;
-        padding-top:72px;
+        padding-top: 72px;
         margin: 0 40px;
         height: 100%;
         overflow-y: auto;
@@ -1660,6 +1659,11 @@
         document.querySelectorAll('.main-nav a').forEach(el => el.classList.remove('active-link'));
         var navLink = document.getElementById('nav-' + section);
         if(navLink) navLink.classList.add('active-link');
+
+        // --- ADDED FIX HERE ---
+        if(section === 'settings') {
+            showSettingsForm('profile');
+        }
     }
 
     function showSettingsForm(formName) {
