@@ -1393,19 +1393,19 @@
                     {
                         <form @onsubmit="UpdateProfile">
                             <div class="settings-form-group" style="display:flex; flex-direction:column; align-items:center;">
-                                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #ddd; background-size: cover; background-position: center; background-image: url('@(currentUser.ProfileImage ?? "")'); margin-bottom: 10px;"></div>
-                                <label class="login-btn secondary" style="cursor: pointer; font-weight:normal; font-size:13px; padding: 5px 15px; position: relative; overflow: hidden;">
+                                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #ddd; background-size: cover; background-position: center; background-image: url('@(currentUser?.ProfileImage ?? "")'); margin-bottom: 10px;"></div>
+                                <label class="login-btn secondary" style="cursor: pointer; font-weight:normal; font-size:13px; padding: 5px 15px; position: relative; overflow: hidden; @(currentUser == null ? "opacity: 0.5; cursor: not-allowed;" : "")">
                                     Change Photo
                                     <InputFile OnChange="HandleProfileImageSelected" accept=".jpg,.jpeg,.png" style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
                                 </label>
                             </div>
-                            <div class="settings-form-group"><label>Display Name</label><input type="text" @bind="currentUser.DisplayName"></div>
-                            <div class="settings-form-group"><label>Bio</label><textarea rows="4" @bind="currentUser.Bio"></textarea></div>
+                            <div class="settings-form-group"><label>Display Name</label><input type="text" @bind="currentUser.DisplayName" disabled="@(currentUser == null)" /></div>
+                            <div class="settings-form-group"><label>Bio</label><textarea rows="4" @bind="currentUser.Bio" disabled="@(currentUser == null)"></textarea></div>
                             @if (!string.IsNullOrEmpty(updateStatusMessage))
                             {
                                 <div class="@(updateStatusMessage.Contains("Error") ? "error-msg" : "success-msg")">@updateStatusMessage</div>
                             }
-                            <button type="submit" class="login-btn">Save Changes</button>
+                            <button type="submit" class="login-btn" disabled="@(currentUser == null)">Save Changes</button>
                         </form>
                     }
                     else
@@ -1428,7 +1428,7 @@
                         {
                             <div class="@(isPasswordSuccess ? "success-msg" : "error-msg")">@passwordMessage</div>
                         }
-                        <button type="submit" class="login-btn">Update Password</button>
+                        <button type="submit" class="login-btn" disabled="@(currentUser == null)">Update Password</button>
                     </EditForm>
                 </div>
             </div>
@@ -1445,7 +1445,7 @@
                     <form @onsubmit="HandleAccessRequest" @onsubmit:preventDefault>
                         <div class="settings-form-group">
                             <label>Select Category</label>
-                            <select @bind="selectedCategoryId" class="settings-form-group" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+                            <select @bind="selectedCategoryId" class="settings-form-group" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" disabled="@(currentUser == null)">
                                 <option value="0">-- Select a verified category --</option>
                                 @foreach (var cat in VerifiedCategoriesForRequest)
                                 {
@@ -1455,10 +1455,10 @@
                         </div>
                         <div class="settings-form-group">
                             <label>Reason for Request</label>
-                            <textarea rows="5" @bind="accessRequestReason" placeholder="Explain why you need access..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
+                            <textarea rows="5" @bind="accessRequestReason" placeholder="Explain why you need access..." style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;" disabled="@(currentUser == null)"></textarea>
                         </div>
                         @{
-                            bool isSubmitDisabled = selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason);
+                            bool isSubmitDisabled = currentUser == null || selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason);
                         }
                         <button type="submit" class="login-btn" disabled="@isSubmitDisabled">Submit Request</button>
                     </form>
@@ -1796,6 +1796,7 @@
             {
                 var userId = userPrincipal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId)) { using var scope = ScopeFactory.CreateScope(); var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>(); var dbUser = await userManager.GetUserAsync(userPrincipal); userId = dbUser?.Id; currentUser = dbUser; } else if (currentUser == null) { using var scope = ScopeFactory.CreateScope(); var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>(); currentUser = await userManager.FindByIdAsync(userId); }
+                if (string.IsNullOrEmpty(userId)) { using var scope = ScopeFactory.CreateScope(); var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>(); var dbUser = await userManager.GetUserAsync(userPrincipal); userId = dbUser?.Id; } else if (currentUser == null) { using var scope = ScopeFactory.CreateScope(); var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>(); currentUser = await userManager.FindByIdAsync(userId); }
                 if (currentUser == null) { ForceLogout(); return; }
                 if (!string.IsNullOrEmpty(userId))
                 {
@@ -2003,7 +2004,31 @@
     }
 
     private async Task UnfollowCategory(int categoryId) { if (string.IsNullOrEmpty(currentUser?.Id)) return; try { using var context = DbFactory.CreateDbContext(); var follow = await context.CategoryFollows.FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.UserId == currentUser.Id); if (follow != null) { context.CategoryFollows.Remove(follow); await context.SaveChangesAsync(); FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUser.Id).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync(); } } catch (Exception ex) { Console.WriteLine(ex.Message); } }
-    private async Task HandleProfileImageSelected(InputFileChangeEventArgs e) { var file = e.File; if (file.Size <= 1024 * 1024 * 2) { var buffer = new byte[file.Size]; await file.OpenReadStream(1024 * 1024 * 2).ReadAsync(buffer); tempImageSrc = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}"; offsetX = 0; offsetY = 0; scale = 1.0; showCropModal = true; } else { updateStatusMessage = "Error: File too large. Max size is 2MB."; } }
+
+    private async Task HandleProfileImageSelected(InputFileChangeEventArgs e)
+    {
+        if (currentUser == null)
+        {
+            ShowLoginOverlay = true;
+            return;
+        }
+        var file = e.File;
+        if (file.Size <= 1024 * 1024 * 2)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(1024 * 1024 * 2).ReadAsync(buffer);
+            tempImageSrc = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+            offsetX = 0;
+            offsetY = 0;
+            scale = 1.0;
+            showCropModal = true;
+        }
+        else
+        {
+            updateStatusMessage = "Error: File too large. Max size is 2MB.";
+        }
+    }
+
     private void OnDragStart(PointerEventArgs e) { isDragging = true; startX = e.ClientX; startY = e.ClientY; initialOffsetX = offsetX; initialOffsetY = offsetY; }
     private void OnDragMove(PointerEventArgs e) { if (isDragging) { offsetX = initialOffsetX + (e.ClientX - startX); offsetY = initialOffsetY + (e.ClientY - startY); } }
     private void OnDragEnd(PointerEventArgs e) { isDragging = false; }
@@ -2016,5 +2041,61 @@
     private async Task HandleCategorySearch() { if (!string.IsNullOrWhiteSpace(searchTerm)) { using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}"); else showCreateConfirm = true; } }
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
     private void NavigateToAdmin() { Navigation.NavigateTo("admin", forceLoad: true); }
-    private async Task HandleAccessRequest() { if (selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason)) { accessRequestMessage = "Please select a category and provide a reason."; isAccessRequestSuccess = false; return; } if (currentUser == null || string.IsNullOrEmpty(currentUser.Id)) { accessRequestMessage = "You must be logged in to submit a request."; isAccessRequestSuccess = false; return; } try { using var context = DbFactory.CreateDbContext(); var existingRequest = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Pending"); if (existingRequest != null) { accessRequestMessage = "You already have a pending request for this category."; isAccessRequestSuccess = false; return; } var approvedRequest = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Approved"); if (approvedRequest != null) { accessRequestMessage = "You already have approved access to this category."; isAccessRequestSuccess = false; return; } var newRequest = new CategoryAccessRequests { UserId = currentUser.Id, CategoryId = selectedCategoryId, Reason = accessRequestReason, Status = "Pending", DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUser.Id }; context.CategoryAccessRequests.Add(newRequest); await context.SaveChangesAsync(); accessRequestMessage = "Your access request has been submitted successfully."; isAccessRequestSuccess = true; selectedCategoryId = 0; accessRequestReason = ""; UserAccessRequests = await context.CategoryAccessRequests.Where(r => r.UserId == currentUser.Id).Include(r => r.Category).OrderByDescending(r => r.DateCreated).ToListAsync(); } catch (Exception ex) { accessRequestMessage = "Error submitting request: " + ex.Message; isAccessRequestSuccess = false; } }
+
+    private async Task HandleAccessRequest()
+    {
+        if (currentUser == null)
+        {
+            accessRequestMessage = "You must be logged in to submit a request.";
+            isAccessRequestSuccess = false;
+            ShowLoginOverlay = true;
+            return;
+        }
+        if (selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason))
+        {
+            accessRequestMessage = "Please select a category and provide a reason.";
+            isAccessRequestSuccess = false;
+            return;
+        }
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var existingRequest = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Pending");
+            if (existingRequest != null)
+            {
+                accessRequestMessage = "You already have a pending request for this category.";
+                isAccessRequestSuccess = false;
+                return;
+            }
+            var approvedRequest = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Approved");
+            if (approvedRequest != null)
+            {
+                accessRequestMessage = "You already have approved access to this category.";
+                isAccessRequestSuccess = false;
+                return;
+            }
+            var newRequest = new CategoryAccessRequests
+            {
+                UserId = currentUser.Id,
+                CategoryId = selectedCategoryId,
+                Reason = accessRequestReason,
+                Status = "Pending",
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUser.Id
+            };
+            context.CategoryAccessRequests.Add(newRequest);
+            await context.SaveChangesAsync();
+            accessRequestMessage = "Your access request has been submitted successfully.";
+            isAccessRequestSuccess = true;
+            selectedCategoryId = 0;
+            accessRequestReason = "";
+            UserAccessRequests = await context.CategoryAccessRequests.Where(r => r.UserId == currentUser.Id).Include(r => r.Category).OrderByDescending(r => r.DateCreated).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            accessRequestMessage = "Error submitting request: " + ex.Message;
+            isAccessRequestSuccess = false;
+        }
+    }
 }

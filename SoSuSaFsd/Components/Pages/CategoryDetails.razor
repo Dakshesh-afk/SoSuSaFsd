@@ -167,11 +167,11 @@
     .login-btn { background-color: #333; color: white; padding: 8px 20px; border: none; border-radius: 20px; font-size: 15px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
     .login-btn:hover { background-color: #000; }
     .login-btn.secondary { background-color: #fff; color: #333; border: 1px solid #ccc; }
-    .follow-btn { padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-right: 10px; border: 1px solid transparent; transition: all 0.2s; }
+    .follow-btn { padding: 8px 20px; border-radius: 20px; font-weight: bold, cursor: pointer; margin-right: 10px; border: 1px solid transparent; transition: all 0.2s; }
     .follow-btn.not-following { background-color: #000; color: white; }
     .follow-btn.following { background-color: #fff; color: #333; border: 1px solid #ccc; }
     .verified-badge { color: #1da1f2; font-size: 24px; position: relative; top: 5px; }
-    .verified-badge-small { color: #1da1f2; font-size: 14px; margin-left: 5px; } /* Removed top positioning for sidebar alignment */
+    .verified-badge-small { color: #1da1f2; font-size: 14px; margin-left: 5px; }
 
     .post-card { background-color: #fff; padding: 0; margin-bottom: 20px; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden; }
     .post-header { display: flex; align-items: center; padding: 15px; }
@@ -212,6 +212,13 @@
     .remove-media-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
     .remove-media-btn:hover { background: red; }
     .upload-loading { font-size: 12px; color: #666; font-style: italic; margin-left: 10px; }
+    
+    /* --- LOGIN POPUP MODAL --- */
+    .login-popup-content { text-align: center; }
+    .login-popup-icon { font-size: 48px; color: #333; margin-bottom: 15px; }
+    .login-popup-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+    .login-popup-message { font-size: 14px; color: #666; margin-bottom: 25px; line-height: 1.5; }
+    .login-popup-buttons { display: flex; gap: 10px; justify-content: center; }
 </style>
 
 <header class="site-header">
@@ -455,13 +462,160 @@
     </aside>
 </div>
 
-@* --- MODALS (Create Post, Request Access, Report, Notification) --- *@
-@if (showPostModal) { <div class="modal"><div class="modal-content"><span class="modal-close" @onclick="ClosePostModal">&times;</span><h2 style="margin-top: 0;">Create Post</h2><div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div><textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea><div class="file-input-wrapper"><label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Images or Videos): @if (isUploading) { <span class="upload-loading">Uploading... please wait.</span> }</label><InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" /></div><div class="preview-container">@for (int i = 0; i < pendingUploads.Count; i++) { var index = i; var file = pendingUploads[i]; <div class="preview-item"><button class="remove-media-btn" @onclick="() => RemoveFile(index)">&times;</button>@if (file.MediaType == "Video") { <video class="preview-media" src="@file.SavedPath"></video> } else { <img class="preview-media" src="@file.SavedPath" alt="Preview" /> }</div> }</div><div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;"><button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button><button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button></div></div></div> }
-@if (showRequestModal) { <div class="modal"><div class="modal-content"><span class="modal-close" @onclick="() => showRequestModal = false">&times;</span><h2 style="margin-top: 0;">Request Access</h2><div style="font-size: 14px; color: #666; margin-bottom: 10px;">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div><textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea><div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;"><button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button><button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button></div></div></div> }
-@if (showReportModal) { <div class="modal"><div class="modal-content"><span class="modal-close" @onclick="() => showReportModal = false">&times;</span><h2 style="margin-top: 0; color: #dc3545;">Report Content</h2><div style="font-size: 14px; color: #666; margin-bottom: 10px;">Help us keep the community safe. Why are you reporting this post?</div><div style="margin-bottom: 15px;"><label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label><select class="modal-textarea" style="height: 40px;" @bind="reportReasonSelection"><option value="Spam">Spam</option><option value="Harassment">Harassment or Bullying</option><option value="Misinformation">Misinformation</option><option value="Hate Speech">Hate Speech</option><option value="Inappropriate">Inappropriate Content</option><option value="Other">Other</option></select></div><div style="margin-bottom: 15px;"><label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label><textarea class="modal-textarea" placeholder="Please provide more details..." @bind="reportReasonDetails"></textarea></div><div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;"><button class="login-btn secondary" @onclick="() => showReportModal = false">Cancel</button><button class="login-btn" style="background-color: #dc3545;" @onclick="SubmitReport">Submit Report</button></div></div></div> }
-@if (showNotificationModal) { <div class="modal"><div class="modal-content" style="text-align: center; max-width: 400px;"><span class="modal-close" @onclick="CloseNotification">&times;</span><div style="margin-bottom: 15px;">@if (notificationType == "success") { <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i><h2 style="margin: 10px 0; color: #28a745;">Success</h2> } else if (notificationType == "info") { <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i><h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2> } else { <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i><h2 style="margin: 10px 0; color: #dc3545;">Error</h2> }</div><p style="font-size: 16px; margin-bottom: 25px;">@notificationMessage</p><button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button></div></div> }
-<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")"><div class="modal-content"><span class="modal-close" @onclick="() => showCreateConfirm = false">&times;</span><h2>Category Not Found</h2><p>Would you like to create <b>#@searchTerm</b>?</p><div style="display: flex; gap: 10px; margin-top: 20px;"><button class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button><button class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">Cancel</button></div></div></div>
+@* --- Remove old modals section and replace with auth overlay --- *@
+@if (showPostModal) 
+{ 
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="ClosePostModal">@closeChar</span>
+            <h2 style="margin-top: 0;">Create Post</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
+            <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
+            <div class="file-input-wrapper">
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Images or Videos): @if (isUploading) { <span class="upload-loading">Uploading... please wait.</span> }</label>
+                <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
+            </div>
+            <div class="preview-container">
+                @for (int i = 0; i < pendingUploads.Count; i++) 
+                { 
+                    var index = i; 
+                    var file = pendingUploads[i]; 
+                    <div class="preview-item">
+                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">@closeChar</button>
+                        @if (file.MediaType == "Video") 
+                        { 
+                            <video class="preview-media" src="@file.SavedPath"></video> 
+                        } 
+                        else 
+                        { 
+                            <img class="preview-media" src="@file.SavedPath" alt="Preview" /> 
+                        }
+                    </div> 
+                }
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
+                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
+            </div>
+        </div>
+    </div> 
+}
+@if (showRequestModal) 
+{ 
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="() => showRequestModal = false">@closeChar</span>
+            <h2 style="margin-top: 0;">Request Access</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div>
+            <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button>
+                <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
+            </div>
+        </div>
+    </div> 
+}
+@if (showReportModal) 
+{ 
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="() => showReportModal = false">@closeChar</span>
+            <h2 style="margin-top: 0; color: #dc3545;">Report Content</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Help us keep the community safe. Why are you reporting this post?</div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label>
+                <select class="modal-textarea" style="height: 40px;" @bind="reportReasonSelection">
+                    <option value="Spam">Spam</option>
+                    <option value="Harassment">Harassment or Bullying</option>
+                    <option value="Misinformation">Misinformation</option>
+                    <option value="Hate Speech">Hate Speech</option>
+                    <option value="Inappropriate">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label>
+                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="reportReasonDetails"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="() => showReportModal = false">Cancel</button>
+                <button class="login-btn" style="background-color: #dc3545;" @onclick="SubmitReport">Submit Report</button>
+            </div>
+        </div>
+    </div> 
+}
+@if (showNotificationModal) 
+{ 
+    <div class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <span class="modal-close" @onclick="CloseNotification">@closeChar</span>
+            <div style="margin-bottom: 15px;">
+                @if (notificationType == "success") 
+                { 
+                    <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i>
+                    <h2 style="margin: 10px 0; color: #28a745;">Success</h2> 
+                } 
+                else if (notificationType == "info") 
+                { 
+                    <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i>
+                    <h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2> 
+                } 
+                else 
+                { 
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i>
+                    <h2 style="margin: 10px 0; color: #dc3545;">Error</h2> 
+                }
+            </div>
+            <p style="font-size: 16px; margin-bottom: 25px;">@notificationMessage</p>
+            <button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button>
+        </div>
+    </div> 
+}
+<div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
+    <div class="modal-content">
+        <span class="modal-close" @onclick="() => showCreateConfirm = false">@closeChar</span>
+        <h2>Category Not Found</h2>
+        <p>Would you like to create <b>#@searchTerm</b>?</p>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="login-btn" style="flex:1;" @onclick="NavigateToCreate">Yes, Create</button>
+            <button class="login-btn secondary" style="flex:1;" @onclick="() => showCreateConfirm = false">Cancel</button>
+        </div>
+    </div>
+</div>
 
+@* --- AUTH OVERLAY (from Home.razor) --- *@
+<div id="auth-overlay" class="auth-overlay" style="display: @(ShowLoginOverlay ? "flex" : "none"); position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center;">
+    <div class="auth-card" style="background-color: #fff; width: 90%; max-width: 400px; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; border: 1px solid #eee;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3 style="margin:0;">Welcome</h3><span style="cursor:pointer; font-size:20px;" @onclick="() => ShowLoginOverlay = false">@closeChar</span></div>
+        <div id="login-view">
+            <form action="api/Account/login" method="post">
+                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
+                    <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                </div>
+                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
+                    <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                </div>
+                <button type="submit" class="auth-btn" style="width: 100%; padding: 12px; background-color: #333; color: white; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;">Log In</button>
+            </form>
+            <div class="auth-switch" style="margin-top: 20px; font-size: 14px; color: #666;">Don't have an account? <a onclick="document.getElementById('login-view').style.display='none'; document.getElementById('register-view').style.display='block';" style="cursor: pointer; color: #333; font-weight: bold;">Register</a></div>
+        </div>
+        <div id="register-view" style="display: none;">
+            <form action="api/Account/register" method="post">
+                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
+                    <input type="email" name="email" placeholder="Email Address" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                </div>
+                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
+                    <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                </div>
+                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
+                    <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                </div>
+                <button type="submit" class="auth-btn" style="width: 100%; padding: 12px; background-color: #333; color: white; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;">Sign Up</button>
+            </form>
+            <div class="auth-switch" style="margin-top: 20px; font-size: 14px; color: #666;">Already have an account? <a onclick="document.getElementById('register-view').style.display='none'; document.getElementById('login-view').style.display='block';" style="cursor: pointer; color: #333; font-weight: bold;">Log In</a></div>
+        </div>
+    </div>
+</div>
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -495,6 +649,10 @@
     private bool showNotificationModal = false;
     private string notificationMessage = "";
     private string notificationType = "success";
+    private bool showLoginModal = false;
+    private string loginModalAction = "";
+    private string closeChar = "×";
+    private bool ShowLoginOverlay = false;
     private Dictionary<int, int> _carouselIndices = new();
     private int GetCurrentIndex(int postId) { if (!_carouselIndices.ContainsKey(postId)) _carouselIndices[postId] = 0; return _carouselIndices[postId]; }
     private void NextSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex + 1) % totalCount; }
@@ -562,20 +720,22 @@
 
     private void ShowNotification(string message, string type) { notificationMessage = message; notificationType = type; showNotificationModal = true; }
     private void CloseNotification() { showNotificationModal = false; notificationMessage = ""; }
-    private void OpenReportModal(int postId) { if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } reportPostId = postId; reportReasonSelection = "Spam"; reportReasonDetails = ""; showReportModal = true; }
+    private void ShowLoginPopup(string action) { ShowLoginOverlay = true; }
+    private void CloseLoginModal() { ShowLoginOverlay = false; }
+    private void OpenReportModal(int postId) { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("report posts"); return; } reportPostId = postId; reportReasonSelection = "Spam"; reportReasonDetails = ""; showReportModal = true; }
     private async Task SubmitReport() { if (reportPostId == 0 || string.IsNullOrEmpty(currentUserId)) { ShowNotification("Session error. Please refresh and try again.", "error"); return; } try { using var context = DbFactory.CreateDbContext(); var existingReport = await context.Reports.FirstOrDefaultAsync(r => r.PostID == reportPostId && r.ReporterID == currentUserId); if (existingReport != null) { showReportModal = false; if (existingReport.Status == "Dismissed") ShowNotification("An Admin has already dismissed your report for this post.", "error"); else ShowNotification("You have already reported this post.", "error"); return; } bool isAlreadyDismissed = await context.Reports.AnyAsync(r => r.PostID == reportPostId && r.Status == "Dismissed"); string finalReason = reportReasonSelection; if (!string.IsNullOrWhiteSpace(reportReasonDetails)) finalReason = $"{reportReasonSelection}: {reportReasonDetails}"; var newReport = new Reports { PostID = reportPostId, ReporterID = currentUserId, Reason = finalReason, Status = "Pending", DateCreated = DateTime.Now }; context.Reports.Add(newReport); await context.SaveChangesAsync(); showReportModal = false; if (isAlreadyDismissed) ShowNotification("Report submitted, but this content has already been reviewed and dismissed by admins.", "info"); else ShowNotification("Report submitted successfully.", "success"); } catch (Exception ex) { ShowNotification("Error sending report: " + ex.Message, "error"); } }
-    private async Task ToggleLike(int postId) { if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } try { using var context = DbFactory.CreateDbContext(); var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId); var post = CategoryPosts.FirstOrDefault(p => p.Id == postId); if (existingLike != null) { context.PostLikes.Remove(existingLike); if (post != null) { var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId); if (localLike != null) post.Likes.Remove(localLike); } } else { var newLike = new PostLikes { PostID = postId, UserID = currentUserId, LikedAt = DateTime.Now }; context.PostLikes.Add(newLike); if (post != null) post.Likes.Add(newLike); } await context.SaveChangesAsync(); StateHasChanged(); } catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); } }
-    private async Task ToggleComments(int postId) { if (!_showComments.ContainsKey(postId)) _showComments[postId] = false; _showComments[postId] = !_showComments[postId]; if (_showComments[postId]) { if (!_postComments.ContainsKey(postId) || _postComments[postId] == null) { try { using var context = DbFactory.CreateDbContext(); var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync(); _postComments[postId] = comments; } catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); } } } StateHasChanged(); }
+    private async Task ToggleLike(int postId) { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("like posts"); return; } try { using var context = DbFactory.CreateDbContext(); var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId); var post = CategoryPosts.FirstOrDefault(p => p.Id == postId); if (existingLike != null) { context.PostLikes.Remove(existingLike); if (post != null) { var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId); if (localLike != null) post.Likes.Remove(localLike); } } else { var newLike = new PostLikes { PostID = postId, UserID = currentUserId, LikedAt = DateTime.Now }; context.PostLikes.Add(newLike); if (post != null) post.Likes.Add(newLike); } await context.SaveChangesAsync(); StateHasChanged(); } catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); } }
+    private async Task ToggleComments(int postId) { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("comment on posts"); return; } if (!_showComments.ContainsKey(postId)) _showComments[postId] = false; _showComments[postId] = !_showComments[postId]; if (_showComments[postId]) { if (!_postComments.ContainsKey(postId) || _postComments[postId] == null) { try { using var context = DbFactory.CreateDbContext(); var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync(); _postComments[postId] = comments; } catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); } } } StateHasChanged(); }
     private void UpdateCommentDraft(int postId, string? value) { if (value != null) _commentDrafts[postId] = value; }
-    private async Task SubmitComment(int postId) { if (currentUser == null) { Navigation.NavigateTo("/Account/Login", true); return; } if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId])) return; var content = _commentDrafts[postId]; try { using var context = DbFactory.CreateDbContext(); var newComment = new Comments { PostID = postId, UserID = currentUser.Id, Content = content, DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUser.Id }; context.Comments.Add(newComment); await context.SaveChangesAsync(); _commentDrafts[postId] = ""; newComment.User = currentUser; if (!_postComments.ContainsKey(postId)) _postComments[postId] = new List<Comments>(); _postComments[postId].Add(newComment); StateHasChanged(); } catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); } }
+    private async Task SubmitComment(int postId) { if (currentUser == null) { ShowLoginPopup("post comments"); return; } if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId])) return; var content = _commentDrafts[postId]; try { using var context = DbFactory.CreateDbContext(); var newComment = new Comments { PostID = postId, UserID = currentUser.Id, Content = content, DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUser.Id, UpdatedBy = currentUser.Id }; context.Comments.Add(newComment); await context.SaveChangesAsync(); _commentDrafts[postId] = ""; newComment.User = currentUser; if (!_postComments.ContainsKey(postId)) _postComments[postId] = new List<Comments>(); _postComments[postId].Add(newComment); StateHasChanged(); } catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); } }
     private async Task HandleFilesSelected(InputFileChangeEventArgs e) { errorMessage = ""; isUploading = true; try { var newFiles = e.GetMultipleFiles(MaxAllowedFiles); var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads"); if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder); foreach (var file in newFiles) { if (pendingUploads.Count >= MaxAllowedFiles) break; if (file.Size <= MaxFileSize) { try { var extension = Path.GetExtension(file.Name).ToLower(); bool isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov"); var fileName = $"{Guid.NewGuid()}{extension}"; var physicalPath = Path.Combine(uploadsFolder, fileName); var webPath = $"/uploads/{fileName}"; await using var fileStream = new FileStream(physicalPath, FileMode.Create); await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream); pendingUploads.Add(new PendingFile { SavedPath = webPath, PhysicalPath = physicalPath, MediaType = isVideo ? "Video" : "Image" }); } catch (Exception ex) { errorMessage = $"Error reading {file.Name}: {ex.Message}"; } } else { errorMessage = $"File {file.Name} is too large."; } } } finally { isUploading = false; } }
     private void RemoveFile(int index) { if (index >= 0 && index < pendingUploads.Count) { var file = pendingUploads[index]; try { if (System.IO.File.Exists(file.PhysicalPath)) { System.IO.File.Delete(file.PhysicalPath); } } catch { } pendingUploads.RemoveAt(index); } }
-    private async Task HandleSubmitRequest() { if (string.IsNullOrEmpty(currentUserId)) return; try { using var context = DbFactory.CreateDbContext(); var exists = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending"); if (exists) { errorMessage = "You already have a pending request."; showRequestModal = false; hasPendingRequest = true; return; } var request = new CategoryAccessRequests { UserId = currentUserId, CategoryId = Id, Reason = requestReason, Status = "Pending", DateCreated = DateTime.Now, DateUpdated = DateTime.Now }; context.CategoryAccessRequests.Add(request); await context.SaveChangesAsync(); showRequestModal = false; requestReason = ""; hasPendingRequest = true; StateHasChanged(); } catch (Exception ex) { errorMessage = "Error sending request: " + ex.Message; } }
-    private async Task HandleCreatePost() { if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0) return; if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } try { using var context = DbFactory.CreateDbContext(); var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id); bool dbHasAccess = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved"); if (category?.IsVerified == true && !isAdmin && !dbHasAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } var newPost = new Posts { Content = newPostContent, CategoryId = Id, UserId = currentUserId, PostStatus = "Published", DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUserId, UpdatedBy = currentUserId, Media = new List<PostMedia>() }; foreach (var file in pendingUploads) { newPost.Media.Add(new PostMedia { MediaPath = file.SavedPath, MediaType = file.MediaType }); } context.Posts.Add(newPost); await context.SaveChangesAsync(); ClosePostModal(); CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).Include(p => p.Likes).OrderByDescending(p => p.DateCreated).ToListAsync(); } catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; } }
+    private async Task HandleSubmitRequest() { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("request category access"); return; } try { using var context = DbFactory.CreateDbContext(); var exists = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending"); if (exists) { errorMessage = "You already have a pending request."; showRequestModal = false; hasPendingRequest = true; return; } var request = new CategoryAccessRequests { UserId = currentUserId, CategoryId = Id, Reason = requestReason, Status = "Pending", DateCreated = DateTime.Now, DateUpdated = DateTime.Now }; context.CategoryAccessRequests.Add(request); await context.SaveChangesAsync(); showRequestModal = false; requestReason = ""; hasPendingRequest = true; StateHasChanged(); } catch (Exception ex) { errorMessage = "Error sending request: " + ex.Message; } }
+    private async Task HandleCreatePost() { if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0) return; if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("create posts"); return; } if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } try { using var context = DbFactory.CreateDbContext(); var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id); bool dbHasAccess = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved"); if (category?.IsVerified == true && !isAdmin && !dbHasAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } var newPost = new Posts { Content = newPostContent, CategoryId = Id, UserId = currentUserId, PostStatus = "Published", DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUserId, UpdatedBy = currentUserId, Media = new List<PostMedia>() }; foreach (var file in pendingUploads) { newPost.Media.Add(new PostMedia { MediaPath = file.SavedPath, MediaType = file.MediaType }); } context.Posts.Add(newPost); await context.SaveChangesAsync(); ClosePostModal(); CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).Include(p => p.Likes).OrderByDescending(p => p.DateCreated).ToListAsync(); } catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; } }
     private void ClosePostModal() { showPostModal = false; newPostContent = ""; pendingUploads.Clear(); errorMessage = ""; }
     private bool CanUserPost() { if (CurrentCategory?.IsVerified == true) { return isAdmin || hasApprovedAccess; } return !string.IsNullOrEmpty(currentUserId); }
-    private async Task ToggleFollow() { if (string.IsNullOrEmpty(currentUserId)) { Navigation.NavigateTo("/Account/Login", true); return; } try { using var context = DbFactory.CreateDbContext(); if (isFollowing) { var record = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id); if (record != null) context.CategoryFollows.Remove(record); isFollowing = false; } else { context.CategoryFollows.Add(new CategoryFollows { UserId = currentUserId, CategoryId = Id, DateCreated = DateTime.Now, DateUpdated = DateTime.Now }); isFollowing = true; } await context.SaveChangesAsync(); FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync(); } catch (Exception ex) { errorMessage = ex.Message; } }
+    private async Task ToggleFollow() { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("follow categories"); return; } try { using var context = DbFactory.CreateDbContext(); if (isFollowing) { var record = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id); if (record != null) context.CategoryFollows.Remove(record); isFollowing = false; } else { context.CategoryFollows.Add(new CategoryFollows { UserId = currentUserId, CategoryId = Id, DateCreated = DateTime.Now, DateUpdated = DateTime.Now }); isFollowing = true; } await context.SaveChangesAsync(); FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync(); } catch (Exception ex) { errorMessage = ex.Message; } }
     private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}", forceLoad: true);
     private async Task HandleCategorySearch() { if (string.IsNullOrWhiteSpace(searchTerm)) return; using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}", true); else showCreateConfirm = true; }
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
-}
+}}
