@@ -1,0 +1,397 @@
+/* --- FEED AREA --- */
+/* Find this section in your CSS */
+.feed-area {
+    width: 600px;
+    flex-grow: 0;
+    padding-top: 72px;
+    margin: 0 40px;
+    height: calc(100vh - 20px);
+    overflow-y: auto;
+    padding-bottom: 50px;
+    box-sizing: border-box;
+}
+
+.feed-area::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.feed-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.feed-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #222;
+    margin: 0;
+}
+
+.create-post-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-weight: normal;
+    font-size: 13px;
+    cursor: pointer;
+    width: auto;
+    display: inline-block;
+}
+
+.create-post-btn:hover {
+    background-color: #d0d0d0;
+    border-color: #bbb;
+}
+
+/* --- POST CARDS --- */
+.post-card {
+    background-color: #fff;
+    padding: 0;
+    margin-bottom: 20px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    background-color: #ddd;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.post-meta div {
+    font-size: 15px;
+    color: #222;
+}
+
+.post-category-tag {
+    color: #666;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.post-category-tag a {
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.post-content {
+    font-size: 16px;
+    color: #111;
+    line-height: 1.6;
+    padding: 5px 15px 20px 15px;
+}
+
+.post-actions {
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+}
+
+.action-btn {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 0;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+/* --- CAROUSEL --- */
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-media {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    font-size: 24px;
+    padding: 10px 15px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+    border-radius: 4px;
+}
+
+.carousel-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.carousel-btn.prev {
+    left: 10px;
+}
+
+.carousel-btn.next {
+    right: 10px;
+}
+
+.carousel-counter {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* --- COMMENTS --- */
+.comment-section {
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+    padding: 15px;
+}
+
+.comment-list {
+    margin-bottom: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.comment-item {
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #ddd;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.comment-bubble {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 8px 12px;
+    border: 1px solid #eee;
+    flex-grow: 1;
+}
+
+.comment-user {
+    font-weight: bold;
+    font-size: 13px;
+    margin-right: 5px;
+    color: #000;
+}
+
+.comment-date {
+    font-size: 11px;
+    color: #888;
+}
+
+.comment-text {
+    font-size: 14px;
+    color: #333;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.comment-input-area {
+    display: flex;
+    gap: 10px;
+}
+
+.comment-input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    outline: none;
+}
+
+.comment-send-btn {
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 6px 15px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.comment-send-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* --- PROFILE/FOLLOWING --- */
+.profile-card {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    background-color: #ddd;
+    border-radius: 50%;
+    margin: 0 auto 15px auto;
+    object-fit: cover;
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 5px 0;
+    color: #222;
+}
+
+.profile-handle {
+    font-size: 16px;
+    color: #666;
+    margin: 0 0 15px 0;
+}
+
+.profile-bio {
+    font-size: 15px;
+    color: #444;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 10px 0;
+    border-top: 1px solid #f5f5f5;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+
+.stat-item:hover {
+    background-color: #f5f5f5;
+}
+
+.edit-profile-btn {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s;
+}
+
+.following-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.following-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #fff;
+    transition: border-color 0.2s;
+}
+
+.following-card:hover {
+    border-color: #333;
+}
+
+.following-card h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+/* --- SETTINGS --- */
+.settings-form-group {
+    margin-bottom: 20px;
+}
+
+.settings-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.settings-form-group input,
+.settings-form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.section-view {
+    display: none;
+}
+
+.section-view.active {
+    display: block;
+}

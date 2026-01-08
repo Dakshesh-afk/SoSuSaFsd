@@ -1,0 +1,40 @@
+@using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components
+
+<div class="comment-section">
+    <div class="comment-list">
+        @if (Comments != null && Comments.Any())
+        {
+            @foreach (var comment in Comments)
+            {
+                <div class="comment-item">
+                    <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
+                    <div class="comment-bubble">
+                        <div>
+                            <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
+                            <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                        </div>
+                        <div class="comment-text">@comment.Content</div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="comment-input-area">
+        <input 
+            type="text" 
+            class="comment-input" 
+            placeholder="Write a comment..."
+            value="@(Draft ?? "")"
+            @onchange="@(e => OnDraftChange.InvokeAsync(e.Value?.ToString() ?? ""))" />
+        <button class="comment-send-btn" @onclick="() => OnSubmit.InvokeAsync()">Post</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Comments>? Comments { get; set; }
+    [Parameter] public string? Draft { get; set; }
+    [Parameter] public EventCallback<string> OnDraftChange { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+}

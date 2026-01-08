@@ -1,0 +1,49 @@
+@using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components
+
+<div class="carousel-container">
+    @if (MediaList != null && MediaList.Count > 0)
+    {
+        var activeMedia = MediaList[CurrentIndex];
+        
+        @if (MediaList.Count > 1)
+        {
+            <button class="carousel-btn prev" @onclick="OnPrevious">&#10094;</button>
+        }
+
+        @if (activeMedia.MediaType == "Video")
+        {
+            <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">
+                Your browser does not support the video tag.
+            </video>
+        }
+        else
+        {
+            <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
+        }
+
+        @if (MediaList.Count > 1)
+        {
+            <button class="carousel-btn next" @onclick="OnNext">&#10095;</button>
+            <div class="carousel-counter">@(CurrentIndex + 1) / @MediaList.Count</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public List<PostMedia>? MediaList { get; set; }
+    [Parameter] public int CurrentIndex { get; set; }
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (MediaList == null || MediaList.Count == 0)
+            return;
+
+        if (CurrentIndex < 0)
+            CurrentIndex = 0;
+        if (CurrentIndex >= MediaList.Count)
+            CurrentIndex = MediaList.Count - 1;
+    }
+}

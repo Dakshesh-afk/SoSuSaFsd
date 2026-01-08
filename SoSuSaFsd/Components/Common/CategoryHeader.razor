@@ -1,0 +1,67 @@
+@using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components
+
+<div class="category-header-card">
+    <h1 class="page-title">
+        #@Category?.CategoryName
+        @if (Category?.IsVerified == true)
+        {
+            <i class="fas fa-check-circle verified-badge" title="Verified Category"></i>
+        }
+    </h1>
+    <p class="cat-desc">@(string.IsNullOrEmpty(Category?.CategoryDescription) ? "No description provided." : Category.CategoryDescription)</p>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 15px 0; border-radius: 5px;">
+            <strong>Error:</strong> @ErrorMessage
+        </div>
+    }
+
+    <div style="margin-top: 15px;">
+        <button class="follow-btn @(IsFollowing ? "following" : "not-following")" @onclick="OnToggleFollow">
+            @(IsFollowing ? "Unfollow" : "Follow")
+        </button>
+
+        @if (CanPost)
+        {
+            <button class="login-btn" @onclick="OnCreatePost">Create Post</button>
+        }
+        else if (HasPendingRequest)
+        {
+            <button class="login-btn" disabled style="background-color: #888; cursor: default;">Request Pending</button>
+        }
+        else if (Category?.IsVerified == true)
+        {
+            <button class="login-btn" @onclick="OnRequestAccess">Request Access</button>
+        }
+        else
+        {
+            <button class="login-btn" @onclick="OnCreatePost">Create Post</button>
+        }
+    </div>
+
+    @if (Category?.IsVerified == true && !CanPost && !HasPendingRequest)
+    {
+        <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;">
+            <strong>?? Verified Category:</strong> This category is restricted. You must request access to post here.
+        </div>
+    }
+    else if (HasPendingRequest)
+    {
+        <div style="color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;">
+            <strong>?? Pending:</strong> Your request to post in this verified category is awaiting admin approval.
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Categories? Category { get; set; }
+    [Parameter] public bool IsFollowing { get; set; }
+    [Parameter] public bool CanPost { get; set; }
+    [Parameter] public bool HasPendingRequest { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public EventCallback OnToggleFollow { get; set; }
+    [Parameter] public EventCallback OnCreatePost { get; set; }
+    [Parameter] public EventCallback OnRequestAccess { get; set; }
+}

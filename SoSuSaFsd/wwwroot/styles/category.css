@@ -1,0 +1,96 @@
+/* === CATEGORY DETAILS PAGE STYLES === */
+
+.category-header-card {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.cat-desc {
+    color: #666;
+    margin-top: 10px;
+    font-size: 15px;
+}
+
+.follow-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 10px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.follow-btn.not-following {
+    background-color: #000;
+    color: white;
+}
+
+.follow-btn.following {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+/* === POST CARD === */
+.post-card {
+    background-color: #fff;
+    padding: 0;
+    margin-bottom: 20px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    background-color: #ddd;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+    background-size: cover;
+    background-position: center;
+}
+
+.post-content {
+    font-size: 16px;
+    color: #111;
+    line-height: 1.6;
+    padding: 5px 15px 20px 15px;
+}
+
+.post-actions {
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+}
+
+.action-btn {
+    flex-grow: 1;
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 0;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #f9f9f9;
+    color: #333;
+}

@@ -1,0 +1,175 @@
+@using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager Navigation
+
+<div class="post-card">
+    <div class="post-header">
+        <div class="post-avatar" style="background-image: url('@(Post.User?.ProfileImage ?? "")');"></div>
+        <div>
+            <b>@(Post.User?.UserName ?? "User")</b>
+            <div class="post-meta">
+                <span style="font-size: 12px; color: #888;">@Post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</span>
+                <div class="post-category-tag">
+                    Posted in <a href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(Post.CategoryId))'>
+                        #@Post.Category?.CategoryName
+                        @if (Post.Category?.IsVerified == true)
+                        {
+                            <i class="fas fa-check-circle verified-badge" style="font-size:12px;" title="Verified"></i>
+                        }
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-content">@Post.Content</div>
+
+    @if (Post.Media != null && Post.Media.Any())
+    {
+        var mediaList = Post.Media.ToList();
+        var totalMedia = mediaList.Count;
+        var currentIndex = GetCurrentCarouselIndex(Post.Id);
+        var activeMedia = mediaList[currentIndex];
+
+        <div class="carousel-container">
+            @if (totalMedia > 1)
+            {
+                <button class="carousel-btn prev" @onclick="() => PrevSlide(Post.Id, totalMedia)">&#10094;</button>
+            }
+
+            @if (activeMedia.MediaType == "Video")
+            {
+                <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">
+                    Your browser does not support the video tag.
+                </video>
+            }
+            else
+            {
+                <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
+            }
+
+            @if (totalMedia > 1)
+            {
+                <button class="carousel-btn next" @onclick="() => NextSlide(Post.Id, totalMedia)">&#10095;</button>
+                <div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div>
+            }
+        </div>
+    }
+
+    <div class="post-actions">
+        <button class="action-btn" @onclick="() => OnLike.InvokeAsync(Post.Id)">
+            @{
+                var isLiked = Post.Likes.Any(l => l.UserID == CurrentUser?.Id);
+                var likeCount = Post.Likes.Count;
+            }
+            @if (isLiked)
+            {
+                <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
+            }
+            else
+            {
+                <i class="far fa-heart" style="margin-right: 5px;"></i>
+            }
+            @if (likeCount > 0)
+            {
+                <span>@likeCount</span>
+            }
+            else
+            {
+                <span>Like</span>
+            }
+        </button>
+
+        <button class="action-btn" @onclick="() => OnComment.InvokeAsync(Post.Id)">
+            <i class="far fa-comment"></i> Comment
+        </button>
+
+        <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
+        <button class="action-btn" style="color: #666; font-size: 14px;" @onclick="() => OnReport.InvokeAsync(Post.Id)" title="Report Post">
+            <i class="far fa-flag"></i> Report
+        </button>
+    </div>
+
+    @if (ShowComments != null && ShowComments.ContainsKey(Post.Id) && ShowComments[Post.Id])
+    {
+        <div class="comment-section">
+            <div class="comment-list">
+                @if (PostComments != null && PostComments.ContainsKey(Post.Id) && PostComments[Post.Id] != null)
+                {
+                    @foreach (var comment in PostComments[Post.Id])
+                    {
+                        <div class="comment-item">
+                            <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
+                            <div class="comment-bubble">
+                                <div>
+                                    <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
+                                    <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                </div>
+                                <div class="comment-text">@comment.Content</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="comment-input-area">
+                <input type="text" class="comment-input" placeholder="Write a comment..."
+                       value="@(CommentDrafts != null && CommentDrafts.ContainsKey(Post.Id) ? CommentDrafts[Post.Id] : "")"
+                       @onchange="@(e => OnUpdateDraft.InvokeAsync(new CommentDraftEventArgs { PostId = Post.Id, Content = e.Value?.ToString() }))" />
+                <button class="comment-send-btn" @onclick="() => OnSubmitComment.InvokeAsync(Post.Id)">Post</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Posts Post { get; set; } = null!;
+    [Parameter] public Users? CurrentUser { get; set; }
+    [Parameter] public EventCallback<int> OnLike { get; set; }
+    [Parameter] public EventCallback<int> OnComment { get; set; }
+    [Parameter] public EventCallback<int> OnReport { get; set; }
+    [Parameter] public Dictionary<int, bool>? ShowComments { get; set; }
+    [Parameter] public Dictionary<int, List<Comments>>? PostComments { get; set; }
+    [Parameter] public Dictionary<int, string>? CommentDrafts { get; set; }
+    [Parameter] public EventCallback<CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
+    [Parameter] public Dictionary<int, int>? CarouselIndices { get; set; }
+    [Parameter] public EventCallback<CarouselEventArgs> OnCarouselChange { get; set; }
+
+    private int GetCurrentCarouselIndex(int postId)
+    {
+        if (CarouselIndices == null || !CarouselIndices.ContainsKey(postId))
+            return 0;
+        return CarouselIndices[postId];
+    }
+
+    private async Task NextSlide(int postId, int totalCount)
+    {
+        var currentIndex = GetCurrentCarouselIndex(postId);
+        var newIndex = (currentIndex + 1) % totalCount;
+        await OnCarouselChange.InvokeAsync(new CarouselEventArgs { PostId = postId, Index = newIndex });
+    }
+
+    private async Task PrevSlide(int postId, int totalCount)
+    {
+        var currentIndex = GetCurrentCarouselIndex(postId);
+        var newIndex = (currentIndex - 1 + totalCount) % totalCount;
+        await OnCarouselChange.InvokeAsync(new CarouselEventArgs { PostId = postId, Index = newIndex });
+    }
+
+    private void NavigateToCategory(int categoryId)
+    {
+        Navigation.NavigateTo($"/category/{categoryId}", forceLoad: true);
+    }
+
+    public class CommentDraftEventArgs
+    {
+        public int PostId { get; set; }
+        public string? Content { get; set; }
+    }
+
+    public class CarouselEventArgs
+    {
+        public int PostId { get; set; }
+        public int Index { get; set; }
+    }
+}

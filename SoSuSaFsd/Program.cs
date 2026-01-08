@@ -2,35 +2,37 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SoSuSaFsd.Data;
+using SoSuSaFsd.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using SoSuSaFsd.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. DbContext Configuration
+// ========== DATABASE ==========
 builder.Services.AddDbContextFactory<SoSuSaFsdContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SoSuSaFsdContext") ?? throw new InvalidOperationException("Connection string 'SoSuSaFsdContext' not found.")));
-
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SoSuSaFsdContext") ?? 
+        throw new InvalidOperationException("Connection string 'SoSuSaFsdContext' not found.")));
+        
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// --- CRITICAL FIX 1: Add Controller Services ---
+// ========== SERVICES ==========
 builder.Services.AddControllers();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
-// --- CRITICAL FIX 4: INCREASE SIGNALR MESSAGE LIMIT ---
+// ========== SIGNALR ==========
 builder.Services.Configure<HubOptions>(options =>
 {
-    options.MaximumReceiveMessageSize = 1024 * 1024 * 1000; // 100MB
+    options.MaximumReceiveMessageSize = 1024 * 1024 * 100; // 100MB
 });
 
-// 2. Add Identity Services
+// ========== IDENTITY ==========
 builder.Services.AddIdentityCore<Users>(options =>
 {
-    // Login settings
     options.SignIn.RequireConfirmedAccount = false;
-
-    // Password settings
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireUppercase = false;
@@ -43,7 +45,7 @@ builder.Services.AddIdentityCore<Users>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-// 3. Add Authentication State
+// ========== AUTHENTICATION ==========
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = IdentityConstants.ApplicationScheme;
@@ -53,12 +55,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddCascadingAuthenticationState();
 
+// ========== BLAZOR ==========
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
 
-// --- NEW ADMIN SEEDING LOGIC ---
+// ========== DATABASE SEEDING ==========
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -67,7 +70,7 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<Users>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // 1. Ensure Roles Exist
+        // Ensure roles exist
         string[] roleNames = { "Admin", "User" };
         foreach (var roleName in roleNames)
         {
@@ -77,17 +80,15 @@ using (var scope = app.Services.CreateScope())
             }
         }
 
-        // 2. Define the SPECIFIC Admin credentials you requested
+        // Create or reset admin user
         string targetEmail = "So@gmail.com";
         string targetUsername = "SoSuSaAdmin";
         string targetPassword = "SoSoSaAdmin123";
 
-        // Check if this specific user exists
         var adminUser = await userManager.FindByEmailAsync(targetEmail);
 
         if (adminUser == null)
         {
-            // CREATE NEW ADMIN
             adminUser = new Users
             {
                 UserName = targetUsername,
@@ -105,7 +106,6 @@ using (var scope = app.Services.CreateScope())
             };
 
             var result = await userManager.CreateAsync(adminUser, targetPassword);
-
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
@@ -113,18 +113,14 @@ using (var scope = app.Services.CreateScope())
         }
         else
         {
-            // IF EXISTS: FORCE RESET PASSWORD to 'SoSoSaAdmin123'
-            // This fixes "Invalid Login" if the account was made previously with a different password
             var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
             await userManager.ResetPasswordAsync(adminUser, token, targetPassword);
 
-            // Force Role Assignment
             if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
 
-            // Fix Database Role Column
             if (adminUser.Role != "Admin")
             {
                 adminUser.Role = "Admin";
@@ -135,11 +131,11 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the database.");
+        logger.LogError(ex, "Error seeding database.");
     }
 }
-// --- END SEEDING LOGIC ---
 
+// ========== MIDDLEWARE ==========
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -151,7 +147,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-// 4. Enable Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
