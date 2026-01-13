@@ -13,213 +13,7 @@
 @inject IWebHostEnvironment Environment
 
 <PageTitle>@Title</PageTitle>
-
-<style>
-    /* --- GLOBAL STYLES --- */
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #ffffff;
-        margin: 0;
-        color: #333;
-        overflow: hidden; /* CRITICAL: Prevents window scroll */
-    }
-
-    a { text-decoration: none; color: #333; cursor: pointer; }
-    ul { list-style-type: none; padding: 0; margin: 0; }
-    hr { border: 0; border-top: 1px solid #ddd; margin: 15px 0; }
-
-    /* --- HEADER --- */
-    .site-header {
-        background-color: #ffffff;
-        border-bottom: 2px solid #333;
-        padding: 10px 0;
-        position: fixed;
-        top: 0; left: 0; width: 100%; z-index: 1000;
-        height: 62px; box-sizing: border-box;
-    }
-
-    .header-container { width: 95%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 100%; }
-    .logo-area { display: flex; align-items: center; text-decoration: none; cursor: pointer; }
-    .logo-icon { width: 40px; height: 40px; background-color: #333; color: white; border-radius: 50% 50% 50% 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 2px 2px 0px #999; }
-    .logo-text { font-size: 32px; font-weight: 700; color: #333; letter-spacing: -1px; }
-
-    /* --- MAIN LAYOUT --- */
-    .main-layout {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        height: 100vh;
-        gap: 0;
-    }
-
-    /* --- SIDEBAR BASE --- */
-    .sidebar {
-        width: 280px;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding-top: 72px;
-        box-sizing: border-box;
-        z-index: 900;
-    }
-
-    /* --- LEFT SIDEBAR (FOLLOWING + SEARCH) --- */
-    .sidebar-left {
-        border-right: 1px solid #ddd;
-        padding-right: 0;
-        overflow: hidden !important;
-        background-color: #f5f5f5;
-    }
-
-    .sidebar-left .sidebar-section.scrollable-list {
-        flex-grow: 1;
-        overflow-y: auto;
-        margin-bottom: 0;
-        padding-bottom: 10px;
-        padding-left: 20px;
-        padding-right: 10px;
-    }
-
-    .sidebar-left .sidebar-section.scrollable-list::-webkit-scrollbar { width: 6px; }
-    .sidebar-left .sidebar-section.scrollable-list::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
-
-    /* Sticky Title for Left Sidebar */
-    .sidebar-left .sidebar-section.scrollable-list h3 {
-        position: sticky;
-        top: 0;
-        background-color: #f5f5f5;
-        margin-bottom: 0;
-        padding-bottom: 15px;
-        padding-top: 5px;
-        z-index: 10;
-        font-size: 18px;
-        color: #333;
-        font-weight: bold;
-    }
-
-    .sidebar-footer {
-        flex-shrink: 0;
-        padding: 15px 20px 25px 20px;
-        background-color: transparent;
-        border-top: 1px solid #f9f9f9;
-    }
-
-    /* --- RIGHT SIDEBAR (VERIFIED + RECENT) --- */
-    .sidebar-right {
-        border-left: 1px solid #ddd;
-        padding-left: 20px;
-        overflow-y: hidden !important; /* No main scrollbar */
-    }
-
-    .sidebar-right .sidebar-section {
-        margin-bottom: 40px;
-        padding-bottom: 10px;
-    }
-
-    .sidebar-section h3 {
-        font-size: 18px;
-        color: #333;
-        margin-bottom: 15px;
-        font-weight: bold;
-    }
-
-    /* --- SEARCH INPUT --- */
-    .category-search-container {
-        display: flex; gap: 5px; align-items: center;
-        background-color: #ffffff; border: 1px solid #ccc;
-        border-radius: 30px; padding: 5px 8px; transition: border-color 0.2s;
-    }
-    .category-search-container:focus-within { border-color: #333; }
-    .category-search-container input { flex-grow: 1; padding: 8px 10px; border: none; background: transparent; font-size: 14px; width: 100%; min-width: 0; outline: none; }
-    .create-cat-btn { background-color: #333; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .create-cat-btn:hover { background-color: #000; }
-
-    /* --- LINKS (PILL STYLE) --- */
-    .category-link {
-        font-size: 16px; color: #555; display: flex; align-items: center;
-        justify-content: space-between; padding: 5px 12px; transition: all 0.2s;
-        cursor: pointer; border-radius: 30px; margin-bottom: 2px;
-    }
-    .category-link:hover { color: #000; text-decoration: none; background-color: #f0f0f0; }
-    .hashtag { color: #999; font-weight: normal; margin-right: 8px; }
-    .link-text-wrapper { display: flex; align-items: center; }
-
-    /* --- FEED AREA --- */
-    .feed-area {
-        width: 600px;
-        flex-grow: 0;
-        padding-top: 72px;
-        margin: 0 40px;
-        height: 100%;
-        overflow-y: auto;
-        padding-bottom: 50px;
-        box-sizing: border-box;
-    }
-    .feed-area::-webkit-scrollbar { width: 0px; background: transparent; }
-
-    /* --- OTHER COMPONENTS --- */
-    .category-header-card { background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center; }
-    .page-title { font-size: 32px; font-weight: 800; color: #222; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .cat-desc { color: #666; margin-top: 10px; font-size: 15px; }
-
-    .login-btn { background-color: #333; color: white; padding: 8px 20px; border: none; border-radius: 20px; font-size: 15px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-    .login-btn:hover { background-color: #000; }
-    .login-btn.secondary { background-color: #fff; color: #333; border: 1px solid #ccc; }
-    .follow-btn { padding: 8px 20px; border-radius: 20px; font-weight: bold, cursor: pointer; margin-right: 10px; border: 1px solid transparent; transition: all 0.2s; }
-    .follow-btn.not-following { background-color: #000; color: white; }
-    .follow-btn.following { background-color: #fff; color: #333; border: 1px solid #ccc; }
-    .verified-badge { color: #1da1f2; font-size: 24px; position: relative; top: 5px; }
-    .verified-badge-small { color: #1da1f2; font-size: 14px; margin-left: 5px; }
-
-    .post-card { background-color: #fff; padding: 0; margin-bottom: 20px; border: 1px solid #e1e1e1; border-radius: 8px; overflow: hidden; }
-    .post-header { display: flex; align-items: center; padding: 15px; }
-    .post-avatar { width: 48px; height: 48px; background-color: #ddd; border-radius: 50%; margin-right: 15px; object-fit: cover; }
-    .post-content { font-size: 16px; color: #111; line-height: 1.6; padding: 5px 15px 20px 15px; }
-    .post-actions { border-top: 1px solid #f0f0f0; display: flex; }
-    .action-btn { flex-grow: 1; background: none; border: none; font-size: 14px; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 0; transition: background-color 0.2s; }
-    .action-btn:hover { background-color: #f9f9f9; color: #333; }
-
-    /* Carousel, Comments, Modals (Same as before) */
-    .carousel-container { position: relative; width: 100%; height: 400px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
-    .carousel-media { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-    .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.5); color: white; border: none; font-size: 24px; padding: 10px 15px; cursor: pointer; z-index: 10; transition: background 0.2s; border-radius: 4px; }
-    .carousel-btn:hover { background: rgba(0, 0, 0, 0.8); }
-    .carousel-btn.prev { left: 10px; }
-    .carousel-btn.next { right: 10px; }
-    .carousel-counter { position: absolute; bottom: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; padding: 5px 12px; border-radius: 15px; font-size: 13px; font-weight: bold; }
-    .comment-section { background-color: #f9f9f9; border-top: 1px solid #eee; padding: 15px; }
-    .comment-list { margin-bottom: 15px; max-height: 300px; overflow-y: auto; }
-    .comment-item { display: flex; margin-bottom: 12px; }
-    .comment-avatar { width: 32px; height: 32px; border-radius: 50%; background-color: #ddd; margin-right: 10px; object-fit: cover; }
-    .comment-bubble { background-color: #fff; border-radius: 12px; padding: 8px 12px; border: 1px solid #eee; flex-grow: 1; }
-    .comment-user { font-weight: bold; font-size: 13px; margin-right: 5px; color: #000; }
-    .comment-date { font-size: 11px; color: #888; }
-    .comment-text { font-size: 14px; color: #333; margin-top: 2px; line-height: 1.4; }
-    .comment-input-area { display: flex; gap: 10px; }
-    .comment-input { flex-grow: 1; padding: 8px 12px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; outline: none; }
-    .comment-send-btn { background-color: #333; color: white; border: none; border-radius: 20px; padding: 6px 15px; cursor: pointer; font-size: 13px; font-weight: bold; }
-    .comment-send-btn:disabled { opacity: 0.5; cursor: default; }
-    .modal { display: flex; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-    .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-    .modal-close { position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; color: #aaa; }
-    .modal-textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; resize: none; font-family: inherit; font-size: 15px; box-sizing: border-box; margin: 10px 0; }
-    .file-input-wrapper { margin: 10px 0; }
-    .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
-    .preview-item { width: 100px; height: 100px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; position: relative; background: #f0f0f0; }
-    .preview-media { width: 100%; height: 100%; object-fit: cover; }
-    .remove-media-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; }
-    .remove-media-btn:hover { background: red; }
-    .upload-loading { font-size: 12px; color: #666; font-style: italic; margin-left: 10px; }
-    
-    /* --- LOGIN POPUP MODAL --- */
-    .login-popup-content { text-align: center; }
-    .login-popup-icon { font-size: 48px; color: #333; margin-bottom: 15px; }
-    .login-popup-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-    .login-popup-message { font-size: 14px; color: #666; margin-bottom: 25px; line-height: 1.5; }
-    .login-popup-buttons { display: flex; gap: 10px; justify-content: center; }
-</style>
+<link rel="stylesheet" href="/styles/category-details.css" />
 
 <header class="site-header">
     <div class="header-container">
@@ -232,7 +26,7 @@
 </header>
 
 <div class="main-layout">
-    @* --- LEFT SIDEBAR: FOLLOWING + SEARCH (Matching Home) --- *@
+    @* --- LEFT SIDEBAR --- *@
     <aside class="sidebar sidebar-left">
         <div class="sidebar-section scrollable-list">
             <h3>Following</h3>
@@ -242,7 +36,7 @@
                     @foreach (var cat in FollowedCategories)
                     {
                         <li>
-                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => NavigateToCategory(cat.Id))">
                                 <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
                                 @if (cat.IsVerified)
                                 {
@@ -256,10 +50,10 @@
                 {
                     <AuthorizeView>
                         <Authorized>
-                            <li style="padding-left:10px; color:#666; font-size:14px;">You aren't following anything yet.</li>
+                            <li class="empty-list-item">You aren't following anything yet.</li>
                         </Authorized>
                         <NotAuthorized>
-                            <li style="padding-left:10px; color:#666; font-size:14px;">Login to see follows.</li>
+                            <li class="empty-list-item">Login to see follows.</li>
                         </NotAuthorized>
                     </AuthorizeView>
                 }
@@ -276,11 +70,11 @@
         </div>
     </aside>
 
-    @* --- CENTER FEED --- *@
+    @* --- MAIN FEED --- *@
     <main class="feed-area">
         @if (CurrentCategory == null)
         {
-            <div style="text-align: center; margin-top: 50px;">
+            <div class="loading-state">
                 @if (IsLoading)
                 {
                     <span>Loading...</span>
@@ -305,18 +99,22 @@
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <div style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; margin: 15px 0; border-radius: 5px;"><strong>Error:</strong> @errorMessage</div>
+                    <div class="alert alert-error">
+                        <strong>Error:</strong> @errorMessage
+                    </div>
                 }
 
-                <div style="margin-top: 15px;">
-                    <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">@(isFollowing ? "Unfollow" : "Follow")</button>
+                <div class="action-buttons">
+                    <button class="follow-btn @(isFollowing ? "following" : "not-following")" @onclick="ToggleFollow">
+                        @(isFollowing ? "Unfollow" : "Follow")
+                    </button>
                     @if (CanUserPost())
                     {
                         <button class="login-btn" @onclick="() => showPostModal = true">Create Post</button>
                     }
                     else if (hasPendingRequest)
                     {
-                        <button class="login-btn" disabled style="background-color: #888; cursor: default;">Request Pending</button>
+                        <button class="login-btn" disabled>Request Pending</button>
                     }
                     else if (CurrentCategory?.IsVerified == true)
                     {
@@ -330,11 +128,15 @@
 
                 @if (CurrentCategory?.IsVerified == true && !CanUserPost() && !hasPendingRequest)
                 {
-                    <div style="color: #856404; background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;"><strong>⚠️ Verified Category:</strong> This category is restricted. You must request access to post here.</div>
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Verified Category:</strong> This category is restricted. You must request access to post here.
+                    </div>
                 }
                 else if (hasPendingRequest)
                 {
-                    <div style="color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; margin: 15px 0; border-radius: 5px; font-size: 14px;"><strong>ℹ️ Pending:</strong> Your request to post in this verified category is awaiting admin approval.</div>
+                    <div class="alert alert-info">
+                        <strong>ℹ️ Pending:</strong> Your request to post in this verified category is awaiting admin approval.
+                    </div>
                 }
             </div>
 
@@ -342,81 +144,90 @@
 
             @if (CategoryPosts != null && CategoryPosts.Any())
             {
-                @foreach (var post in CategoryPosts)
+                <div style="margin-bottom: 20px;">
+                    <input type="text" placeholder="Search posts in this category..." @bind="postSearchTerm" @bind:event="oninput" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
+                </div>
+
+                // Calculate filtered posts
+                var resultList = (IEnumerable<Posts>)CategoryPosts;
+                
+                // 1. If user typed in the local search bar, prioritize that
+                if (!string.IsNullOrWhiteSpace(postSearchTerm))
                 {
-                    <div class="post-card">
-                        <div class="post-header">
-                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
-                            <div>
-                                <b>@(post.User?.UserName ?? "User")</b>
-                                <div style="font-size: 12px; color: #888;">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
-                            </div>
-                        </div>
-                        <div class="post-content">@post.Content</div>
-                        @if (post.Media != null && post.Media.Any())
-                        {
-                            var mediaList = post.Media.ToList();
-                            var totalMedia = mediaList.Count;
-                            var currentIndex = GetCurrentIndex(post.Id);
-                            var activeMedia = mediaList[currentIndex];
-                            <div class="carousel-container">
-                                @if (totalMedia > 1) { <button class="carousel-btn prev" @onclick="() => PrevSlide(post.Id, totalMedia)">&#10094;</button> }
-                                @if (activeMedia.MediaType == "Video")
-                                {
-                                    <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">Your browser does not support the video tag.</video>
-                                }
-                                else
-                                {
-                                    <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
-                                }
-                                @if (totalMedia > 1) { <button class="carousel-btn next" @onclick="() => NextSlide(post.Id, totalMedia)">&#10095;</button><div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div> }
-                            </div>
-                        }
-                        <div class="post-actions">
-                            <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
-                                @{ var isLiked = post.Likes.Any(l => l.UserID == currentUserId); var likeCount = post.Likes.Count; }
-                                @if (isLiked) { <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i> } else { <i class="far fa-heart" style="margin-right: 5px;"></i> }
-                                @if (likeCount > 0) { <span>@likeCount</span> } else { <span>Like</span> }
-                            </button>
-                            <button class="action-btn" @onclick="() => ToggleComments(post.Id)"><i class="far fa-comment"></i> Comment</button>
-                            <button class="action-btn"><i class="far fa-share-square"></i> Share</button>
-                            <button class="action-btn" style="color: #666;" @onclick="@(() => OpenReportModal(post.Id))" title="Report Post"><i class="far fa-flag"></i> Report</button>
-                        </div>
-                        @if (_showComments.ContainsKey(post.Id) && _showComments[post.Id])
-                        {
-                            <div class="comment-section">
-                                <div class="comment-list">
-                                    @if (_postComments.ContainsKey(post.Id) && _postComments[post.Id] != null)
-                                    {
-                                        foreach (var comment in _postComments[post.Id])
-                                        {
-                                            <div class="comment-item">
-                                                <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
-                                                <div class="comment-bubble">
-                                                    <div><span class="comment-user">@(comment.User?.UserName ?? "User")</span><span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span></div>
-                                                    <div class="comment-text">@comment.Content</div>
-                                                </div>
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                                <div class="comment-input-area">
-                                    <input type="text" class="comment-input" placeholder="Write a comment..." value="@(_commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "")" @onchange="@(e => UpdateCommentDraft(post.Id, e.Value?.ToString()))" />
-                                    <button class="comment-send-btn" @onclick="() => SubmitComment(post.Id)">Post</button>
+                    resultList = resultList.Where(p => 
+                        p.Content.Contains(postSearchTerm, StringComparison.OrdinalIgnoreCase) || 
+                        (p.User?.UserName ?? "").Contains(postSearchTerm, StringComparison.OrdinalIgnoreCase));
+                }
+                // 2. Otherwise, if we came from the main search (URL has focusPostId), show only that post
+                else if (FocusPostId.HasValue)
+                {
+                    resultList = resultList.Where(p => p.Id == FocusPostId.Value);
+                }
+                
+                var filteredPosts = resultList.ToList();
+
+                @* "View All" button if looking at specific search result *@
+                @if (FocusPostId.HasValue && string.IsNullOrWhiteSpace(postSearchTerm))
+                {
+                    <div style="margin-bottom: 15px;">
+                        <button class="login-btn secondary" @onclick="ClearSearchAndNavigate">
+                            ← View all posts in #@CurrentCategory?.CategoryName
+                        </button>
+                    </div>
+                }
+
+                @if (filteredPosts.Any())
+                {
+                    @foreach (var post in filteredPosts)
+                    {
+                        <div class="post-card">
+                            <div class="post-header">
+                                <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
+                                <div>
+                                    <b>@(post.User?.UserName ?? "User")</b>
+                                    <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
                                 </div>
                             </div>
-                        }
+                            <div class="post-content">@post.Content</div>
+                            @if (post.Media != null && post.Media.Any())
+                            {
+                                @RenderCarousel(post)
+                            }
+                            <div class="post-actions">
+                                <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
+                                    @RenderLikeButton(post)
+                                </button>
+                                <button class="action-btn" @onclick="() => ToggleComments(post.Id)">
+                                    <i class="far fa-comment"></i> Comment
+                                </button>
+                                <button class="action-btn" @onclick="@(() => OpenReportModal(post.Id))" title="Report Post">
+                                    <i class="far fa-flag"></i> Report
+                                </button>
+                            </div>
+                            @if (IsCommentSectionVisible(post.Id))
+                            {
+                                @RenderCommentSection(post)
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state center">
+                        No posts found matching "<b>@postSearchTerm</b>"
                     </div>
                 }
             }
             else
             {
-                <div style="text-align:center; padding:20px; color:#666;">No posts yet. Be the first to post in <b>#@CurrentCategory.CategoryName</b>!</div>
+                <div class="empty-state center">
+                    No posts yet. Be the first to post in <b>#@CurrentCategory.CategoryName</b>!
+                </div>
             }
         }
     </main>
 
-    @* --- RIGHT SIDEBAR: VERIFIED + RECENTLY CREATED (Matching Home) --- *@
+    @* --- RIGHT SIDEBAR --- *@
     <aside class="sidebar sidebar-right">
         <div class="sidebar-section">
             <h3>Verified Categories</h3>
@@ -426,7 +237,7 @@
                     @foreach (var cat in VerifiedCategories)
                     {
                         <li>
-                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => NavigateToCategory(cat.Id))">
                                 <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
                                 <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
                             </a>
@@ -443,7 +254,7 @@
                     @foreach (var cat in RecentCategories)
                     {
                         <li>
-                            <a class="category-link" href="#" @onclick:preventDefault @onclick='@(() => NavigateToCategory(cat.Id))'>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => NavigateToCategory(cat.Id))">
                                 <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
                                 @if (cat.IsVerified) { <i class="fas fa-check-circle verified-badge-small" title="Verified"></i> }
                             </a>
@@ -453,8 +264,8 @@
                 else
                 {
                     <AuthorizeView>
-                        <Authorized><li style="padding-left:10px; color:#666; font-size:14px;">You haven't created any categories yet.</li></Authorized>
-                        <NotAuthorized><li style="padding-left:10px; color:#666; font-size:14px;">Login to see your categories.</li></NotAuthorized>
+                        <Authorized><li class="empty-list-item">You haven't created any categories yet.</li></Authorized>
+                        <NotAuthorized><li class="empty-list-item">Login to see your categories.</li></NotAuthorized>
                     </AuthorizeView>
                 }
             </ul>
@@ -462,17 +273,19 @@
     </aside>
 </div>
 
-@* --- Remove old modals section and replace with auth overlay --- *@
+@* --- MODALS --- *@
+
+@* Post Modal *@
 @if (showPostModal) 
 { 
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="ClosePostModal">@closeChar</span>
-            <h2 style="margin-top: 0;">Create Post</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
+            <span class="modal-close" @onclick="ClosePostModal">×</span>
+            <h2>Create Post</h2>
+            <div class="modal-subtitle">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
             <div class="file-input-wrapper">
-                <label style="font-weight:bold; display:block; margin-bottom:5px;">Add Media (Images or Videos): @if (isUploading) { <span class="upload-loading">Uploading... please wait.</span> }</label>
+                <label>Add Media (Images or Videos): @if (isUploading) { <span class="upload-loading">Uploading... please wait.</span> }</label>
                 <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
             </div>
             <div class="preview-container">
@@ -481,7 +294,7 @@
                     var index = i; 
                     var file = pendingUploads[i]; 
                     <div class="preview-item">
-                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">@closeChar</button>
+                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">×</button>
                         @if (file.MediaType == "Video") 
                         { 
                             <video class="preview-media" src="@file.SavedPath"></video> 
@@ -493,38 +306,42 @@
                     </div> 
                 }
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+            <div class="modal-actions">
                 <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
                 <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
             </div>
         </div>
     </div> 
 }
+
+@* Request Access Modal *@
 @if (showRequestModal) 
 { 
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="() => showRequestModal = false">@closeChar</span>
-            <h2 style="margin-top: 0;">Request Access</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div>
+            <span class="modal-close" @onclick="() => showRequestModal = false">×</span>
+            <h2>Request Access</h2>
+            <div class="modal-subtitle">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+            <div class="modal-actions">
                 <button class="login-btn secondary" @onclick="() => showRequestModal = false">Cancel</button>
                 <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
             </div>
         </div>
     </div> 
 }
+
+@* Report Modal *@
 @if (showReportModal) 
 { 
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="() => showReportModal = false">@closeChar</span>
-            <h2 style="margin-top: 0; color: #dc3545;">Report Content</h2>
-            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">Help us keep the community safe. Why are you reporting this post?</div>
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label>
-                <select class="modal-textarea" style="height: 40px;" @bind="reportReasonSelection">
+            <span class="modal-close" @onclick="() => showReportModal = false">×</span>
+            <h2 class="modal-title-error">Report Content</h2>
+            <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
+            <div class="form-group">
+                <label>Reason:</label>
+                <select class="modal-textarea form-select" @bind="reportReasonSelection">
                     <option value="Spam">Spam</option>
                     <option value="Harassment">Harassment or Bullying</option>
                     <option value="Misinformation">Misinformation</option>
@@ -533,47 +350,51 @@
                     <option value="Other">Other</option>
                 </select>
             </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label>
+            <div class="form-group">
+                <label>Additional Details (Optional):</label>
                 <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="reportReasonDetails"></textarea>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+            <div class="modal-actions">
                 <button class="login-btn secondary" @onclick="() => showReportModal = false">Cancel</button>
-                <button class="login-btn" style="background-color: #dc3545;" @onclick="SubmitReport">Submit Report</button>
+                <button class="login-btn btn-error" @onclick="SubmitReport">Submit Report</button>
             </div>
         </div>
     </div> 
 }
+
+@* Notification Modal *@
 @if (showNotificationModal) 
 { 
     <div class="modal">
-        <div class="modal-content" style="text-align: center; max-width: 400px;">
-            <span class="modal-close" @onclick="CloseNotification">@closeChar</span>
-            <div style="margin-bottom: 15px;">
+        <div class="modal-content modal-notification">
+            <span class="modal-close" @onclick="CloseNotification">×</span>
+            <div class="notification-icon">
                 @if (notificationType == "success") 
                 { 
-                    <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i>
-                    <h2 style="margin: 10px 0; color: #28a745;">Success</h2> 
+                    <i class="fas fa-check-circle success-icon"></i>
                 } 
                 else if (notificationType == "info") 
                 { 
-                    <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i>
-                    <h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2> 
+                    <i class="fas fa-info-circle info-icon"></i>
                 } 
                 else 
                 { 
-                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i>
-                    <h2 style="margin: 10px 0; color: #dc3545;">Error</h2> 
+                    <i class="fas fa-exclamation-circle error-icon"></i>
                 }
             </div>
-            <p style="font-size: 16px; margin-bottom: 25px;">@notificationMessage</p>
+            <h2 class="notification-title @notificationType">
+                @(notificationType == "success" ? "Success" : notificationType == "info" ? "Report Received" : "Error")
+            </h2>
+            <p class="notification-message">@notificationMessage</p>
             <button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button>
         </div>
     </div> 
 }
+
+@* Create Category Confirmation Modal *@
 <div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
     <div class="modal-content">
-        <span class="modal-close" @onclick="() => showCreateConfirm = false">@closeChar</span>
+        <span class="modal-close" @onclick="() => showCreateConfirm = false">×</span>
         <h2>Category Not Found</h2>
         <p>Would you like to create <b>#@searchTerm</b>?</p>
         <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -583,159 +404,960 @@
     </div>
 </div>
 
-@* --- AUTH OVERLAY (from Home.razor) --- *@
-<div id="auth-overlay" class="auth-overlay" style="display: @(ShowLoginOverlay ? "flex" : "none"); position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center;">
-    <div class="auth-card" style="background-color: #fff; width: 90%; max-width: 400px; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; border: 1px solid #eee;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:15px;"><h3 style="margin:0;">Welcome</h3><span style="cursor:pointer; font-size:20px;" @onclick="() => ShowLoginOverlay = false">@closeChar</span></div>
+@* Auth Overlay *@
+<div id="auth-overlay" class="auth-overlay" style="display: @(ShowLoginOverlay ? "flex" : "none");">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <h3>Welcome</h3>
+            <span style="cursor:pointer; font-size:20px;" @onclick="() => ShowLoginOverlay = false">×</span>
+        </div>
         <div id="login-view">
             <form action="api/Account/login" method="post">
-                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
-                    <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                <div class="auth-input-group">
+                    <input type="text" name="username" placeholder="Username" required />
                 </div>
-                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
-                    <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                <div class="auth-input-group">
+                    <input type="password" name="password" placeholder="Password" required />
                 </div>
-                <button type="submit" class="auth-btn" style="width: 100%; padding: 12px; background-color: #333; color: white; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;">Log In</button>
+                <button type="submit" class="auth-btn">Log In</button>
             </form>
-            <div class="auth-switch" style="margin-top: 20px; font-size: 14px; color: #666;">Don't have an account? <a onclick="document.getElementById('login-view').style.display='none'; document.getElementById('register-view').style.display='block';" style="cursor: pointer; color: #333; font-weight: bold;">Register</a></div>
+            <div class="auth-switch">Don't have an account? <a onclick="document.getElementById('login-view').style.display='none'; document.getElementById('register-view').style.display='block';">Register</a></div>
         </div>
         <div id="register-view" style="display: none;">
             <form action="api/Account/register" method="post">
-                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
-                    <input type="email" name="email" placeholder="Email Address" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                <div class="auth-input-group">
+                    <input type="email" name="email" placeholder="Email Address" required />
                 </div>
-                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
-                    <input type="text" name="username" placeholder="Username" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                <div class="auth-input-group">
+                    <input type="text" name="username" placeholder="Username" required />
                 </div>
-                <div class="auth-input-group" style="margin-bottom: 15px; text-align: left;">
-                    <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; background-color: #f9f9f9;" />
+                <div class="auth-input-group">
+                    <input type="password" name="password" placeholder="Password" required />
                 </div>
-                <button type="submit" class="auth-btn" style="width: 100%; padding: 12px; background-color: #333; color: white; border: none; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;">Sign Up</button>
+                <button type="submit" class="auth-btn">Sign Up</button>
             </form>
-            <div class="auth-switch" style="margin-top: 20px; font-size: 14px; color: #666;">Already have an account? <a onclick="document.getElementById('register-view').style.display='none'; document.getElementById('login-view').style.display='block';" style="cursor: pointer; color: #333; font-weight: bold;">Log In</a></div>
+            <div class="auth-switch">Already have an account? <a onclick="document.getElementById('register-view').style.display='none'; document.getElementById('login-view').style.display='block';">Log In</a></div>
         </div>
     </div>
 </div>
+
 @code {
     [Parameter] public int Id { get; set; }
+    
+    // Reads focusPostId from the URL ?focusPostId=123
+    [SupplyParameterFromQuery] public int? FocusPostId { get; set; }
 
+    // ============ DATA MODELS ============
     private Categories? CurrentCategory;
     private List<Posts> CategoryPosts = new();
-    
-    // --- SIDEBAR DATA (Added VerifiedCategories to match Home) ---
     private List<Categories> RecentCategories = new();
     private List<Categories> FollowedCategories = new();
     private List<Categories> VerifiedCategories = new();
 
+    // ============ UI STATE ============
     private bool IsLoading = true;
     private string Title = "Category";
-    private bool isFollowing = false;
-    private string searchTerm = "";
-    private bool showCreateConfirm = false;
-    private bool showPostModal = false;
-    private bool showRequestModal = false;
-    private string requestReason = "";
-    private bool hasApprovedAccess = false;
-    private bool hasPendingRequest = false;
-    private string newPostContent = "";
     private string errorMessage = "";
+    private bool ShowLoginOverlay = false;
+
+    // ============ USER STATE ============
     private string? currentUserId;
     private bool isAdmin = false;
     private Users? currentUser;
+
+    // ============ CATEGORY STATE ============
+    private bool isFollowing = false;
+    private bool hasApprovedAccess = false;
+    private bool hasPendingRequest = false;
+
+    // ============ MODAL VISIBILITY ============
+    private bool showPostModal = false;
+    private bool showRequestModal = false;
     private bool showReportModal = false;
+    private bool showNotificationModal = false;
+    private bool showCreateConfirm = false;
+
+    // ============ FORM DATA ============
+    private string searchTerm = "";
+    private string postSearchTerm = "";
+    private string newPostContent = "";
+    private string requestReason = "";
     private int reportPostId = 0;
     private string reportReasonSelection = "Spam";
     private string reportReasonDetails = "";
-    private bool showNotificationModal = false;
     private string notificationMessage = "";
     private string notificationType = "success";
-    private bool showLoginModal = false;
-    private string loginModalAction = "";
-    private string closeChar = "×";
-    private bool ShowLoginOverlay = false;
-    private Dictionary<int, int> _carouselIndices = new();
-    private int GetCurrentIndex(int postId) { if (!_carouselIndices.ContainsKey(postId)) _carouselIndices[postId] = 0; return _carouselIndices[postId]; }
-    private void NextSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex + 1) % totalCount; }
-    private void PrevSlide(int postId, int totalCount) { var currentIndex = GetCurrentIndex(postId); _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount; }
+
+    // ============ COMMENTS & MEDIA ============
     private Dictionary<int, bool> _showComments = new();
     private Dictionary<int, List<Comments>> _postComments = new();
     private Dictionary<int, string> _commentDrafts = new();
-    private class PendingFile { public string SavedPath { get; set; } = ""; public string MediaType { get; set; } = ""; public string PhysicalPath { get; set; } = ""; }
+    private Dictionary<int, int> _carouselIndices = new();
     private List<PendingFile> pendingUploads = new();
     private bool isUploading = false;
+
+    // ============ CONSTANTS ============
     private const long MaxFileSize = 1024 * 1024 * 200;
     private const int MaxAllowedFiles = 10;
 
+    // ============ LIFECYCLE ============
     protected override async Task OnParametersSetAsync()
     {
-        IsLoading = true; errorMessage = ""; hasApprovedAccess = false; hasPendingRequest = false;
+        await InitializePageData();
+    }
+
+    // ============ INITIALIZATION ============
+    private async Task InitializePageData()
+    {
+        ResetPageState();
         try
         {
             using var context = DbFactory.CreateDbContext();
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-            if (currentUserId == null && user.Identity?.IsAuthenticated == true)
-            {
-                using var scope = ScopeFactory.CreateScope();
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-                var dbUser = await userManager.GetUserAsync(user);
-                currentUserId = dbUser?.Id;
-                currentUser = dbUser;
-            }
-            else if (currentUserId != null)
-            {
-                using var scope = ScopeFactory.CreateScope();
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-                currentUser = await userManager.FindByIdAsync(currentUserId);
-            }
-
-            // Load verified categories (for Right Sidebar)
-            VerifiedCategories = await context.Categories.Where(c => c.IsVerified == true).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
-
-            CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
-            if (CurrentCategory != null) Title = "#" + CurrentCategory.CategoryName;
-            if (user.Identity?.IsAuthenticated == true) isAdmin = user.IsInRole("Admin");
-
-            if (!string.IsNullOrEmpty(currentUserId) && CurrentCategory != null)
-            {
-                var existingFollow = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
-                isFollowing = (existingFollow != null);
-                var accessRequest = await context.CategoryAccessRequests.OrderByDescending(r => r.DateCreated).FirstOrDefaultAsync(r => r.UserId == currentUserId && r.CategoryId == CurrentCategory.Id);
-                if (accessRequest != null) { if (accessRequest.Status == "Approved") hasApprovedAccess = true; if (accessRequest.Status == "Pending") hasPendingRequest = true; }
-            }
-
-            CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).Include(p => p.Likes).OrderByDescending(p => p.DateCreated).ToListAsync();
-
-            if (!string.IsNullOrEmpty(currentUserId))
-            {
-                RecentCategories = await context.Categories.Where(c => c.CreatedBy == currentUserId).OrderByDescending(c => c.DateCreated).Take(5).ToListAsync();
-                FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync();
-            }
+            await LoadUserData(user, context);
+            await LoadCategoryData(context);
+            await LoadUserSpecificData(context);
         }
-        catch (Exception ex) { errorMessage = "Error loading: " + ex.Message; }
-        finally { IsLoading = false; }
+        catch (Exception ex)
+        {
+            errorMessage = "Error loading: " + ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
-    private void ShowNotification(string message, string type) { notificationMessage = message; notificationType = type; showNotificationModal = true; }
-    private void CloseNotification() { showNotificationModal = false; notificationMessage = ""; }
-    private void ShowLoginPopup(string action) { ShowLoginOverlay = true; }
-    private void CloseLoginModal() { ShowLoginOverlay = false; }
-    private void OpenReportModal(int postId) { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("report posts"); return; } reportPostId = postId; reportReasonSelection = "Spam"; reportReasonDetails = ""; showReportModal = true; }
-    private async Task SubmitReport() { if (reportPostId == 0 || string.IsNullOrEmpty(currentUserId)) { ShowNotification("Session error. Please refresh and try again.", "error"); return; } try { using var context = DbFactory.CreateDbContext(); var existingReport = await context.Reports.FirstOrDefaultAsync(r => r.PostID == reportPostId && r.ReporterID == currentUserId); if (existingReport != null) { showReportModal = false; if (existingReport.Status == "Dismissed") ShowNotification("An Admin has already dismissed your report for this post.", "error"); else ShowNotification("You have already reported this post.", "error"); return; } bool isAlreadyDismissed = await context.Reports.AnyAsync(r => r.PostID == reportPostId && r.Status == "Dismissed"); string finalReason = reportReasonSelection; if (!string.IsNullOrWhiteSpace(reportReasonDetails)) finalReason = $"{reportReasonSelection}: {reportReasonDetails}"; var newReport = new Reports { PostID = reportPostId, ReporterID = currentUserId, Reason = finalReason, Status = "Pending", DateCreated = DateTime.Now }; context.Reports.Add(newReport); await context.SaveChangesAsync(); showReportModal = false; if (isAlreadyDismissed) ShowNotification("Report submitted, but this content has already been reviewed and dismissed by admins.", "info"); else ShowNotification("Report submitted successfully.", "success"); } catch (Exception ex) { ShowNotification("Error sending report: " + ex.Message, "error"); } }
-    private async Task ToggleLike(int postId) { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("like posts"); return; } try { using var context = DbFactory.CreateDbContext(); var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId); var post = CategoryPosts.FirstOrDefault(p => p.Id == postId); if (existingLike != null) { context.PostLikes.Remove(existingLike); if (post != null) { var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId); if (localLike != null) post.Likes.Remove(localLike); } } else { var newLike = new PostLikes { PostID = postId, UserID = currentUserId, LikedAt = DateTime.Now }; context.PostLikes.Add(newLike); if (post != null) post.Likes.Add(newLike); } await context.SaveChangesAsync(); StateHasChanged(); } catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); } }
-    private async Task ToggleComments(int postId) { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("comment on posts"); return; } if (!_showComments.ContainsKey(postId)) _showComments[postId] = false; _showComments[postId] = !_showComments[postId]; if (_showComments[postId]) { if (!_postComments.ContainsKey(postId) || _postComments[postId] == null) { try { using var context = DbFactory.CreateDbContext(); var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync(); _postComments[postId] = comments; } catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); } } } StateHasChanged(); }
-    private void UpdateCommentDraft(int postId, string? value) { if (value != null) _commentDrafts[postId] = value; }
-    private async Task SubmitComment(int postId) { if (currentUser == null) { ShowLoginPopup("post comments"); return; } if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId])) return; var content = _commentDrafts[postId]; try { using var context = DbFactory.CreateDbContext(); var newComment = new Comments { PostID = postId, UserID = currentUser.Id, Content = content, DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUser.Id, UpdatedBy = currentUser.Id }; context.Comments.Add(newComment); await context.SaveChangesAsync(); _commentDrafts[postId] = ""; newComment.User = currentUser; if (!_postComments.ContainsKey(postId)) _postComments[postId] = new List<Comments>(); _postComments[postId].Add(newComment); StateHasChanged(); } catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); } }
-    private async Task HandleFilesSelected(InputFileChangeEventArgs e) { errorMessage = ""; isUploading = true; try { var newFiles = e.GetMultipleFiles(MaxAllowedFiles); var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads"); if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder); foreach (var file in newFiles) { if (pendingUploads.Count >= MaxAllowedFiles) break; if (file.Size <= MaxFileSize) { try { var extension = Path.GetExtension(file.Name).ToLower(); bool isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov"); var fileName = $"{Guid.NewGuid()}{extension}"; var physicalPath = Path.Combine(uploadsFolder, fileName); var webPath = $"/uploads/{fileName}"; await using var fileStream = new FileStream(physicalPath, FileMode.Create); await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream); pendingUploads.Add(new PendingFile { SavedPath = webPath, PhysicalPath = physicalPath, MediaType = isVideo ? "Video" : "Image" }); } catch (Exception ex) { errorMessage = $"Error reading {file.Name}: {ex.Message}"; } } else { errorMessage = $"File {file.Name} is too large."; } } } finally { isUploading = false; } }
-    private void RemoveFile(int index) { if (index >= 0 && index < pendingUploads.Count) { var file = pendingUploads[index]; try { if (System.IO.File.Exists(file.PhysicalPath)) { System.IO.File.Delete(file.PhysicalPath); } } catch { } pendingUploads.RemoveAt(index); } }
-    private async Task HandleSubmitRequest() { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("request category access"); return; } try { using var context = DbFactory.CreateDbContext(); var exists = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending"); if (exists) { errorMessage = "You already have a pending request."; showRequestModal = false; hasPendingRequest = true; return; } var request = new CategoryAccessRequests { UserId = currentUserId, CategoryId = Id, Reason = requestReason, Status = "Pending", DateCreated = DateTime.Now, DateUpdated = DateTime.Now }; context.CategoryAccessRequests.Add(request); await context.SaveChangesAsync(); showRequestModal = false; requestReason = ""; hasPendingRequest = true; StateHasChanged(); } catch (Exception ex) { errorMessage = "Error sending request: " + ex.Message; } }
-    private async Task HandleCreatePost() { if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0) return; if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("create posts"); return; } if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } try { using var context = DbFactory.CreateDbContext(); var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id); bool dbHasAccess = await context.CategoryAccessRequests.AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved"); if (category?.IsVerified == true && !isAdmin && !dbHasAccess) { errorMessage = "This category is verified. You must request access to post here."; return; } var newPost = new Posts { Content = newPostContent, CategoryId = Id, UserId = currentUserId, PostStatus = "Published", DateCreated = DateTime.Now, DateUpdated = DateTime.Now, CreatedBy = currentUserId, UpdatedBy = currentUserId, Media = new List<PostMedia>() }; foreach (var file in pendingUploads) { newPost.Media.Add(new PostMedia { MediaPath = file.SavedPath, MediaType = file.MediaType }); } context.Posts.Add(newPost); await context.SaveChangesAsync(); ClosePostModal(); CategoryPosts = await context.Posts.Where(p => p.CategoryId == Id).Include(p => p.User).Include(p => p.Media).Include(p => p.Likes).OrderByDescending(p => p.DateCreated).ToListAsync(); } catch (Exception ex) { errorMessage = "Error posting: " + ex.Message; } }
-    private void ClosePostModal() { showPostModal = false; newPostContent = ""; pendingUploads.Clear(); errorMessage = ""; }
-    private bool CanUserPost() { if (CurrentCategory?.IsVerified == true) { return isAdmin || hasApprovedAccess; } return !string.IsNullOrEmpty(currentUserId); }
-    private async Task ToggleFollow() { if (string.IsNullOrEmpty(currentUserId)) { ShowLoginPopup("follow categories"); return; } try { using var context = DbFactory.CreateDbContext(); if (isFollowing) { var record = await context.CategoryFollows.FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id); if (record != null) context.CategoryFollows.Remove(record); isFollowing = false; } else { context.CategoryFollows.Add(new CategoryFollows { UserId = currentUserId, CategoryId = Id, DateCreated = DateTime.Now, DateUpdated = DateTime.Now }); isFollowing = true; } await context.SaveChangesAsync(); FollowedCategories = await context.CategoryFollows.Where(cf => cf.UserId == currentUserId).Include(cf => cf.Category).Select(cf => cf.Category!).ToListAsync(); } catch (Exception ex) { errorMessage = ex.Message; } }
+    private void ResetPageState()
+    {
+        IsLoading = true;
+        errorMessage = "";
+        hasApprovedAccess = false;
+        hasPendingRequest = false;
+    }
+
+    private async Task LoadUserData(System.Security.Claims.ClaimsPrincipal user, SoSuSaFsdContext context)
+    {
+        currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (currentUserId == null && user.Identity?.IsAuthenticated == true)
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+            var dbUser = await userManager.GetUserAsync(user);
+            currentUserId = dbUser?.Id;
+            currentUser = dbUser;
+        }
+        else if (currentUserId != null)
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+            currentUser = await userManager.FindByIdAsync(currentUserId);
+        }
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            isAdmin = user.IsInRole("Admin");
+        }
+    }
+
+    private async Task LoadCategoryData(SoSuSaFsdContext context)
+    {
+        VerifiedCategories = await context.Categories
+            .Where(c => c.IsVerified == true)
+            .OrderByDescending(c => c.DateCreated)
+            .Take(5)
+            .ToListAsync();
+
+        CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
+        if (CurrentCategory != null)
+        {
+            Title = "#" + CurrentCategory.CategoryName;
+        }
+
+        CategoryPosts = await context.Posts
+            .Where(p => p.CategoryId == Id)
+            .Include(p => p.User)
+            .Include(p => p.Media)
+            .Include(p => p.Likes)
+            .OrderByDescending(p => p.DateCreated)
+            .ToListAsync();
+    }
+
+    private async Task LoadUserSpecificData(SoSuSaFsdContext context)
+    {
+        if (string.IsNullOrEmpty(currentUserId) || CurrentCategory == null)
+        {
+            return;
+        }
+
+        var existingFollow = await context.CategoryFollows
+            .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
+        isFollowing = (existingFollow != null);
+
+        var accessRequest = await context.CategoryAccessRequests
+            .OrderByDescending(r => r.DateCreated)
+            .FirstOrDefaultAsync(r => r.UserId == currentUserId && r.CategoryId == CurrentCategory.Id);
+
+        if (accessRequest != null)
+        {
+            hasApprovedAccess = accessRequest.Status == "Approved";
+            hasPendingRequest = accessRequest.Status == "Pending";
+        }
+
+        RecentCategories = await context.Categories
+            .Where(c => c.CreatedBy == currentUserId)
+            .OrderByDescending(c => c.DateCreated)
+            .Take(5)
+            .ToListAsync();
+
+        FollowedCategories = await context.CategoryFollows
+            .Where(cf => cf.UserId == currentUserId)
+            .Include(cf => cf.Category)
+            .Select(cf => cf.Category!)
+            .ToListAsync();
+    }
+
+    // ========== ADDED METHOD TO FIX RZ1010 ==========
+    private void ClearSearchAndNavigate()
+    {
+        FocusPostId = null;
+        Navigation.NavigateTo($"/category/{Id}");
+    }
+
+    private int GetCurrentIndex(int postId)
+    {
+        if (!_carouselIndices.ContainsKey(postId))
+        {
+            _carouselIndices[postId] = 0;
+        }
+        return _carouselIndices[postId];
+    }
+
+    private void NextSlide(int postId, int totalCount)
+    {
+        var currentIndex = GetCurrentIndex(postId);
+        _carouselIndices[postId] = (currentIndex + 1) % totalCount;
+    }
+
+    private void PrevSlide(int postId, int totalCount)
+    {
+        var currentIndex = GetCurrentIndex(postId);
+        _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount;
+    }
+
+    private bool IsCommentSectionVisible(int postId)
+    {
+        return _showComments.ContainsKey(postId) && _showComments[postId];
+    }
+
+    private async Task ToggleComments(int postId)
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            ShowLoginPopup("comment on posts");
+            return;
+        }
+
+        if (!_showComments.ContainsKey(postId))
+        {
+            _showComments[postId] = false;
+        }
+
+        _showComments[postId] = !_showComments[postId];
+
+        if (_showComments[postId])
+        {
+            await LoadComments(postId);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task LoadComments(int postId)
+    {
+        if (!_postComments.ContainsKey(postId) || _postComments[postId] == null)
+        {
+            try
+            {
+                using var context = DbFactory.CreateDbContext();
+                var comments = await context.Comments
+                    .Where(c => c.PostID == postId)
+                    .Include(c => c.User)
+                    .OrderBy(c => c.DateCreated)
+                    .ToListAsync();
+                _postComments[postId] = comments;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error loading comments: " + ex.Message);
+            }
+        }
+    }
+
+    private void UpdateCommentDraft(int postId, string? value)
+    {
+        if (value != null)
+        {
+            _commentDrafts[postId] = value;
+        }
+    }
+
+    private async Task SubmitComment(int postId)
+    {
+        if (currentUser == null)
+        {
+            ShowLoginPopup("post comments");
+            return;
+        }
+
+        if (!_commentDrafts.ContainsKey(postId) || string.IsNullOrWhiteSpace(_commentDrafts[postId]))
+        {
+            return;
+        }
+
+        var content = _commentDrafts[postId];
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var newComment = new Comments
+            {
+                PostID = postId,
+                UserID = currentUser.Id,
+                Content = content,
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUser.Id,
+                UpdatedBy = currentUser.Id
+            };
+
+            context.Comments.Add(newComment);
+            await context.SaveChangesAsync();
+
+            _commentDrafts[postId] = "";
+            newComment.User = currentUser;
+
+            if (!_postComments.ContainsKey(postId))
+            {
+                _postComments[postId] = new List<Comments>();
+            }
+
+            _postComments[postId].Add(newComment);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error posting comment: " + ex.Message);
+        }
+    }
+
+    private async Task ToggleLike(int postId)
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            ShowLoginPopup("like posts");
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var existingLike = await context.PostLikes
+                .FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId);
+            var post = CategoryPosts.FirstOrDefault(p => p.Id == postId);
+
+            if (existingLike != null)
+            {
+                context.PostLikes.Remove(existingLike);
+                if (post != null)
+                {
+                    var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId);
+                    if (localLike != null)
+                    {
+                        post.Likes.Remove(localLike);
+                    }
+                }
+            }
+            else
+            {
+                var newLike = new PostLikes
+                {
+                    PostID = postId,
+                    UserID = currentUserId,
+                    LikedAt = DateTime.Now
+                };
+                context.PostLikes.Add(newLike);
+                if (post != null)
+                {
+                    post.Likes.Add(newLike);
+                }
+            }
+
+            await context.SaveChangesAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling like: {ex.Message}");
+        }
+    }
+
+    private bool CanUserPost()
+    {
+        if (CurrentCategory?.IsVerified == true)
+        {
+            return isAdmin || hasApprovedAccess;
+        }
+        return !string.IsNullOrEmpty(currentUserId);
+    }
+
+    private async Task HandleCreatePost()
+    {
+        if (string.IsNullOrWhiteSpace(newPostContent) && pendingUploads.Count == 0)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            ShowLoginPopup("create posts");
+            return;
+        }
+
+        if (CurrentCategory?.IsVerified == true && !isAdmin && !hasApprovedAccess)
+        {
+            errorMessage = "This category is verified. You must request access to post here.";
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            bool dbHasAccess = await context.CategoryAccessRequests
+                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved");
+
+            if (CurrentCategory?.IsVerified == true && !isAdmin && !dbHasAccess)
+            {
+                errorMessage = "This category is verified. You must request access to post here.";
+                return;
+            }
+
+            var newPost = new Posts
+            {
+                Content = newPostContent,
+                CategoryId = Id,
+                UserId = currentUserId,
+                PostStatus = "Published",
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUserId,
+                UpdatedBy = currentUserId,
+                Media = new List<PostMedia>()
+            };
+
+            foreach (var file in pendingUploads)
+            {
+                newPost.Media.Add(new PostMedia
+                {
+                    MediaPath = file.SavedPath,
+                    MediaType = file.MediaType
+                });
+            }
+
+            context.Posts.Add(newPost);
+            await context.SaveChangesAsync();
+
+            ClosePostModal();
+
+            CategoryPosts = await context.Posts
+                .Where(p => p.CategoryId == Id)
+                .Include(p => p.User)
+                .Include(p => p.Media)
+                .Include(p => p.Likes)
+                .OrderByDescending(p => p.DateCreated)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error posting: " + ex.Message;
+        }
+    }
+
+    private void ClosePostModal()
+    {
+        showPostModal = false;
+        newPostContent = "";
+        pendingUploads.Clear();
+        errorMessage = "";
+    }
+
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        errorMessage = "";
+        isUploading = true;
+
+        try
+        {
+            var newFiles = e.GetMultipleFiles(MaxAllowedFiles);
+            var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            foreach (var file in newFiles)
+            {
+                if (pendingUploads.Count >= MaxAllowedFiles)
+                {
+                    break;
+                }
+
+                if (file.Size <= MaxFileSize)
+                {
+                    try
+                    {
+                        var extension = Path.GetExtension(file.Name).ToLower();
+                        bool isVideo = (extension == ".mp4" || extension == ".webm" || extension == ".mov");
+                        var fileName = $"{Guid.NewGuid()}{extension}";
+                        var physicalPath = Path.Combine(uploadsFolder, fileName);
+                        var webPath = $"/uploads/{fileName}";
+
+                        await using var fileStream = new FileStream(physicalPath, FileMode.Create);
+                        await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream);
+
+                        pendingUploads.Add(new PendingFile
+                        {
+                            SavedPath = webPath,
+                            PhysicalPath = physicalPath,
+                            MediaType = isVideo ? "Video" : "Image"
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessage = $"Error reading {file.Name}: {ex.Message}";
+                    }
+                }
+                else
+                {
+                    errorMessage = $"File {file.Name} is too large.";
+                }
+            }
+        }
+        finally
+        {
+            isUploading = false;
+        }
+    }
+
+    private void RemoveFile(int index)
+    {
+        if (index >= 0 && index < pendingUploads.Count)
+        {
+            var file = pendingUploads[index];
+            try
+            {
+                if (System.IO.File.Exists(file.PhysicalPath))
+                {
+                    System.IO.File.Delete(file.PhysicalPath);
+                }
+            }
+            catch { }
+            pendingUploads.RemoveAt(index);
+        }
+    }
+
+    private async Task ToggleFollow()
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            ShowLoginPopup("follow categories");
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            if (isFollowing)
+            {
+                var record = await context.CategoryFollows
+                    .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id);
+                if (record != null)
+                {
+                    context.CategoryFollows.Remove(record);
+                }
+                isFollowing = false;
+            }
+            else
+            {
+                context.CategoryFollows.Add(new CategoryFollows
+                {
+                    UserId = currentUserId,
+                    CategoryId = Id,
+                    DateCreated = DateTime.Now,
+                    DateUpdated = DateTime.Now
+                });
+                isFollowing = true;
+            }
+
+            await context.SaveChangesAsync();
+
+            FollowedCategories = await context.CategoryFollows
+                .Where(cf => cf.UserId == currentUserId)
+                .Include(cf => cf.Category)
+                .Select(cf => cf.Category!)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task HandleSubmitRequest()
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            ShowLoginPopup("request category access");
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var exists = await context.CategoryAccessRequests
+                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending");
+
+            if (exists)
+            {
+                errorMessage = "You already have a pending request.";
+                showRequestModal = false;
+                hasPendingRequest = true;
+                return;
+            }
+
+            var request = new CategoryAccessRequests
+            {
+                UserId = currentUserId,
+                CategoryId = Id,
+                Reason = requestReason,
+                Status = "Pending",
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now
+            };
+
+            context.CategoryAccessRequests.Add(request);
+            await context.SaveChangesAsync();
+
+            showRequestModal = false;
+            requestReason = "";
+            hasPendingRequest = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error sending request: " + ex.Message;
+        }
+    }
+
+    private void OpenReportModal(int postId)
+    {
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            ShowLoginPopup("report posts");
+            return;
+        }
+
+        reportPostId = postId;
+        reportReasonSelection = "Spam";
+        reportReasonDetails = "";
+        showReportModal = true;
+    }
+
+    private async Task SubmitReport()
+    {
+        if (reportPostId == 0 || string.IsNullOrEmpty(currentUserId))
+        {
+            ShowNotification("Session error. Please refresh and try again.", "error");
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var existingReport = await context.Reports
+                .FirstOrDefaultAsync(r => r.PostID == reportPostId && r.ReporterID == currentUserId);
+
+            if (existingReport != null)
+            {
+                showReportModal = false;
+                if (existingReport.Status == "Dismissed")
+                {
+                    ShowNotification("An Admin has already dismissed your report for this post.", "error");
+                }
+                else
+                {
+                    ShowNotification("You have already reported this post.", "error");
+                }
+                return;
+            }
+
+            bool isAlreadyDismissed = await context.Reports
+                .AnyAsync(r => r.PostID == reportPostId && r.Status == "Dismissed");
+
+            string finalReason = reportReasonSelection;
+            if (!string.IsNullOrWhiteSpace(reportReasonDetails))
+            {
+                finalReason = $"{reportReasonSelection}: {reportReasonDetails}";
+            }
+
+            var newReport = new Reports
+            {
+                PostID = reportPostId,
+                ReporterID = currentUserId,
+                Reason = finalReason,
+                Status = "Pending",
+                DateCreated = DateTime.Now
+            };
+
+            context.Reports.Add(newReport);
+            await context.SaveChangesAsync();
+
+            showReportModal = false;
+
+            if (isAlreadyDismissed)
+            {
+                ShowNotification("Report submitted, but this content has already been reviewed and dismissed by admins.", "info");
+            }
+            else
+            {
+                ShowNotification("Report submitted successfully.", "success");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowNotification("Error sending report: " + ex.Message, "error");
+        }
+    }
+
+    private void ShowNotification(string message, string type)
+    {
+        notificationMessage = message;
+        notificationType = type;
+        showNotificationModal = true;
+    }
+
+    private void CloseNotification()
+    {
+        showNotificationModal = false;
+        notificationMessage = "";
+    }
+
     private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}", forceLoad: true);
-    private async Task HandleCategorySearch() { if (string.IsNullOrWhiteSpace(searchTerm)) return; using var context = DbFactory.CreateDbContext(); var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower()); if (cat != null) Navigation.NavigateTo($"/category/{cat.Id}", true); else showCreateConfirm = true; }
+
+    private async Task HandleCategorySearch()
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return;
+        }
+
+        using var context = DbFactory.CreateDbContext();
+        var cat = await context.Categories
+            .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
+
+        if (cat != null)
+        {
+            Navigation.NavigateTo($"/category/{cat.Id}", true);
+        }
+        else
+        {
+            showCreateConfirm = true;
+        }
+    }
+
     private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
+
+    private void ShowLoginPopup(string action) => ShowLoginOverlay = true;
+
+    // ============ HELPER METHODS ============
+    private RenderFragment RenderCarousel(Posts post)
+    {
+        return builder =>
+        {
+            var mediaList = post.Media.ToList();
+            var totalMedia = mediaList.Count;
+            var currentIndex = GetCurrentIndex(post.Id);
+            var activeMedia = mediaList[currentIndex];
+
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "carousel-container");
+
+            if (totalMedia > 1)
+            {
+                builder.OpenElement(2, "button");
+                builder.AddAttribute(3, "class", "carousel-btn prev");
+                // Correct attribute syntax for RenderTreeBuilder
+                builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => PrevSlide(post.Id, totalMedia)));
+                builder.AddContent(5, "❮");
+                builder.CloseElement();
+            }
+
+            if (activeMedia.MediaType == "Video")
+            {
+                builder.OpenElement(6, "video");
+                builder.AddAttribute(7, "class", "carousel-media");
+                builder.AddAttribute(8, "controls", true);
+                builder.AddAttribute(9, "src", activeMedia.MediaPath);
+                builder.AddAttribute(10, "key", activeMedia.MediaPath);
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(11, "img");
+                builder.AddAttribute(12, "class", "carousel-media");
+                builder.AddAttribute(13, "src", activeMedia.MediaPath);
+                builder.AddAttribute(14, "alt", "Post Media");
+                builder.AddAttribute(15, "key", activeMedia.MediaPath);
+                builder.CloseElement();
+            }
+
+            if (totalMedia > 1)
+            {
+                builder.OpenElement(16, "button");
+                builder.AddAttribute(17, "class", "carousel-btn next");
+                builder.AddAttribute(18, "onclick", EventCallback.Factory.Create(this, () => NextSlide(post.Id, totalMedia)));
+                builder.AddContent(19, "❯");
+                builder.CloseElement();
+
+                builder.OpenElement(20, "div");
+                builder.AddAttribute(21, "class", "carousel-counter");
+                builder.AddContent(22, $"{currentIndex + 1} / {totalMedia}");
+                builder.CloseElement();
+            }
+
+            builder.CloseElement();
+        };
+    }
+
+    private RenderFragment RenderLikeButton(Posts post)
+    {
+        return builder =>
+        {
+            var isLiked = post.Likes.Any(l => l.UserID == currentUserId);
+            var likeCount = post.Likes.Count;
+
+            if (isLiked)
+            {
+                builder.OpenElement(0, "i");
+                builder.AddAttribute(1, "class", "fas fa-heart");
+                builder.AddAttribute(2, "style", "color: #e0245e; margin-right: 5px;");
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(3, "i");
+                builder.AddAttribute(4, "class", "far fa-heart");
+                builder.AddAttribute(5, "style", "margin-right: 5px;");
+                builder.CloseElement();
+            }
+
+            builder.OpenElement(6, "span");
+            if (likeCount > 0)
+            {
+                builder.AddContent(7, likeCount);
+            }
+            else
+            {
+                builder.AddContent(7, "Like");
+            }
+            builder.CloseElement();
+        };
+    }
+
+    private RenderFragment RenderCommentSection(Posts post)
+    {
+        return builder =>
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "comment-section");
+
+            builder.OpenElement(2, "div");
+            builder.AddAttribute(3, "class", "comment-list");
+
+            if (_postComments.ContainsKey(post.Id) && _postComments[post.Id] != null)
+            {
+                foreach (var comment in _postComments[post.Id])
+                {
+                    builder.OpenElement(4, "div");
+                    builder.AddAttribute(5, "class", "comment-item");
+
+                    builder.OpenElement(6, "div");
+                    builder.AddAttribute(7, "class", "comment-avatar");
+                    builder.AddAttribute(8, "style", $"background-image: url('{comment.User?.ProfileImage ?? ""}');");
+                    builder.CloseElement();
+
+                    builder.OpenElement(9, "div");
+                    builder.AddAttribute(10, "class", "comment-bubble");
+
+                    builder.OpenElement(11, "div");
+                    builder.OpenElement(12, "span");
+                    builder.AddAttribute(13, "class", "comment-user");
+                    builder.AddContent(14, comment.User?.UserName ?? "User");
+                    builder.CloseElement();
+                    builder.OpenElement(15, "span");
+                    builder.AddAttribute(16, "class", "comment-date");
+                    builder.AddContent(17, comment.DateCreated.ToString("MMM dd, HH:mm"));
+                    builder.CloseElement();
+                    builder.CloseElement();
+
+                    builder.OpenElement(18, "div");
+                    builder.AddAttribute(19, "class", "comment-text");
+                    builder.AddContent(20, comment.Content);
+                    builder.CloseElement();
+
+                    builder.CloseElement();
+                    builder.CloseElement();
+                }
+            }
+
+            builder.CloseElement();
+
+            builder.OpenElement(21, "div");
+            builder.AddAttribute(22, "class", "comment-input-area");
+
+            builder.OpenElement(23, "input");
+            builder.AddAttribute(24, "type", "text");
+            builder.AddAttribute(25, "class", "comment-input");
+            builder.AddAttribute(26, "placeholder", "Write a comment...");
+            builder.AddAttribute(27, "value", _commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "");
+            
+            // Correct attribute syntax for RenderTreeBuilder
+            builder.AddAttribute(28, "onchange", EventCallback.Factory.Create(this, (ChangeEventArgs e) => UpdateCommentDraft(post.Id, e.Value?.ToString())));
+            
+            builder.CloseElement();
+
+            builder.OpenElement(29, "button");
+            builder.AddAttribute(30, "class", "comment-send-btn");
+            // Correct attribute syntax for RenderTreeBuilder
+            builder.AddAttribute(31, "onclick", EventCallback.Factory.Create(this, () => SubmitComment(post.Id)));
+            builder.AddContent(32, "Post");
+            builder.CloseElement();
+
+            builder.CloseElement();
+            builder.CloseElement();
+        };
+    }
+
+    // ============ HELPER CLASSES ============
+    private class PendingFile
+    {
+        public string SavedPath { get; set; } = "";
+        public string MediaType { get; set; } = "";
+        public string PhysicalPath { get; set; } = "";
+    }
 }}

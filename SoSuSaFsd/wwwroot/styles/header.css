@@ -73,13 +73,47 @@
     gap: 20px;
 }
 
+.header-search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+}
+
 .search-bar {
     padding: 8px 15px;
     font-size: 15px;
-    border: 1px solid #ccc;
-    border-radius: 20px;
+    border: none;
+    border-radius: 0;
     width: 200px;
-    background-color: #f5f5f5;
+    background-color: transparent;
+    outline: none;
+}
+
+.search-bar:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.header-search-btn {
+    background-color: transparent;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    color: #666;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.header-search-btn:hover {
+    color: #333;
 }
 
 .login-btn {
@@ -92,7 +126,6 @@
     cursor: pointer;
     font-weight: bold;
     text-decoration: none;
-    display: inline-block;
 }
 
 .login-btn:hover {

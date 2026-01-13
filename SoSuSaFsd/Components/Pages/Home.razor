@@ -29,9 +29,12 @@
             <a onclick="showSection('settings')" id="nav-settings">Settings</a>
         </nav>
         <div class="header-right">
-            <form action="#">
-                <input type="text" id="header-search-input" class="search-bar" placeholder="Search posts...">
-            </form>
+            <div class="header-search-wrapper" id="header-search-wrapper" style="display: flex;">
+                <input type="text" id="header-search-input" class="search-bar" placeholder="Search posts..." @bind="headerSearchTerm" @bind:event="oninput" @onkeyup="async (e) => await HandleHeaderSearch()">
+                <button type="button" class="header-search-btn" title="Search" @onclick="async () => await HandleHeaderSearch()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
             <AuthorizeView>
                 <Authorized>
                     <AuthorizeView Roles="Admin" Context="innerContext">
@@ -46,6 +49,58 @@
         </div>
     </div>
 </header>
+
+@* --- SEARCH RESULTS DROPDOWN --- *@
+@if (HasSearchedPosts && PostSearchResults != null && PostSearchResults.Any() && currentActiveSection == "home")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999;">
+        <div style="padding: 10px 0;">
+            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #666; font-size: 12px;">Search Results (@PostSearchResults.Count)</div>
+            @foreach (var post in PostSearchResults)
+            {
+                @* UPDATED ONCLICK: Passes CategoryId and PostId *@
+                <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick='@(() => OnSearchPostClicked(post.CategoryId, post.Id))'>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(post.User?.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 13px; color: #222;">@(post.User?.DisplayName ?? post.User?.UserName ?? "Unknown")</div>
+                        <div style="font-size: 12px; color: #666;">@(post.Content.Length > 60 ? post.Content.Substring(0, 60) + "..." : post.Content)</div>
+                        <div style="font-size: 11px, color: #999; margin-top: 4px;">#@(post.Category?.CategoryName ?? "Unknown") • @post.DateCreated.ToString("MMM dd")</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (HasSearchedPosts && (PostSearchResults == null || !PostSearchResults.Any()) && currentActiveSection == "home")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999; text-align: center; color: #999;">
+        <p>No posts found matching "@headerSearchTerm"</p>
+    </div>
+}
+else if (HasSearchedUsers && UserSearchResults != null && UserSearchResults.Any() && currentActiveSection == "profile")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999;">
+        <div style="padding: 10px 0;">
+            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #666; font-size: 12px;">Search Results (@UserSearchResults.Count)</div>
+            @foreach (var user in UserSearchResults)
+            {
+                <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick='@(() => OnSearchUserClicked(user.UserName))'>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(user.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 13px; color: #222;">@(user.DisplayName ?? user.UserName ?? "Unknown")</div>
+                        <div style="font-size: 12px; color: #666;">@user.UserName</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.Any()) && currentActiveSection == "profile")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999; text-align: center; color: #999;">
+        <p>No users found matching "@headerSearchTerm"</p>
+    </div>
+}
 
 <div class="main-layout">
     @* --- LEFT SIDEBAR (FOLLOWING + PINNED SEARCH) --- *@
@@ -144,9 +199,9 @@
                 {
                     @foreach (var post in FeedPosts)
                     {
-                        <PostCard Post="post" CurrentUser="currentUser" OnLike="ToggleLike" OnComment="ToggleComments" 
-                                  OnReport="OpenReportModal" ShowComments="_showComments" PostComments="_postComments" 
-                                  CommentDrafts="_commentDrafts" OnUpdateDraft="UpdateCommentDraft" 
+                        <PostCard Post="post" CurrentUser="currentUser" OnLike="ToggleLike" OnComment="ToggleComments"
+                                  OnReport="OpenReportModal" ShowComments="_showComments" PostComments="_postComments"
+                                  CommentDrafts="_commentDrafts" OnUpdateDraft="UpdateCommentDraft"
                                   OnSubmitComment="SubmitComment" CarouselIndices="_carouselIndices" OnCarouselChange="UpdateCarouselIndex" />
                     }
                 }
@@ -168,9 +223,9 @@
             {
                 @foreach (var post in UserPosts)
                 {
-                    <PostCard Post="post" CurrentUser="currentUser" OnLike="ToggleLike" OnComment="ToggleComments" 
-                              OnReport="OpenReportModal" ShowComments="_showComments" PostComments="_postComments" 
-                              CommentDrafts="_commentDrafts" OnUpdateDraft="UpdateCommentDraft" 
+                    <PostCard Post="post" CurrentUser="currentUser" OnLike="ToggleLike" OnComment="ToggleComments"
+                              OnReport="OpenReportModal" ShowComments="_showComments" PostComments="_postComments"
+                              CommentDrafts="_commentDrafts" OnUpdateDraft="UpdateCommentDraft"
                               OnSubmitComment="SubmitComment" CarouselIndices="_carouselIndices" OnCarouselChange="UpdateCarouselIndex" />
                 }
             }
@@ -465,6 +520,29 @@
         if(section === 'settings') {
             showSettingsForm('profile');
         }
+        // Adjust header search visibility and placeholder based on section
+        try {
+            var headerSearchWrapper = document.getElementById('header-search-wrapper');
+            var rightSidebar = document.getElementById('right-sidebar');
+            var searchInput = document.getElementById('header-search-input');
+
+            if (section === 'profile' || section === 'following') {
+                if(headerSearchWrapper) headerSearchWrapper.style.display = 'flex';
+                if(searchInput) searchInput.placeholder = 'Search users...';
+                if(rightSidebar) rightSidebar.style.display = 'none';
+            } else if (section === 'settings') {
+                if(headerSearchWrapper) headerSearchWrapper.style.display = 'none';
+                if(rightSidebar) rightSidebar.style.display = 'none';
+                showSettingsForm('profile');
+            } else {
+                if(headerSearchWrapper) headerSearchWrapper.style.display = 'flex';
+                if(searchInput) searchInput.placeholder = 'Search posts...';
+                if(rightSidebar) rightSidebar.style.display = 'flex';
+            }
+        } catch (e) { }
+
+        // Notify Blazor about section change
+        window.currentSection = section;
     }
 
     function showSettingsForm(formName) {
@@ -522,11 +600,15 @@
 
     // ========== STATE MANAGEMENT ==========
     private string searchTerm = "";
+    private string headerSearchTerm = "";
     private string ErrorMessage = "";
     private bool ShowLoginOverlay = false;
     private bool showCreateConfirm = false;
     private string updateStatusMessage = "";
-    
+    private bool HasSearchedPosts = false;
+    private bool HasSearchedUsers = false;
+    private string currentActiveSection = "home";
+
     // Data collections
     private List<Categories> RecentCategories = new();
     private List<Categories> VerifiedCategories = new();
@@ -535,14 +617,16 @@
     private List<Posts> FeedPosts = new();
     private List<Posts> UserPosts = new();
     private List<CategoryAccessRequests> UserAccessRequests = new();
-    
+    private List<Posts> PostSearchResults = new();
+    private List<Users> UserSearchResults = new();
+
     // User info
     private Users? currentUser;
     private int selectedCategoryId = 0;
     private string accessRequestReason = "";
     private string accessRequestMessage = "";
     private bool isAccessRequestSuccess = false;
-    
+
     // Comments/interactions
     private Dictionary<int, bool> _showComments = new();
     private Dictionary<int, List<Comments>> _postComments = new();
@@ -560,7 +644,7 @@
     private bool showNotificationModal = false;
     private string notificationMessage = "";
     private string notificationType = "success";
-    
+
     // Password change
     private class PasswordChangeModel
     {
@@ -593,19 +677,51 @@
             // Set up visibility change detection to refresh feed when page comes into focus
             try
             {
-                await JSRuntime.InvokeVoidAsync("window.addEventListener", "visibilitychange", 
+                await JSRuntime.InvokeVoidAsync("window.addEventListener", "visibilitychange",
                     DotNetObjectReference.Create(this));
             }
             catch { }
         }
+
+        // Check for section changes from JavaScript
+        try
+        {
+            var newSection = await JSRuntime.InvokeAsync<string>("eval", "window.currentSection || 'home'");
+            if (newSection != currentActiveSection)
+            {
+                currentActiveSection = newSection;
+                ClearHeaderSearchState();
+                StateHasChanged();
+            }
+        }
+        catch { }
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
-    [JSInvokable]
-    public async Task OnPageVisibilityChanged()
+    private void ClearHeaderSearchState()
     {
-        await LoadUserAndCategories();
-        StateHasChanged();
+        headerSearchTerm = "";
+        PostSearchResults = new List<Posts>();
+        UserSearchResults = new List<Users>();
+        HasSearchedPosts = false;
+        HasSearchedUsers = false;
+    }
+
+    // UPDATED METHOD: Accepts CategoryId and PostId
+    private void OnSearchPostClicked(int categoryId, int postId)
+    {
+        // Clear UI state first
+        ClearHeaderSearchState();
+        // Navigate to the category page with focusPostId parameter
+        Navigation.NavigateTo($"/category/{categoryId}?focusPostId={postId}", true);
+    }
+
+    private void OnSearchUserClicked(string? username)
+    {
+        if (string.IsNullOrEmpty(username)) return;
+        ClearHeaderSearchState();
+        Navigation.NavigateTo($"/profile/{username}", true);
     }
 
     // ========== DATA LOADING ==========
@@ -628,11 +744,11 @@
 
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userPrincipal = authState.User;
-            
+
             if (userPrincipal.Identity != null && userPrincipal.Identity.IsAuthenticated)
             {
                 var userId = userPrincipal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                
+
                 if (string.IsNullOrEmpty(userId))
                 {
                     using var scope = ScopeFactory.CreateScope();
@@ -699,7 +815,7 @@
                             {
                                 foreach (var fp in FeedPosts.Take(10))
                                 {
-                                    Console.WriteLine($"Post Id: {fp.Id}, CategoryId: {fp.CategoryId}, UserId: {fp.UserId}, DateCreated: {fp.DateCreated}");
+                                    Console.WriteLine($"Post Id: {fp.Id}, CategoryId: @post.CategoryId, UserId: @post.UserId, DateCreated: @post.DateCreated");
                                 }
                             }
                         }
@@ -733,7 +849,7 @@
             if (string.IsNullOrEmpty(currentUser?.Id)) return;
 
             using var context = DbFactory.CreateDbContext();
-            
+
             var followedCategoryIds = await context.CategoryFollows
                 .Where(cf => cf.UserId == currentUser.Id)
                 .Select(cf => cf.CategoryId)
@@ -914,7 +1030,191 @@
         StateHasChanged();
     }
 
-   
+    // ========== EVENT HANDLERS ==========
+    private async Task HandleHeaderSearch(KeyboardEventArgs? e = null)
+    {
+        // Query the latest section directly from JS at the time of the search
+        string section = "home";
+        try
+        {
+            section = await JSRuntime.InvokeAsync<string>("eval", "window.currentSection || 'home'");
+        }
+        catch { section = currentActiveSection ?? "home"; }
+
+        if (section == "profile")
+        {
+            await HandleUserSearch();
+        }
+        else if (section == "settings")
+        {
+            // Do nothing on settings page - searches disabled
+            return;
+        }
+        else
+        {
+            await HandlePostSearch();
+        }
+    }
+
+    private async Task HandlePostSearch()
+    {
+        if (string.IsNullOrWhiteSpace(headerSearchTerm))
+        {
+            PostSearchResults = new();
+            HasSearchedPosts = false;
+            StateHasChanged();
+            return;
+        }
+
+        HasSearchedPosts = true;
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var searchTerm = headerSearchTerm.ToLower();
+
+            PostSearchResults = await context.Posts
+                .Where(p => p.Content.ToLower().Contains(searchTerm) ||
+                           p.User.UserName.ToLower().Contains(searchTerm))
+                .Include(p => p.User)
+                .Include(p => p.Category)
+                .Include(p => p.Media)
+                .Include(p => p.Likes)
+                .OrderByDescending(p => p.DateCreated)
+                .Take(10)
+                .ToListAsync();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching posts: {ex.Message}");
+        }
+    }
+
+    private async Task HandleUserSearch()
+    {
+        if (string.IsNullOrWhiteSpace(headerSearchTerm))
+        {
+            UserSearchResults = new();
+            HasSearchedUsers = false;
+            StateHasChanged();
+            return;
+        }
+
+        HasSearchedUsers = true;
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            UserSearchResults = await context.Users
+                .Where(u => u.UserName.ToLower().Contains(headerSearchTerm.ToLower()) ||
+                           u.DisplayName.ToLower().Contains(headerSearchTerm.ToLower()))
+                .OrderBy(u => u.DisplayName ?? u.UserName)
+                .Take(10)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error searching users: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCategorySearch()
+    {
+        // Simple client-side search for now
+        if (string.IsNullOrWhiteSpace(searchTerm)) return;
+
+        // Trim and normalize search term
+        var term = searchTerm.Trim().ToLower();
+
+        // Check if category exists
+        var categoryExists = VerifiedCategoriesForRequest.Any(c => c.CategoryName.Trim().ToLower() == term);
+
+        if (categoryExists)
+        {
+            // Navigate to category if it exists
+            var category = VerifiedCategoriesForRequest.First(c => c.CategoryName.Trim().ToLower() == term);
+            NavigateToCategory(category.Id);
+        }
+        else
+        {
+            // Show create confirm modal if category doesn't exist
+            showCreateConfirm = true;
+        }
+    }
+
+    private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
+
+    private async Task UpdateProfile()
+    {
+        if (currentUser == null) return;
+        try
+        {
+            using var scope = ScopeFactory.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+            var userToUpdate = await userManager.FindByIdAsync(currentUser.Id);
+            if (userToUpdate != null)
+            {
+                userToUpdate.DisplayName = currentUser.DisplayName;
+                userToUpdate.Bio = currentUser.Bio;
+                var result = await userManager.UpdateAsync(userToUpdate);
+                if (result.Succeeded)
+                {
+                    updateStatusMessage = "Profile updated successfully!";
+                    currentUser = userToUpdate;
+                    StateHasChanged();
+                }
+                else
+                {
+                    updateStatusMessage = "Error: " + string.Join(", ", result.Errors.Select(e => e.Description));
+                }
+            }
+        }
+        catch (Exception ex) { updateStatusMessage = "Error updating: " + ex.Message; }
+    }
+
+    private async Task HandleProfileImageSelected(InputFileChangeEventArgs e)
+    {
+        if (currentUser == null)
+        {
+            ShowLoginOverlay = true;
+            return;
+        }
+        var file = e.File;
+        if (file.Size <= 1024 * 1024 * 2)
+        {
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream(1024 * 1024 * 2).ReadAsync(buffer);
+            var base64 = Convert.ToBase64String(buffer);
+            var tempImageSrc = $"data:{file.ContentType};base64,{base64}";
+
+            updateStatusMessage = "Image crop functionality to be implemented";
+        }
+        else
+        {
+            updateStatusMessage = "Error: File too large. Max size is 2MB.";
+        }
+    }
+
+    private async Task HandlePasswordChange() { }
+
+    private async Task UnfollowCategory(int categoryId)
+    {
+        if (string.IsNullOrEmpty(currentUser?.Id)) return;
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var follow = await context.CategoryFollows.FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.UserId == currentUser.Id);
+            if (follow != null)
+            {
+                context.CategoryFollows.Remove(follow);
+                await context.SaveChangesAsync();
+                await RefreshFeed();
+            }
+        }
+        catch (Exception ex) { Console.WriteLine(ex.Message); }
+    }
+
     private void UpdateCommentDraft(PostCard.CommentDraftEventArgs args)
     {
         if (args.Content != null)
@@ -954,151 +1254,68 @@
         catch (Exception ex) { Console.WriteLine("Error posting comment: " + ex.Message); }
     }
 
-    
     private void UpdateCarouselIndex(PostCard.CarouselEventArgs args)
     {
         _carouselIndices[args.PostId] = args.Index;
         StateHasChanged();
     }
 
-    private async Task UnfollowCategory(int categoryId)
-    {
-        if (string.IsNullOrEmpty(currentUser?.Id)) return;
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            var follow = await context.CategoryFollows.FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.UserId == currentUser.Id);
-            if (follow != null)
-            {
-                context.CategoryFollows.Remove(follow);
-                await context.SaveChangesAsync();
-                await RefreshFeed();
-            }
-        }
-        catch (Exception ex) { Console.WriteLine(ex.Message); }
-    }
-
-    private async Task HandleProfileImageSelected(InputFileChangeEventArgs e)
-    {
-        if (currentUser == null)
-        {
-            ShowLoginOverlay = true;
-            return;
-        }
-        var file = e.File;
-        if (file.Size <= 1024 * 1024 * 2)
-        {
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream(1024 * 1024 * 2).ReadAsync(buffer);
-            var base64 = Convert.ToBase64String(buffer);
-            var tempImageSrc = $"data:{file.ContentType};base64,{base64}";
-            
-            updateStatusMessage = "Image crop functionality to be implemented";
-        }
-        else
-        {
-            updateStatusMessage = "Error: File too large. Max size is 2MB.";
-        }
-    }
-
-    private async Task UpdateProfile()
-    {
-        if (currentUser == null) return;
-        try
-        {
-            using var scope = ScopeFactory.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-            var userToUpdate = await userManager.FindByIdAsync(currentUser.Id);
-            if (userToUpdate != null)
-            {
-                userToUpdate.DisplayName = currentUser.DisplayName;
-                userToUpdate.Bio = currentUser.Bio;
-                var result = await userManager.UpdateAsync(userToUpdate);
-                if (result.Succeeded)
-                {
-                    updateStatusMessage = "Profile updated successfully!";
-                    currentUser = userToUpdate;
-                    StateHasChanged();
-                }
-                else
-                {
-                    updateStatusMessage = "Error: " + string.Join(", ", result.Errors.Select(e => e.Description));
-                }
-            }
-        }
-        catch (Exception ex) { updateStatusMessage = "Error updating: " + ex.Message; }
-    }
-
-    private async Task HandlePasswordChange() { }
-    
     private void ForceLogout() => Navigation.NavigateTo("/api/Account/logout", true);
-    private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}", true);
-    
-    private async Task HandleCategorySearch()
-    {
-        if (!string.IsNullOrWhiteSpace(searchTerm))
-        {
-            using var context = DbFactory.CreateDbContext();
-            var cat = await context.Categories.FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
-            if (cat != null)
-                Navigation.NavigateTo($"/category/{cat.Id}");
-            else
-                showCreateConfirm = true;
-        }
-    }
-    
-    private void NavigateToCreate() => Navigation.NavigateTo($"/categories/create?name={searchTerm}");
+
+    private void NavigateToCategory(int id) => Navigation.NavigateTo($"/category/{id}");
+
     private void NavigateToAdmin() { Navigation.NavigateTo("admin", forceLoad: true); }
 
     private async Task HandleAccessRequest()
     {
         if (currentUser == null)
         {
-            accessRequestMessage = "You must be logged in to submit a request.";
-            isAccessRequestSuccess = false;
             ShowLoginOverlay = true;
             return;
         }
-        if (selectedCategoryId == 0 || string.IsNullOrWhiteSpace(accessRequestReason))
+
+        if (selectedCategoryId == 0)
         {
-            accessRequestMessage = "Please select a category and provide a reason.";
-            isAccessRequestSuccess = false;
+            ShowNotification("Please select a category.", "error");
             return;
         }
+
+        if (string.IsNullOrWhiteSpace(accessRequestReason))
+        {
+            ShowNotification("Please provide a reason for the request.", "error");
+            return;
+        }
+
         try
         {
             using var context = DbFactory.CreateDbContext();
-            var existingRequest = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Pending");
+            var existingRequest = await context.CategoryAccessRequests
+                .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId);
+
             if (existingRequest != null)
             {
-                accessRequestMessage = "You already have a pending request for this category.";
-                isAccessRequestSuccess = false;
+                ShowNotification("You have already submitted a request for this category.", "error");
                 return;
             }
-            var approvedRequest = await context.CategoryAccessRequests.FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId && r.Status == "Approved");
-            if (approvedRequest != null)
-            {
-                accessRequestMessage = "You already have approved access to this category.";
-                isAccessRequestSuccess = false;
-                return;
-            }
+
             var newRequest = new CategoryAccessRequests
             {
                 UserId = currentUser.Id,
                 CategoryId = selectedCategoryId,
                 Reason = accessRequestReason,
                 Status = "Pending",
-                DateCreated = DateTime.Now,
-                DateUpdated = DateTime.Now,
-                CreatedBy = currentUser.Id
+                DateCreated = DateTime.Now
             };
+
             context.CategoryAccessRequests.Add(newRequest);
             await context.SaveChangesAsync();
-            accessRequestMessage = "Your access request has been submitted successfully.";
+
+            accessRequestMessage = "Request submitted successfully!";
             isAccessRequestSuccess = true;
-            selectedCategoryId = 0;
-            accessRequestReason = "";
-            UserAccessRequests = await context.CategoryAccessRequests.Where(r => r.UserId == currentUser.Id).Include(r => r.Category).OrderByDescending(r => r.DateCreated).ToListAsync();
+            StateHasChanged();
+
+            // Optionally, refresh the user data to reflect new request
+            await LoadUserAndCategories();
         }
         catch (Exception ex)
         {

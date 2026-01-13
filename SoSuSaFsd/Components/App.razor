@@ -97,20 +97,31 @@
             if (feedTarget) feedTarget.classList.add('active');
 
             // Adjust search bar and right sidebar visibility
-            const headerSearch = document.getElementById('header-search-input');
+            const headerSearchWrapper = document.getElementById('header-search-wrapper');
+            const headerSearchInput = document.getElementById('header-search-input');
             const rightSidebar = document.getElementById('right-sidebar');
 
             if (sectionName === 'profile' || sectionName === 'following') {
-                if(headerSearch) headerSearch.placeholder = "Search for users...";
+                if(headerSearchWrapper) headerSearchWrapper.style.display = 'flex';
+                if(headerSearchInput) headerSearchInput.placeholder = 'Search users...';
                 if(rightSidebar) rightSidebar.style.display = 'none';
             } else if (sectionName === 'settings') {
-                if(headerSearch) headerSearch.placeholder = "Search posts...";
+                if(headerSearchWrapper) headerSearchWrapper.style.display = 'none';
                 if(rightSidebar) rightSidebar.style.display = 'none';
                 showSettingsForm('profile');
             } else {
-                if(headerSearch) headerSearch.placeholder = "Search posts...";
+                if(headerSearchWrapper) headerSearchWrapper.style.display = 'flex';
+                if(headerSearchInput) headerSearchInput.placeholder = 'Search posts...';
                 if(rightSidebar) rightSidebar.style.display = 'flex';
             }
+
+            // Clear header search text and notify Blazor by dispatching an input event
+            try {
+                if (headerSearchInput) {
+                    headerSearchInput.value = '';
+                    headerSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            } catch (e) { /* ignore */ }
         }
 
         function showSettingsForm(formName) {
