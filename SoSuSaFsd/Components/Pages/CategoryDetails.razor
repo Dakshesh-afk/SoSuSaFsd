@@ -214,7 +214,83 @@
                             </div>
                             @if (IsCommentSectionVisible(post.Id))
                             {
-                                @RenderCommentSection(post)
+                                @* --- NEW COMMENT SECTION (Replaces RenderFragment) --- *@
+                                <div class="comment-section">
+                                    <div class="comment-list">
+                                        @if (_postComments.ContainsKey(post.Id) && _postComments[post.Id] != null)
+                                        {
+                                            var allComments = _postComments[post.Id];
+                                            var parentComments = allComments.Where(c => c.ParentCommentID == null).OrderBy(c => c.DateCreated);
+
+                                            @foreach (var comment in parentComments)
+                                            {
+                                                var replies = allComments.Where(c => c.ParentCommentID == comment.Id).OrderBy(c => c.DateCreated).ToList();
+
+                                                // --- PARENT COMMENT ---
+                                                <div class="comment-item">
+                                                    <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
+                                                    <div class="comment-bubble-wrapper" style="flex: 1;">
+                                                        <div class="comment-bubble">
+                                                            <div>
+                                                                <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
+                                                                <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                                            </div>
+                                                            <div class="comment-text">@comment.Content</div>
+                                                        </div>
+                                                        <div style="margin-top: 2px; margin-left: 10px;">
+                                                            <button style="background:none; border:none; cursor:pointer; font-size:11px; color:#666; font-weight:600;"
+                                                                    @onclick="() => ToggleReplyBox(comment.Id)">
+                                                                Reply
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                // --- REPLIES ---
+                                                @if (replies.Any())
+                                                {
+                                                    <div style="margin-left: 45px; border-left: 2px solid #eee; padding-left: 10px; margin-bottom: 10px;">
+                                                        @foreach (var reply in replies)
+                                                        {
+                                                            <div class="comment-item" style="margin-bottom: 8px;">
+                                                                <div class="comment-avatar" style="width: 24px; height: 24px; background-image: url('@(reply.User?.ProfileImage ?? "")');"></div>
+                                                                <div class="comment-bubble" style="padding: 8px 12px;">
+                                                                    <div>
+                                                                        <span class="comment-user" style="font-size: 11px;">@(reply.User?.UserName ?? "User")</span>
+                                                                        <span class="comment-date" style="font-size: 10px;">@reply.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                                                    </div>
+                                                                    <div class="comment-text" style="font-size: 13px;">@reply.Content</div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+
+                                                // --- REPLY INPUT BOX ---
+                                                @if (_activeReplyBoxes.ContainsKey(comment.Id) && _activeReplyBoxes[comment.Id])
+                                                {
+                                                    <div style="margin-left: 45px; margin-bottom: 15px; display: flex; gap: 5px;">
+                                                        <input type="text" class="comment-input" style="font-size: 13px; padding: 6px;" placeholder="Write a reply..."
+                                                               value="@(_replyDrafts.ContainsKey(comment.Id) ? _replyDrafts[comment.Id] : "")"
+                                                               @onchange="@(e => UpdateReplyDraft(comment.Id, e.Value?.ToString()))" />
+                                                        <button class="comment-send-btn" style="padding: 0 10px; font-size: 12px;"
+                                                                @onclick="() => SubmitReply(post.Id, comment.Id)">
+                                                            Reply
+                                                        </button>
+                                                    </div>
+                                                }
+                                            }
+                                        }
+                                    </div>
+
+                                    @* --- MAIN POST COMMENT INPUT --- *@
+                                    <div class="comment-input-area">
+                                        <input type="text" class="comment-input" placeholder="Write a comment..."
+                                               value="@(_commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "")"
+                                               @onchange="@(e => UpdateCommentDraft(post.Id, e.Value?.ToString()))" />
+                                        <button class="comment-send-btn" @onclick="() => SubmitComment(post.Id)">Post</button>
+                                    </div>
+                                </div>
                             }
                         </div>
                     }
@@ -296,36 +372,38 @@
             <div class="modal-subtitle">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
             <div class="file-input-wrapper">
-                <label>Add Media (Images or Videos): @if (isUploading) {
-                <span class="upload-loading">Uploading... please wait.</span>
-            }
-</label>
-            <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
-        </div>
-        <div class="preview-container">
-            @for (int i = 0; i < pendingUploads.Count; i++)
-            {
-                var index = i;
-                var file = pendingUploads[i];
-                <div class="preview-item">
-                    <button class="remove-media-btn" @onclick="() => RemoveFile(index)">×</button>
-                    @if (file.MediaType == "Video")
+                <label>
+                    Add Media (Images or Videos): @if (isUploading)
                     {
-                        <video class="preview-media" src="@file.SavedPath"></video>
+                        <span class="upload-loading">Uploading... please wait.</span>
                     }
-                    else
-                    {
-                        <img class="preview-media" src="@file.SavedPath" alt="Preview" />
-                    }
-                </div>
-            }
-        </div>
-        <div class="modal-actions">
-            <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
-            <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
+                </label>
+                <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
+            </div>
+            <div class="preview-container">
+                @for (int i = 0; i < pendingUploads.Count; i++)
+                {
+                    var index = i;
+                    var file = pendingUploads[i];
+                    <div class="preview-item">
+                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">×</button>
+                        @if (file.MediaType == "Video")
+                        {
+                            <video class="preview-media" src="@file.SavedPath"></video>
+                        }
+                        else
+                        {
+                            <img class="preview-media" src="@file.SavedPath" alt="Preview" />
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-actions">
+                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
+                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
+            </div>
         </div>
     </div>
-</div>
 }
 
 @* Request Access Modal *@
@@ -509,6 +587,10 @@
     private Dictionary<int, int> _carouselIndices = new();
     private List<PendingFile> pendingUploads = new();
     private bool isUploading = false;
+
+    // ============ REPLY MANAGEMENT (NEW) ============
+    private Dictionary<int, bool> _activeReplyBoxes = new(); // Key: CommentId (Parent)
+    private Dictionary<int, string> _replyDrafts = new();    // Key: CommentId (Parent)
 
     // ============ CONSTANTS ============
     private const long MaxFileSize = 1024 * 1024 * 200;
@@ -771,6 +853,83 @@
         catch (Exception ex)
         {
             Console.WriteLine("Error posting comment: " + ex.Message);
+        }
+    }
+
+    // ========== NEW REPLY METHODS ==========
+    private void ToggleReplyBox(int commentId)
+    {
+        if (!_activeReplyBoxes.ContainsKey(commentId))
+            _activeReplyBoxes[commentId] = false;
+
+        _activeReplyBoxes[commentId] = !_activeReplyBoxes[commentId];
+
+        // Initialize draft
+        if (!_replyDrafts.ContainsKey(commentId))
+            _replyDrafts[commentId] = "";
+
+        StateHasChanged();
+    }
+
+    private void UpdateReplyDraft(int commentId, string? value)
+    {
+        if (value != null)
+        {
+            _replyDrafts[commentId] = value;
+        }
+    }
+
+    private async Task SubmitReply(int postId, int parentCommentId)
+    {
+        if (currentUser == null)
+        {
+            ShowLoginPopup("post replies");
+            return;
+        }
+
+        if (!_replyDrafts.ContainsKey(parentCommentId) || string.IsNullOrWhiteSpace(_replyDrafts[parentCommentId]))
+        {
+            return;
+        }
+
+        var content = _replyDrafts[parentCommentId];
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var newComment = new Comments
+            {
+                PostID = postId,
+                UserID = currentUser.Id,
+                Content = content,
+                ParentCommentID = parentCommentId, // Link to parent
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUser.Id,
+                UpdatedBy = currentUser.Id
+            };
+
+            context.Comments.Add(newComment);
+            await context.SaveChangesAsync();
+
+            // Cleanup UI
+            _replyDrafts[parentCommentId] = "";
+            _activeReplyBoxes[parentCommentId] = false;
+
+            // Update local state
+            newComment.User = currentUser;
+
+            if (!_postComments.ContainsKey(postId))
+            {
+                _postComments[postId] = new List<Comments>();
+            }
+
+            _postComments[postId].Add(newComment);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error posting reply: " + ex.Message);
         }
     }
 
@@ -1204,7 +1363,11 @@
 
     private void ShowLoginPopup(string action) => ShowLoginOverlay = true;
 
-    // ============ HELPER METHODS ============
+    // ============ HELPER METHODS (Replaced by Inline Razor) ============
+    // I have replaced RenderCommentSection, RenderCarousel, and RenderLikeButton
+    // with inline Razor markup in the HTML to handle the new Nested Reply logic
+    // and make the file consistent. This removes the need for complex RenderTreeBuilder code.
+
     private RenderFragment RenderCarousel(Posts post)
     {
         return builder =>
@@ -1221,7 +1384,6 @@
             {
                 builder.OpenElement(2, "button");
                 builder.AddAttribute(3, "class", "carousel-btn prev");
-                // Correct attribute syntax for RenderTreeBuilder
                 builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => PrevSlide(post.Id, totalMedia)));
                 builder.AddContent(5, "❮");
                 builder.CloseElement();
@@ -1295,80 +1457,6 @@
             {
                 builder.AddContent(7, "Like");
             }
-            builder.CloseElement();
-        };
-    }
-
-    private RenderFragment RenderCommentSection(Posts post)
-    {
-        return builder =>
-        {
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "comment-section");
-
-            builder.OpenElement(2, "div");
-            builder.AddAttribute(3, "class", "comment-list");
-
-            if (_postComments.ContainsKey(post.Id) && _postComments[post.Id] != null)
-            {
-                foreach (var comment in _postComments[post.Id])
-                {
-                    builder.OpenElement(4, "div");
-                    builder.AddAttribute(5, "class", "comment-item");
-
-                    builder.OpenElement(6, "div");
-                    builder.AddAttribute(7, "class", "comment-avatar");
-                    builder.AddAttribute(8, "style", $"background-image: url('{comment.User?.ProfileImage ?? ""}');");
-                    builder.CloseElement();
-
-                    builder.OpenElement(9, "div");
-                    builder.AddAttribute(10, "class", "comment-bubble");
-
-                    builder.OpenElement(11, "div");
-                    builder.OpenElement(12, "span");
-                    builder.AddAttribute(13, "class", "comment-user");
-                    builder.AddContent(14, comment.User?.UserName ?? "User");
-                    builder.CloseElement();
-                    builder.OpenElement(15, "span");
-                    builder.AddAttribute(16, "class", "comment-date");
-                    builder.AddContent(17, comment.DateCreated.ToString("MMM dd, HH:mm"));
-                    builder.CloseElement();
-                    builder.CloseElement();
-
-                    builder.OpenElement(18, "div");
-                    builder.AddAttribute(19, "class", "comment-text");
-                    builder.AddContent(20, comment.Content);
-                    builder.CloseElement();
-
-                    builder.CloseElement();
-                    builder.CloseElement();
-                }
-            }
-
-            builder.CloseElement();
-
-            builder.OpenElement(21, "div");
-            builder.AddAttribute(22, "class", "comment-input-area");
-
-            builder.OpenElement(23, "input");
-            builder.AddAttribute(24, "type", "text");
-            builder.AddAttribute(25, "class", "comment-input");
-            builder.AddAttribute(26, "placeholder", "Write a comment...");
-            builder.AddAttribute(27, "value", _commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "");
-
-            // Correct attribute syntax for RenderTreeBuilder
-            builder.AddAttribute(28, "onchange", EventCallback.Factory.Create(this, (ChangeEventArgs e) => UpdateCommentDraft(post.Id, e.Value?.ToString())));
-
-            builder.CloseElement();
-
-            builder.OpenElement(29, "button");
-            builder.AddAttribute(30, "class", "comment-send-btn");
-            // Correct attribute syntax for RenderTreeBuilder
-            builder.AddAttribute(31, "onclick", EventCallback.Factory.Create(this, () => SubmitComment(post.Id)));
-            builder.AddContent(32, "Post");
-            builder.CloseElement();
-
-            builder.CloseElement();
             builder.CloseElement();
         };
     }

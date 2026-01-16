@@ -208,7 +208,9 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                         <PostCard Post="post" CurrentUser="currentUser" OnLike="ToggleLike" OnComment="ToggleComments"
                                   OnReport="OpenReportModal" ShowComments="_showComments" PostComments="_postComments"
                                   CommentDrafts="_commentDrafts" OnUpdateDraft="UpdateCommentDraft"
-                                  OnSubmitComment="SubmitComment" CarouselIndices="_carouselIndices" OnCarouselChange="UpdateCarouselIndex" />
+                                  OnSubmitComment="SubmitComment" CarouselIndices="_carouselIndices" OnCarouselChange="UpdateCarouselIndex"
+                                  ActiveReplyBoxes="_activeReplyBoxes" ReplyDrafts="_replyDrafts" OnToggleReply="ToggleReplyBox"
+                                  OnUpdateReplyDraft="UpdateReplyDraft" OnSubmitReply="SubmitReply" />
                     }
                 }
             }
@@ -232,7 +234,9 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                     <PostCard Post="post" CurrentUser="currentUser" OnLike="ToggleLike" OnComment="ToggleComments"
                               OnReport="OpenReportModal" ShowComments="_showComments" PostComments="_postComments"
                               CommentDrafts="_commentDrafts" OnUpdateDraft="UpdateCommentDraft"
-                              OnSubmitComment="SubmitComment" CarouselIndices="_carouselIndices" OnCarouselChange="UpdateCarouselIndex" />
+                              OnSubmitComment="SubmitComment" CarouselIndices="_carouselIndices" OnCarouselChange="UpdateCarouselIndex"
+                              ActiveReplyBoxes="_activeReplyBoxes" ReplyDrafts="_replyDrafts" OnToggleReply="ToggleReplyBox"
+                              OnUpdateReplyDraft="UpdateReplyDraft" OnSubmitReply="SubmitReply" />
                 }
             }
             else
@@ -638,6 +642,10 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
     private Dictionary<int, string> _commentDrafts = new();
     private Dictionary<int, int> _carouselIndices = new();
 
+    // Reply Management (NEW)
+    private Dictionary<int, bool> _activeReplyBoxes = new(); // Key: CommentId (Parent)
+    private Dictionary<int, string> _replyDrafts = new();    // Key: CommentId (Parent)
+
     // Debugging flag to temporarily render simple post markup instead of PostCard component
     private bool DebugRenderPosts = false;
 
@@ -808,23 +816,6 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                             .Include(p => p.Likes)
                             .OrderByDescending(p => p.DateCreated)
                             .ToListAsync();
-
-                        // Diagnostic logging
-                        try
-                        {
-                            Console.WriteLine("=== DIAGNOSTIC INFO: LoadUserAndCategories ===");
-                            Console.WriteLine($"Current User ID: {userId}");
-                            Console.WriteLine($"Followed Category IDs ({followedCategoryIds.Count}): {string.Join(",", followedCategoryIds)}");
-                            Console.WriteLine($"FeedPosts count: {FeedPosts?.Count ?? 0}");
-                            if (FeedPosts != null)
-                            {
-                                foreach (var fp in FeedPosts.Take(10))
-                                {
-                                    Console.WriteLine($"Post Id: {fp.Id}, CategoryId: @post.CategoryId, UserId: @post.UserId, DateCreated: @post.DateCreated");
-                                }
-                            }
-                        }
-                        catch { }
                     }
 
                     UserPosts = await context.Posts
@@ -887,16 +878,6 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             {
                 FeedPosts = new List<Posts>();
             }
-
-            // Diagnostic logging for refresh
-            try
-            {
-                Console.WriteLine("=== DIAGNOSTIC INFO: RefreshFeed ===");
-                Console.WriteLine($"Current User ID: {currentUser?.Id}");
-                Console.WriteLine($"Followed Category IDs ({followedCategoryIds.Count}): {string.Join(",", followedCategoryIds)}");
-                Console.WriteLine($"FeedPosts count: {FeedPosts?.Count ?? 0}");
-            }
-            catch { }
 
             StateHasChanged();
         }
@@ -1033,6 +1014,75 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             }
         }
         StateHasChanged();
+    }
+
+    // ========== REPLY HANDLERS (NEW) ==========
+    private void ToggleReplyBox(int commentId)
+    {
+        if (!_activeReplyBoxes.ContainsKey(commentId))
+            _activeReplyBoxes[commentId] = false;
+
+        _activeReplyBoxes[commentId] = !_activeReplyBoxes[commentId];
+
+        // Initialize draft if it doesn't exist
+        if (!_replyDrafts.ContainsKey(commentId))
+            _replyDrafts[commentId] = "";
+
+        StateHasChanged();
+    }
+
+    private void UpdateReplyDraft(PostCard.ReplyDraftEventArgs args)
+    {
+        if (args.Content != null)
+        {
+            _replyDrafts[args.ParentCommentId] = args.Content;
+        }
+    }
+
+    private async Task SubmitReply(PostCard.SubmitReplyEventArgs args)
+    {
+        if (currentUser == null) { ShowLoginOverlay = true; return; }
+
+        // Validate draft
+        if (!_replyDrafts.ContainsKey(args.ParentCommentId) || string.IsNullOrWhiteSpace(_replyDrafts[args.ParentCommentId]))
+            return;
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+
+            var newComment = new Comments
+            {
+                PostID = args.PostId,
+                UserID = currentUser.Id,
+                Content = _replyDrafts[args.ParentCommentId],
+                ParentCommentID = args.ParentCommentId,
+                DateCreated = DateTime.Now,
+                DateUpdated = DateTime.Now,
+                CreatedBy = currentUser.Id
+            };
+
+            context.Comments.Add(newComment);
+            await context.SaveChangesAsync();
+
+            // Cleanup UI
+            _replyDrafts[args.ParentCommentId] = "";
+            _activeReplyBoxes[args.ParentCommentId] = false;
+
+            // Update local state to show the new reply immediately
+            newComment.User = currentUser;
+
+            if (!_postComments.ContainsKey(args.PostId))
+                _postComments[args.PostId] = new List<Comments>();
+
+            _postComments[args.PostId].Add(newComment);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error posting reply: " + ex.Message);
+        }
     }
 
     // ========== EVENT HANDLERS ==========
