@@ -67,71 +67,21 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        var contextFactory = services.GetRequiredService<IDbContextFactory<SoSuSaFsdContext>>();
+        using var context = contextFactory.CreateDbContext();
+        
         var userManager = services.GetRequiredService<UserManager<Users>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+        var logger = services.GetRequiredService<ILogger<DatabaseSeeder>>();
 
-        // Ensure roles exist
-        string[] roleNames = { "Admin", "User" };
-        foreach (var roleName in roleNames)
-        {
-            if (!await roleManager.RoleExistsAsync(roleName))
-            {
-                await roleManager.CreateAsync(new IdentityRole(roleName));
-            }
-        }
-
-        // Create or reset admin user
-        string targetEmail = "So@gmail.com";
-        string targetUsername = "SoSuSaAdmin";
-        string targetPassword = "SoSoSaAdmin123";
-
-        var adminUser = await userManager.FindByEmailAsync(targetEmail);
-
-        if (adminUser == null)
-        {
-            adminUser = new Users
-            {
-                UserName = targetUsername,
-                Email = targetEmail,
-                FirstName = "Super",
-                LastName = "Admin",
-                DisplayName = "SoSuSa Admin",
-                DateCreated = DateTime.Now,
-                DateUpdated = DateTime.Now,
-                DateOfBirth = DateTime.Now,
-                IsActive = true,
-                IsVerified = true,
-                Role = "Admin",
-                EmailConfirmed = true
-            };
-
-            var result = await userManager.CreateAsync(adminUser, targetPassword);
-            if (result.Succeeded)
-            {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
-        }
-        else
-        {
-            var token = await userManager.GeneratePasswordResetTokenAsync(adminUser);
-            await userManager.ResetPasswordAsync(adminUser, token, targetPassword);
-
-            if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-            {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
-
-            if (adminUser.Role != "Admin")
-            {
-                adminUser.Role = "Admin";
-                await userManager.UpdateAsync(adminUser);
-            }
-        }
+        // Create and run the seeder
+        var seeder = new DatabaseSeeder(context, userManager, roleManager, logger);
+        await seeder.SeedAsync();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Error seeding database.");
+        logger.LogError(ex, "An error occurred while seeding the database.");
     }
 }
 
@@ -140,6 +90,9 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
+}
+else
+{
     app.UseMigrationsEndPoint();
 }
 
