@@ -7,7 +7,7 @@ namespace SoSuSaFsd.Domain
         public string? Content { get; set; }
         public int PostID { get; set; }
 
-        //Navigation properties
+        //Navigation properties 
         public string UserID { get; set; } = string.Empty;
         [ForeignKey("UserID")]
         public virtual Users? User { get; set; }

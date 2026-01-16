@@ -21,7 +21,15 @@
             <div class="logo-icon"><i class="fas fa-check"></i></div>
             <span class="logo-text">SoSuSa</span>
         </div>
-        <button class="login-btn" onclick="location.href='/'">Back Home</button>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+            @* --- NEW REFRESH BUTTON --- *@
+            <button class="login-btn secondary" style="min-width: 40px; padding: 0 10px;" title="Refresh Page" @onclick="RefreshPage">
+                <i class="fas fa-redo"></i>
+            </button>
+
+            <button class="login-btn" onclick="location.href='/'">Back Home</button>
+        </div>
     </div>
 </header>
 
@@ -59,7 +67,7 @@
                 }
             </ul>
         </div>
-        
+
         <div class="sidebar-footer">
             <div class="category-search-container">
                 <input type="text" placeholder="Find category..." @bind="searchTerm" @bind:event="oninput" />
@@ -150,20 +158,20 @@
 
                 // Calculate filtered posts
                 var resultList = (IEnumerable<Posts>)CategoryPosts;
-                
+
                 // 1. If user typed in the local search bar, prioritize that
                 if (!string.IsNullOrWhiteSpace(postSearchTerm))
                 {
-                    resultList = resultList.Where(p => 
-                        p.Content.Contains(postSearchTerm, StringComparison.OrdinalIgnoreCase) || 
-                        (p.User?.UserName ?? "").Contains(postSearchTerm, StringComparison.OrdinalIgnoreCase));
+                    resultList = resultList.Where(p =>
+                    p.Content.Contains(postSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    (p.User?.UserName ?? "").Contains(postSearchTerm, StringComparison.OrdinalIgnoreCase));
                 }
                 // 2. Otherwise, if we came from the main search (URL has focusPostId), show only that post
                 else if (FocusPostId.HasValue)
                 {
                     resultList = resultList.Where(p => p.Id == FocusPostId.Value);
                 }
-                
+
                 var filteredPosts = resultList.ToList();
 
                 @* "View All" button if looking at specific search result *@
@@ -256,7 +264,10 @@
                         <li>
                             <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => NavigateToCategory(cat.Id))">
                                 <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
-                                @if (cat.IsVerified) { <i class="fas fa-check-circle verified-badge-small" title="Verified"></i> }
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
+                                }
                             </a>
                         </li>
                     }
@@ -276,8 +287,8 @@
 @* --- MODALS --- *@
 
 @* Post Modal *@
-@if (showPostModal) 
-{ 
+@if (showPostModal)
+{
     <div class="modal">
         <div class="modal-content">
             <span class="modal-close" @onclick="ClosePostModal">×</span>
@@ -285,38 +296,41 @@
             <div class="modal-subtitle">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
             <div class="file-input-wrapper">
-                <label>Add Media (Images or Videos): @if (isUploading) { <span class="upload-loading">Uploading... please wait.</span> }</label>
-                <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
-            </div>
-            <div class="preview-container">
-                @for (int i = 0; i < pendingUploads.Count; i++) 
-                { 
-                    var index = i; 
-                    var file = pendingUploads[i]; 
-                    <div class="preview-item">
-                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">×</button>
-                        @if (file.MediaType == "Video") 
-                        { 
-                            <video class="preview-media" src="@file.SavedPath"></video> 
-                        } 
-                        else 
-                        { 
-                            <img class="preview-media" src="@file.SavedPath" alt="Preview" /> 
-                        }
-                    </div> 
-                }
-            </div>
-            <div class="modal-actions">
-                <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
-                <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
-            </div>
+                <label>Add Media (Images or Videos): @if (isUploading) {
+                <span class="upload-loading">Uploading... please wait.</span>
+            }
+</label>
+            <InputFile OnChange="HandleFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
         </div>
-    </div> 
+        <div class="preview-container">
+            @for (int i = 0; i < pendingUploads.Count; i++)
+            {
+                var index = i;
+                var file = pendingUploads[i];
+                <div class="preview-item">
+                    <button class="remove-media-btn" @onclick="() => RemoveFile(index)">×</button>
+                    @if (file.MediaType == "Video")
+                    {
+                        <video class="preview-media" src="@file.SavedPath"></video>
+                    }
+                    else
+                    {
+                        <img class="preview-media" src="@file.SavedPath" alt="Preview" />
+                    }
+                </div>
+            }
+        </div>
+        <div class="modal-actions">
+            <button class="login-btn secondary" @onclick="ClosePostModal">Cancel</button>
+            <button class="login-btn" @onclick="HandleCreatePost" disabled="@isUploading">@(isUploading ? "Uploading..." : "Post")</button>
+        </div>
+    </div>
+</div>
 }
 
 @* Request Access Modal *@
-@if (showRequestModal) 
-{ 
+@if (showRequestModal)
+{
     <div class="modal">
         <div class="modal-content">
             <span class="modal-close" @onclick="() => showRequestModal = false">×</span>
@@ -328,12 +342,12 @@
                 <button class="login-btn" @onclick="HandleSubmitRequest">Submit Request</button>
             </div>
         </div>
-    </div> 
+    </div>
 }
 
 @* Report Modal *@
-@if (showReportModal) 
-{ 
+@if (showReportModal)
+{
     <div class="modal">
         <div class="modal-content">
             <span class="modal-close" @onclick="() => showReportModal = false">×</span>
@@ -359,26 +373,26 @@
                 <button class="login-btn btn-error" @onclick="SubmitReport">Submit Report</button>
             </div>
         </div>
-    </div> 
+    </div>
 }
 
 @* Notification Modal *@
-@if (showNotificationModal) 
-{ 
+@if (showNotificationModal)
+{
     <div class="modal">
         <div class="modal-content modal-notification">
             <span class="modal-close" @onclick="CloseNotification">×</span>
             <div class="notification-icon">
-                @if (notificationType == "success") 
-                { 
+                @if (notificationType == "success")
+                {
                     <i class="fas fa-check-circle success-icon"></i>
-                } 
-                else if (notificationType == "info") 
-                { 
+                }
+                else if (notificationType == "info")
+                {
                     <i class="fas fa-info-circle info-icon"></i>
-                } 
-                else 
-                { 
+                }
+                else
+                {
                     <i class="fas fa-exclamation-circle error-icon"></i>
                 }
             </div>
@@ -388,7 +402,7 @@
             <p class="notification-message">@notificationMessage</p>
             <button class="login-btn" @onclick="CloseNotification" style="width: 100px;">OK</button>
         </div>
-    </div> 
+    </div>
 }
 
 @* Create Category Confirmation Modal *@
@@ -443,7 +457,7 @@
 
 @code {
     [Parameter] public int Id { get; set; }
-    
+
     // Reads focusPostId from the URL ?focusPostId=123
     [SupplyParameterFromQuery] public int? FocusPostId { get; set; }
 
@@ -625,6 +639,12 @@
     {
         FocusPostId = null;
         Navigation.NavigateTo($"/category/{Id}");
+    }
+
+    // ========== NEW REFRESH METHOD ==========
+    private void RefreshPage()
+    {
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 
     private int GetCurrentIndex(int postId)
@@ -1335,10 +1355,10 @@
             builder.AddAttribute(25, "class", "comment-input");
             builder.AddAttribute(26, "placeholder", "Write a comment...");
             builder.AddAttribute(27, "value", _commentDrafts.ContainsKey(post.Id) ? _commentDrafts[post.Id] : "");
-            
+
             // Correct attribute syntax for RenderTreeBuilder
             builder.AddAttribute(28, "onchange", EventCallback.Factory.Create(this, (ChangeEventArgs e) => UpdateCommentDraft(post.Id, e.Value?.ToString())));
-            
+
             builder.CloseElement();
 
             builder.OpenElement(29, "button");
@@ -1360,4 +1380,4 @@
         public string MediaType { get; set; } = "";
         public string PhysicalPath { get; set; } = "";
     }
-}}
+}

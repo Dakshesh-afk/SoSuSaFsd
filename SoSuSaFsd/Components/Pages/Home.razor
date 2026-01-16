@@ -35,6 +35,12 @@
                     <i class="fas fa-search"></i>
                 </button>
             </div>
+
+            @* --- REFRESH BUTTON --- *@
+            <button class="login-btn secondary" style="min-width: 40px; padding: 0 10px; margin-left: 10px;" title="Refresh Page" @onclick="RefreshPage">
+                <i class="fas fa-redo"></i>
+            </button>
+
             <AuthorizeView>
                 <Authorized>
                     <AuthorizeView Roles="Admin" Context="innerContext">
@@ -58,7 +64,6 @@
             <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #666; font-size: 12px;">Search Results (@PostSearchResults.Count)</div>
             @foreach (var post in PostSearchResults)
             {
-                @* UPDATED ONCLICK: Passes CategoryId and PostId *@
                 <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick='@(() => OnSearchPostClicked(post.CategoryId, post.Id))'>
                     <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(post.User?.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
                     <div style="flex: 1; min-width: 0;">
@@ -143,7 +148,8 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
         <div id="sidebar-profile" class="section-view">
             <div class="profile-card">
-                <div class="profile-avatar-large" style="background-image: url('@(currentUser?.ProfileImage ?? "")');"></div>
+                @* SIDEBAR AVATAR *@
+                <div class="profile-avatar-large" style="background-image: url('@(currentUser?.ProfileImage ?? "")'); background-size: cover; background-position: center; border-radius: 50%;"></div>
                 <h2 class="profile-name">@(currentUser?.UserName ?? "Guest")</h2>
                 <p class="profile-handle">@@@(currentUser?.UserName?.ToLower() ?? "guest")</p>
                 <p class="profile-bio">@(currentUser?.Bio ?? "No bio available")</p>
@@ -272,7 +278,8 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                     {
                         <form @onsubmit="UpdateProfile">
                             <div class="settings-form-group" style="display:flex; flex-direction:column; align-items:center;">
-                                <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #ddd; background-size: cover; background-position: center; background-image: url('@(currentUser?.ProfileImage ?? "")'); margin-bottom: 10px;"></div>
+                                @* SETTINGS EDIT AVATAR *@
+                                <div class="profile-avatar-large" style="background-image: url('@(currentUser?.ProfileImage ?? "")'); margin: 0 auto 15px; width: 120px; height: 120px; background-size: cover; background-position: center; border-radius: 50%;"></div>
                                 <label class="login-btn secondary" style="cursor: pointer; font-weight:normal; font-size:13px; padding: 5px 15px; position: relative; overflow: hidden;">
                                     Change Photo
                                     <InputFile OnChange="HandleProfileImageSelected" accept=".jpg,.jpeg,.png" style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
@@ -510,16 +517,34 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
     function showSection(section) {
         document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.settings-content').forEach(el => el.classList.add('hidden'));
-        var sidebar = document.getElementById('sidebar-' + section);
-        var feed = document.getElementById('feed-' + section);
+
+        var sidebarId = 'sidebar-' + section;
+        var feedId = 'feed-' + section;
+
+        // FIXED: Special case for 'following' section -> Keep Profile Sidebar visible
+        if (section === 'following') {
+            sidebarId = 'sidebar-profile';
+        }
+
+        var sidebar = document.getElementById(sidebarId);
+        var feed = document.getElementById(feedId);
+
         if(sidebar) sidebar.classList.add('active');
         if(feed) feed.classList.add('active');
+
         document.querySelectorAll('.main-nav a').forEach(el => el.classList.remove('active-link'));
-        var navLink = document.getElementById('nav-' + section);
+
+        // Highlight correct nav link (following highlights profile)
+        var navSection = section;
+        if(section === 'following') navSection = 'profile';
+
+        var navLink = document.getElementById('nav-' + navSection);
         if(navLink) navLink.classList.add('active-link');
+
         if(section === 'settings') {
             showSettingsForm('profile');
         }
+
         // Adjust header search visibility and placeholder based on section
         try {
             var headerSearchWrapper = document.getElementById('header-search-wrapper');
@@ -573,26 +598,6 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             reg.classList.remove('hidden');
         }
     }
-
-    window.generateCroppedImage = (imageSrc, offsetX, offsetY, scale, size) => {
-        return new Promise((resolve) => {
-            const canvas = document.createElement('canvas');
-            canvas.width = size;
-            canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            img.onload = () => {
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(0,0,size,size);
-                ctx.translate(size/2, size/2);
-                ctx.translate(offsetX, offsetY);
-                ctx.scale(scale, scale);
-                ctx.drawImage(img, -img.width/2, -img.height/2);
-                resolve(canvas.toDataURL('image/jpeg', 0.9));
-            };
-            img.src = imageSrc;
-        });
-    };
 </script>
 
 @code {
@@ -1121,24 +1126,24 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
     private async Task HandleCategorySearch()
     {
-        // Simple client-side search for now
         if (string.IsNullOrWhiteSpace(searchTerm)) return;
 
-        // Trim and normalize search term
-        var term = searchTerm.Trim().ToLower();
+        // Trim search term
+        var term = searchTerm.Trim();
 
-        // Check if category exists
-        var categoryExists = VerifiedCategoriesForRequest.Any(c => c.CategoryName.Trim().ToLower() == term);
+        using var context = DbFactory.CreateDbContext();
 
-        if (categoryExists)
+        // UPDATED LOGIC: Try to find an exact match first
+        var cat = await context.Categories
+            .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == term.ToLower());
+
+        if (cat != null)
         {
-            // Navigate to category if it exists
-            var category = VerifiedCategoriesForRequest.First(c => c.CategoryName.Trim().ToLower() == term);
-            NavigateToCategory(category.Id);
+            // Found exact match -> Go to it
+            Navigation.NavigateTo($"/category/{cat.Id}", true);
         }
         else
         {
-            // Show create confirm modal if category doesn't exist
             showCreateConfirm = true;
         }
     }
@@ -1157,11 +1162,42 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             {
                 userToUpdate.DisplayName = currentUser.DisplayName;
                 userToUpdate.Bio = currentUser.Bio;
+
+                // --- Update profile image in DB ---
+                userToUpdate.ProfileImage = currentUser.ProfileImage;
+
                 var result = await userManager.UpdateAsync(userToUpdate);
                 if (result.Succeeded)
                 {
                     updateStatusMessage = "Profile updated successfully!";
                     currentUser = userToUpdate;
+
+                    // --- FORCE UPDATE LOCAL POST LISTS TO REFLECT NEW IMAGE ---
+                    if (UserPosts != null)
+                    {
+                        foreach (var post in UserPosts)
+                        {
+                            if (post.User != null)
+                            {
+                                post.User.ProfileImage = currentUser.ProfileImage;
+                                post.User.DisplayName = currentUser.DisplayName;
+                            }
+                        }
+                    }
+
+                    if (FeedPosts != null)
+                    {
+                        foreach (var post in FeedPosts)
+                        {
+                            if (post.UserId == currentUser.Id && post.User != null)
+                            {
+                                post.User.ProfileImage = currentUser.ProfileImage;
+                                post.User.DisplayName = currentUser.DisplayName;
+                            }
+                        }
+                    }
+                    // --------------------------------------------------------
+
                     StateHasChanged();
                 }
                 else
@@ -1180,19 +1216,31 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             ShowLoginOverlay = true;
             return;
         }
-        var file = e.File;
-        if (file.Size <= 1024 * 1024 * 2)
-        {
-            var buffer = new byte[file.Size];
-            await file.OpenReadStream(1024 * 1024 * 2).ReadAsync(buffer);
-            var base64 = Convert.ToBase64String(buffer);
-            var tempImageSrc = $"data:{file.ContentType};base64,{base64}";
 
-            updateStatusMessage = "Image crop functionality to be implemented";
-        }
-        else
+        var file = e.File;
+        // Limit max file size to 5MB to prevent crashes
+        long maxFileSize = 1024 * 1024 * 5;
+
+        try
         {
-            updateStatusMessage = "Error: File too large. Max size is 2MB.";
+            // Resize image to 512x512 pixels to keep DB size manageable
+            // This is crucial when storing images as Base64 in the database
+            var resizedFile = await file.RequestImageFileAsync(file.ContentType, 512, 512);
+
+            var buffer = new byte[resizedFile.Size];
+            await resizedFile.OpenReadStream(maxFileSize).ReadAsync(buffer);
+            var base64 = Convert.ToBase64String(buffer);
+
+            // Update the UI immediately with the new Base64 string
+            // This does NOT save to DB yet; user must click "Save Changes"
+            currentUser.ProfileImage = $"data:{file.ContentType};base64,{base64}";
+
+            updateStatusMessage = "Photo selected. Click 'Save Changes' to apply.";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            updateStatusMessage = "Error: " + ex.Message;
         }
     }
 
@@ -1322,5 +1370,11 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             accessRequestMessage = "Error submitting request: " + ex.Message;
             isAccessRequestSuccess = false;
         }
+    }
+
+    // --- NEW METHOD ---
+    private void RefreshPage()
+    {
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 }

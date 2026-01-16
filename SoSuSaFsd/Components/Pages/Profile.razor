@@ -43,7 +43,8 @@
         {
             <div class="category-header-card">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <div class="profile-avatar-large" style="background-image: url('@(ProfileUser.ProfileImage ?? "")'); margin: 0 auto 15px; width: 120px; height: 120px;"></div>
+                    @* UPDATED: Added background-size: cover; background-position: center; border-radius: 50%; to match post avatar styling *@
+                    <div class="profile-avatar-large" style="background-image: url('@(ProfileUser.ProfileImage ?? "")'); margin: 0 auto 15px; width: 120px; height: 120px; background-size: cover; background-position: center; border-radius: 50%;"></div>
                     <h1 class="page-title" style="margin-bottom: 5px;">@(ProfileUser.DisplayName ?? ProfileUser.UserName)</h1>
                     <p style="color: #666; font-size: 16px; margin: 0 0 15px 0;">@@@ProfileUser.UserName</p>
                 </div>
@@ -88,7 +89,7 @@
                 {
                     <div class="post-card">
                         <div class="post-header">
-                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
+                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")'); width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0;"></div>
                             <div>
                                 <b>@(post.User?.UserName ?? "User")</b>
                                 <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
@@ -149,11 +150,11 @@
         errorMessage = "";
         ProfileUser = null;
         UserPosts = new();
-        
+
         try
         {
             using var context = DbFactory.CreateDbContext();
-            
+
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             if (user.Identity?.IsAuthenticated == true)
@@ -218,7 +219,7 @@
         {
             var promptText = $"Report @{ProfileUser.UserName}. Please enter a brief reason:";
             var reason = await JSRuntime.InvokeAsync<string>("prompt", promptText);
-            
+
             if (string.IsNullOrWhiteSpace(reason))
             {
                 reportStatusMessage = "Report cancelled.";
@@ -226,9 +227,9 @@
             }
 
             using var context = DbFactory.CreateDbContext();
-            var existing = await context.Reports.FirstOrDefaultAsync(r => 
+            var existing = await context.Reports.FirstOrDefaultAsync(r =>
                 r.TargetUserID == ProfileUser.Id && r.ReporterID == CurrentUser.Id);
-            
+
             if (existing != null)
             {
                 reportStatusMessage = "You have already reported this user.";
