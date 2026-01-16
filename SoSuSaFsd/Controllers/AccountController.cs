@@ -58,21 +58,22 @@ namespace SoSuSaFsd.Controllers
                 UserName = username,
                 Email = email,
                 DateCreated = DateTime.Now,
-                IsActive = true // New users are active by default
+                IsActive = true,
+                Role = "User" // All new registrations get User role
             };
 
             var result = await _userManager.CreateAsync(newUser, password);
 
             if (result.Succeeded)
             {
-                // Assign Admin role if applicable
-                if (!await _roleManager.RoleExistsAsync("Admin"))
-                    await _roleManager.CreateAsync(new IdentityRole("Admin"));
+                // Ensure "User" role exists
+                if (!await _roleManager.RoleExistsAsync("User"))
+                    await _roleManager.CreateAsync(new IdentityRole("User"));
 
-                if (username.ToLower() == "admin")
-                    await _userManager.AddToRoleAsync(newUser, "Admin");
+                // All new users get User role only
+                await _userManager.AddToRoleAsync(newUser, "User");
 
-                // Sign them in (Set Cookie)
+                // Sign them in
                 await _signInManager.SignInAsync(newUser, isPersistent: true);
 
                 return Redirect("/");
