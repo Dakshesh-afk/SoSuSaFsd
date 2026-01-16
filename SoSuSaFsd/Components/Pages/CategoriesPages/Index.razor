@@ -3,6 +3,8 @@
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using SoSuSaFsd.Domain
 @using SoSuSaFsd.Data
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
 @implements IAsyncDisposable
 @inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
 

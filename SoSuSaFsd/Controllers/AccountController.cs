@@ -28,7 +28,18 @@ namespace SoSuSaFsd.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromForm] string username, [FromForm] string password)
         {
-            // This sets the Cookie!
+            // 1. Find the user first so we can check their status
+            var user = await _userManager.FindByNameAsync(username);
+
+            // 2. CHECK IF BANNED
+            // If the user exists AND IsActive is false, we kick them out.
+            if (user != null && user.IsActive == false)
+            {
+                // Return to home page with the specific error message
+                return Redirect("/?error=" + Uri.EscapeDataString("Your account has been suspended."));
+            }
+
+            // 3. If they passed the ban check, proceed with normal password check
             var result = await _signInManager.PasswordSignInAsync(username, password, isPersistent: true, lockoutOnFailure: false);
 
             if (result.Succeeded)
@@ -47,7 +58,7 @@ namespace SoSuSaFsd.Controllers
                 UserName = username,
                 Email = email,
                 DateCreated = DateTime.Now,
-                IsActive = true
+                IsActive = true // New users are active by default
             };
 
             var result = await _userManager.CreateAsync(newUser, password);

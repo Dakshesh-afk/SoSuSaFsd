@@ -17,6 +17,9 @@ namespace SoSuSaFsd.Services
         Task<bool> ToggleCategoryVerificationAsync(int categoryId);
         Task ApproveAccessRequestAsync(int requestId);
         Task RejectAccessRequestAsync(int requestId);
+
+        // CHANGED: int -> string
+        Task<bool> ToggleUserBanAsync(string userId);
     }
 
     public class AdminService : IAdminService
@@ -192,6 +195,20 @@ namespace SoSuSaFsd.Services
                 request.DateUpdated = DateTime.Now;
                 await context.SaveChangesAsync();
             }
+        }
+
+        // CHANGED: int -> string
+        public async Task<bool> ToggleUserBanAsync(string userId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var user = await context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.IsActive = !user.IsActive;
+            user.DateUpdated = DateTime.Now;
+
+            await context.SaveChangesAsync();
+            return user.IsActive;
         }
     }
 }
