@@ -65,13 +65,13 @@ namespace SoSuSaFsd.Data
         {
             var users = new List<(string Username, string Email, string Password, string Role, string FirstName, string LastName, string? Bio, bool IsVerified)>
             {
-                ("SoSuSaAdmin", "admin@sosusa.com", "Admin@123", "Admin", "Admin", "User", "Platform Administrator ???", true),
-                ("Louis", "louis@example.com", "User@123", "User", "Louis", "Tan", "Tech enthusiast | Developer ??", true),
-                ("Dakshesh", "dakshesh@example.com", "User@123", "User", "Dakshesh", "Kumar", "Code wizard | Full-stack dev ?", true),
-                ("gamer_123", "gamer123@example.com", "User@123", "User", "Marcus", "Lee", "Gaming is life ?? | Twitch streamer", false),
-                ("troller67", "troller67@example.com", "User@123", "User", "Ryan", "Ng", "Professional meme lord ??", true),
-                ("Mothership", "mothership@example.com", "User@123", "User", "Sarah", "Lim", "Breaking news 24/7 ?? | Journalist", true),
-                ("temasekteacher", "temasekteacher@example.com", "User@123", "User", "David", "Tan", "Educator @ Temasek Poly ?? | Teaching tech", true)
+                ("SoSuSaAdmin", "admin@sosusa.com", "Admin@123", "Admin", "Admin", "User", "Platform Administrator", true),
+                ("Louis", "louis@example.com", "User@123", "User", "Louis", "Tan", "Tech enthusiast | Developer", true),
+                ("Dakshesh", "dakshesh@example.com", "User@123", "User", "Dakshesh", "Kumar", "Code wizard | Full-stack dev", true),
+                ("gamer_123", "gamer123@example.com", "User@123", "User", "Marcus", "Lee", "Gaming is life | Twitch streamer", false),
+                ("troller67", "troller67@example.com", "User@123", "User", "Ryan", "Ng", "Professional meme lord", true),
+                ("Mothership", "mothership@example.com", "User@123", "User", "Sarah", "Lim", "Breaking news 24/7 | Journalist", true),
+                ("temasekteacher", "temasekteacher@example.com", "User@123", "User", "David", "Tan", "Educator @ Temasek Poly | Teaching tech", true)
             };
 
             foreach (var (username, email, password, role, firstName, lastName, bio, isVerified) in users)
@@ -131,9 +131,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "SG News",
-                    CategoryDescription = "Latest news and updates from Singapore ????",
+                    CategoryDescription = "Latest news and updates from Singapore",
                     CategoryIsRestricted = false,
-                    IsVerified = true, // Verified - Official news
+                    IsVerified = true,
                     CreatedBy = mothershipUser?.Id ?? adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-120),
                     DateUpdated = DateTime.Now.AddDays(-120)
@@ -143,7 +143,7 @@ namespace SoSuSaFsd.Data
                     CategoryName = "Temasek Poly News",
                     CategoryDescription = "News, events, and updates from Temasek Polytechnic",
                     CategoryIsRestricted = false,
-                    IsVerified = true, // Verified - Official school news
+                    IsVerified = true,
                     CreatedBy = temasekUser?.Id ?? adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-110),
                     DateUpdated = DateTime.Now.AddDays(-110)
@@ -151,9 +151,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "Gaming",
-                    CategoryDescription = "Game reviews, esports, and gaming discussions ??",
+                    CategoryDescription = "Game reviews, esports, and gaming discussions",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - Community category
+                    IsVerified = false,
                     CreatedBy = adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-100),
                     DateUpdated = DateTime.Now.AddDays(-100)
@@ -161,9 +161,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "Technology",
-                    CategoryDescription = "Tech news, gadgets, and innovations ??",
+                    CategoryDescription = "Tech news, gadgets, and innovations",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - Community category
+                    IsVerified = false,
                     CreatedBy = louisUser?.Id ?? adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-95),
                     DateUpdated = DateTime.Now.AddDays(-95)
@@ -171,9 +171,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "Programming",
-                    CategoryDescription = "Code, tutorials, and developer discussions ?????",
+                    CategoryDescription = "Code, tutorials, and developer discussions",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - Community category
+                    IsVerified = false,
                     CreatedBy = louisUser?.Id ?? adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-90),
                     DateUpdated = DateTime.Now.AddDays(-90)
@@ -181,9 +181,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "Memes & Humor",
-                    CategoryDescription = "Dank memes and funny content ??",
+                    CategoryDescription = "Dank memes and funny content",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - Community category
+                    IsVerified = false,
                     CreatedBy = adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-85),
                     DateUpdated = DateTime.Now.AddDays(-85)
@@ -191,9 +191,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "Education",
-                    CategoryDescription = "Learning resources, study tips, and academic discussions ??",
+                    CategoryDescription = "Learning resources, study tips, and academic discussions",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - Community category
+                    IsVerified = false,
                     CreatedBy = temasekUser?.Id ?? adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-80),
                     DateUpdated = DateTime.Now.AddDays(-80)
@@ -201,9 +201,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "Food & Dining",
-                    CategoryDescription = "Hawker recommendations, cafes, and food reviews ??",
+                    CategoryDescription = "Hawker recommendations, cafes, and food reviews",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - Community category
+                    IsVerified = false,
                     CreatedBy = adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-75),
                     DateUpdated = DateTime.Now.AddDays(-75)
@@ -211,9 +211,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "VIP Lounge",
-                    CategoryDescription = "Exclusive category for verified members only ??",
+                    CategoryDescription = "Exclusive category for verified members only",
                     CategoryIsRestricted = true,
-                    IsVerified = true, // Verified - Restricted access
+                    IsVerified = true,
                     CreatedBy = adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-70),
                     DateUpdated = DateTime.Now.AddDays(-70)
@@ -221,9 +221,9 @@ namespace SoSuSaFsd.Data
                 new Categories
                 {
                     CategoryName = "General",
-                    CategoryDescription = "Random discussions and off-topic conversations ??",
+                    CategoryDescription = "Random discussions and off-topic conversations",
                     CategoryIsRestricted = false,
-                    IsVerified = false, // Not verified - General category
+                    IsVerified = false,
                     CreatedBy = adminUser?.Id,
                     DateCreated = DateTime.Now.AddDays(-130),
                     DateUpdated = DateTime.Now.AddDays(-130)
@@ -273,7 +273,7 @@ namespace SoSuSaFsd.Data
             {
                 new Posts
                 {
-                    Content = "BREAKING: New MRT line announced! The Thomson-East Coast Line extension will connect to more neighborhoods. What do you think about the new route? ??",
+                    Content = "BREAKING: New MRT line announced! The Thomson-East Coast Line extension will connect to more neighborhoods. What do you think about the new route?",
                     PostStatus = "Published",
                     UserId = mothership?.Id ?? users[1].Id,
                     CategoryId = sgNewsCategory?.Id ?? 1,
@@ -283,7 +283,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Temasek Poly's Open House this weekend! Come check out the IIT, ENG, and BUS schools. There'll be booths, demos, and free snacks ???",
+                    Content = "Temasek Poly's Open House this weekend! Come check out the IIT, ENG, and BUS schools. There'll be booths, demos, and free snacks",
                     PostStatus = "Published",
                     UserId = temasekteacher?.Id ?? users[2].Id,
                     CategoryId = temasekCategory?.Id ?? 2,
@@ -293,7 +293,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Just hit Diamond rank in Valorant! ?? Took me 3 months but finally made it. Any Immortal players got tips for climbing higher?",
+                    Content = "Just hit Diamond rank in Valorant! Took me 3 months but finally made it. Any Immortal players got tips for climbing higher?",
                     PostStatus = "Published",
                     UserId = gamer?.Id ?? users[3].Id,
                     CategoryId = gamingCategory?.Id ?? 3,
@@ -303,7 +303,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "When your code works but you don't know why ?? (Meanwhile: When your code doesn't work and you don't know why ??)",
+                    Content = "When your code works but you don't know why (Meanwhile: When your code doesn't work and you don't know why)",
                     PostStatus = "Published",
                     UserId = troller?.Id ?? users[4].Id,
                     CategoryId = memesCategory?.Id ?? 6,
@@ -313,7 +313,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Just finished building a Blazor app with .NET 8 for my FYP! ?? Clean architecture, real-time updates with SignalR. Anyone else working on cool projects?",
+                    Content = "Just finished building a Blazor app with .NET 8 for my FYP! Clean architecture, real-time updates with SignalR. Anyone else working on cool projects?",
                     PostStatus = "Published",
                     UserId = louis?.Id ?? users[1].Id,
                     CategoryId = programmingCategory?.Id ?? 5,
@@ -323,7 +323,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Hot take: AI won't replace developers, but developers who use AI will replace those who don't. Thoughts? ??",
+                    Content = "Hot take: AI won't replace developers, but developers who use AI will replace those who don't. Thoughts?",
                     PostStatus = "Published",
                     UserId = dakshesh?.Id ?? users[2].Id,
                     CategoryId = techCategory?.Id ?? 4,
@@ -333,7 +333,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Reminder: Assignment deadline next week! Don't forget to check the submission guidelines on Brightspace ??",
+                    Content = "Reminder: Assignment deadline next week! Don't forget to check the submission guidelines on Brightspace",
                     PostStatus = "Published",
                     UserId = temasekteacher?.Id ?? users[2].Id,
                     CategoryId = temasekCategory?.Id ?? 2,
@@ -343,7 +343,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "New COD update is FIRE ?? The new maps are insane! Who wants to squad up later?",
+                    Content = "New COD update is FIRE! The new maps are insane! Who wants to squad up later?",
                     PostStatus = "Published",
                     UserId = gamer?.Id ?? users[3].Id,
                     CategoryId = gamingCategory?.Id ?? 3,
@@ -353,7 +353,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Study tip: Pomodoro technique actually works! 25 min focus + 5 min break. Been using it for a week and my productivity is through the roof ???",
+                    Content = "Study tip: Pomodoro technique actually works! 25 min focus + 5 min break. Been using it for a week and my productivity is through the roof",
                     PostStatus = "Published",
                     UserId = temasekteacher?.Id ?? users[2].Id,
                     CategoryId = educationCategory?.Id ?? 7,
@@ -363,7 +363,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Posts
                 {
-                    Content = "Anyone else excited for the long weekend? Finally can catch up on sleep ??",
+                    Content = "Anyone else excited for the long weekend? Finally can catch up on sleep",
                     PostStatus = "Published",
                     UserId = troller?.Id ?? users[4].Id,
                     CategoryId = generalCategory?.Id ?? 10,
@@ -475,7 +475,7 @@ namespace SoSuSaFsd.Data
             {
                 new Comments
                 {
-                    Content = "Finally! The current MRT is so crowded during peak hours ??",
+                    Content = "Finally! The current MRT is so crowded during peak hours",
                     PostID = posts[0].Id,
                     UserID = users[2].Id,
                     DateCreated = DateTime.Now.AddHours(-5),
@@ -484,7 +484,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Comments
                 {
-                    Content = "Will be there! Looking forward to checking out the IT labs ???",
+                    Content = "Will be there! Looking forward to checking out the IT labs",
                     PostID = posts[1].Id,
                     UserID = users[1].Id,
                     DateCreated = DateTime.Now.AddHours(-20),
@@ -493,7 +493,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Comments
                 {
-                    Content = "Congrats bro! Diamond is already top 5% of players ??",
+                    Content = "Congrats bro! Diamond is already top 5% of players",
                     PostID = posts[2].Id,
                     UserID = users[4].Id,
                     DateCreated = DateTime.Now.AddHours(-10),
@@ -502,7 +502,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Comments
                 {
-                    Content = "This is too real ??????",
+                    Content = "This is too real",
                     PostID = posts[3].Id,
                     UserID = users[1].Id,
                     DateCreated = DateTime.Now.AddHours(-7),
@@ -529,7 +529,7 @@ namespace SoSuSaFsd.Data
                 },
                 new Comments
                 {
-                    Content = "Thanks for the reminder! Almost forgot ??",
+                    Content = "Thanks for the reminder! Almost forgot",
                     PostID = posts[6].Id,
                     UserID = users[3].Id,
                     DateCreated = DateTime.Now.AddDays(-3).AddHours(-12),
@@ -789,22 +789,12 @@ namespace SoSuSaFsd.Data
                 {
                     UserId = troller?.Id ?? users[4].Id,
                     CategoryId = vipCategory?.Id ?? categories.First(c => c.CategoryIsRestricted).Id,
-                    Reason = "pls give access i want to see whats inside lol ??",
+                    Reason = "pls give access i want to see whats inside lol",
                     Status = "Rejected",
                     DateCreated = DateTime.Now.AddDays(-15),
                     DateUpdated = DateTime.Now.AddDays(-13),
                     CreatedBy = troller?.Id ?? users[4].Id,
                     UpdatedBy = users[0].Id // Admin rejected
-                },
-                new CategoryAccessRequests
-                {
-                    UserId = gamer?.Id ?? users[3].Id,
-                    CategoryId = vipCategory?.Id ?? categories.First(c => c.CategoryIsRestricted).Id,
-                    Reason = "Second attempt: I've improved my contributions and would genuinely appreciate the opportunity to join VIP discussions. I promise to be an active and respectful member.",
-                    Status = "Pending",
-                    DateCreated = DateTime.Now.AddDays(-1),
-                    DateUpdated = DateTime.Now.AddDays(-1),
-                    CreatedBy = gamer?.Id ?? users[3].Id
                 }
             };
 

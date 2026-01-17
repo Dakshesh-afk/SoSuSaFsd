@@ -464,8 +464,65 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                 return;
             }
 
+            if (string.IsNullOrWhiteSpace(State.RequestReason))
+            {
+                State.ErrorMessage = "Please provide a reason for your request.";
+                return;
+            }
+
             try
             {
+                using var context = DbFactory.CreateDbContext();
+                
+                // Check for existing request
+                var existingRequest = await context.CategoryAccessRequests
+                    .FirstOrDefaultAsync(r => r.UserId == State.CurrentUserId && r.CategoryId == Id);
+
+                if (existingRequest != null)
+                {
+                    if (existingRequest.Status == "Pending")
+                    {
+                        State.ErrorMessage = "You already have a pending request for this category.";
+                        State.ShowRequestModal = false;
+                        return;
+                    }
+                    else if (existingRequest.Status == "Approved")
+                    {
+                        State.ErrorMessage = "You already have access to this category.";
+                        State.ShowRequestModal = false;
+                        return;
+                    }
+                    else if (existingRequest.Status == "Rejected")
+                    {
+                        // Check 7-day cooldown
+                        var canResubmitDate = existingRequest.DateUpdated.AddDays(7);
+                        var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
+                        
+                        if (daysRemaining > 0)
+                        {
+                            State.ErrorMessage = $"Your previous request was rejected on {existingRequest.DateUpdated:MMM dd, yyyy 'at' h:mm tt}. You can resubmit on {canResubmitDate:MMM dd, yyyy 'at' h:mm tt} ({Math.Ceiling(daysRemaining)} day(s) remaining).";
+                            State.ShowRequestModal = false;
+                            return;
+                        }
+                        
+                        // Update existing rejected request
+                        existingRequest.Reason = State.RequestReason;
+                        existingRequest.Status = "Pending";
+                        existingRequest.DateUpdated = DateTime.Now;
+                        existingRequest.UpdatedBy = null;
+                        
+                        await context.SaveChangesAsync();
+                        
+                        State.ShowRequestModal = false;
+                        State.RequestReason = "";
+                        State.HasPendingRequest = true;
+                        State.ShowNotification("Request resubmitted successfully!", "success");
+                        StateHasChanged();
+                        return;
+                    }
+                }
+
+                // Create new request
                 var success = await CategoryDetailsService.SubmitAccessRequestAsync(
                     State.CurrentUserId, Id, State.RequestReason);
 
@@ -474,6 +531,7 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                     State.ShowRequestModal = false;
                     State.RequestReason = "";
                     State.HasPendingRequest = true;
+                    State.ShowNotification("Request submitted successfully!", "success");
                     StateHasChanged();
                 }
                 else

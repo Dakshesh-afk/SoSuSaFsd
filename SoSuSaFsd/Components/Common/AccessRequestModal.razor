@@ -1,0 +1,168 @@
+@using SoSuSaFsd.Domain
+
+@* AccessRequestModal - Shared modal for requesting category access *@
+
+@if (ShowModal)
+{
+    <div class="modal-overlay" @onclick="OnClose" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div class="modal-content" @onclick:stopPropagation style="max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="padding: 20px; border-bottom: 1px solid #ddd;">
+                <h2 style="margin: 0;">Request Category Access</h2>
+                <button class="close-btn" @onclick="OnClose" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #666;">&times;</button>
+            </div>
+            
+            <div class="modal-body" style="padding: 20px;">
+                <p style="margin-bottom: 20px; color: #666;">
+                    Request access to post in <strong># @CategoryName</strong>. Your request will be reviewed by administrators.
+                </p>
+
+                @if (!string.IsNullOrEmpty(StatusMessage))
+                {
+                    <div class="@(IsSuccess ? "success-msg" : "error-msg")" style="margin-bottom: 15px;">
+                        @StatusMessage
+                    </div>
+                }
+
+                @if (ExistingRequest != null)
+                {
+                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <strong>Previous Request</strong>
+                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; background: @(ExistingRequest.Status == "Approved" ? "#d4edda" : ExistingRequest.Status == "Rejected" ? "#f8d7da" : "#fff3cd"); color: @(ExistingRequest.Status == "Approved" ? "#155724" : ExistingRequest.Status == "Rejected" ? "#721c24" : "#856404");">
+                                @ExistingRequest.Status
+                            </span>
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            Submitted: @ExistingRequest.DateCreated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                        </div>
+                        @if (ExistingRequest.Status == "Rejected" && ExistingRequest.DateUpdated != DateTime.MinValue)
+                        {
+                            var canResubmitDate = ExistingRequest.DateUpdated.AddDays(7);
+                            var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
+                            
+                            <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                                Rejected: @ExistingRequest.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                            </div>
+                            
+                            @if (daysRemaining > 0)
+                            {
+                                <div style="padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 13px; color: #856404;">
+                                    <strong>&#9200; Cooldown Period</strong><br/>
+                                    You can resubmit on: <strong>@canResubmitDate.ToString("MMM dd, yyyy 'at' h:mm tt")</strong><br/>
+                                    <span style="font-size: 12px;">(@Math.Ceiling(daysRemaining) day(s) remaining)</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div style="padding: 10px; background: #d4edda; border-left: 3px solid #28a745; border-radius: 4px; font-size: 13px; color: #155724;">
+                                    <strong>&#10004; You can now resubmit your request</strong>
+                                </div>
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(ExistingRequest.Reason))
+                        {
+                            <div style="font-size: 13px; color: #555; margin-top: 8px;">
+                                <strong>Previous Reason:</strong> @ExistingRequest.Reason
+                            </div>
+                        }
+                    </div>
+                }
+
+                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault>
+                    <div class="settings-form-group">
+                        <label>Reason for Request</label>
+                        <textarea rows="5" 
+                                  @bind="RequestReason" 
+                                  placeholder="Explain why you need access to this category..."
+                                  style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"
+                                  disabled="@IsSubmitting"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                        <button type="button" class="login-btn secondary" @onclick="OnClose" disabled="@IsSubmitting">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="login-btn" 
+                                disabled="@(IsSubmitting || string.IsNullOrWhiteSpace(RequestReason) || !CanSubmit)">
+                            @(IsSubmitting ? "Submitting..." : (ExistingRequest?.Status == "Rejected" && CanResubmit ? "Resubmit Request" : "Submit Request"))
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool ShowModal { get; set; }
+    [Parameter] public string CategoryName { get; set; } = string.Empty;
+    [Parameter] public int CategoryId { get; set; }
+    [Parameter] public CategoryAccessRequests? ExistingRequest { get; set; }
+    [Parameter] public string StatusMessage { get; set; } = string.Empty;
+    [Parameter] public bool IsSuccess { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(int CategoryId, string Reason)> OnSubmit { get; set; }
+
+    private string RequestReason { get; set; } = string.Empty;
+    private bool IsSubmitting { get; set; }
+
+    private bool CanSubmit
+    {
+        get
+        {
+            if (ExistingRequest == null) return true;
+            
+            if (ExistingRequest.Status == "Pending") return false;
+            if (ExistingRequest.Status == "Approved") return false;
+            
+            if (ExistingRequest.Status == "Rejected")
+            {
+                return CanResubmit;
+            }
+            
+            return true;
+        }
+    }
+
+    private bool CanResubmit
+    {
+        get
+        {
+            if (ExistingRequest == null || ExistingRequest.Status != "Rejected") 
+                return false;
+                
+            var canResubmitDate = ExistingRequest.DateUpdated.AddDays(7);
+            return DateTime.Now >= canResubmitDate;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Reset reason when modal opens with new category
+        if (ShowModal && string.IsNullOrEmpty(RequestReason))
+        {
+            RequestReason = string.Empty;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(RequestReason) || !CanSubmit)
+            return;
+
+        IsSubmitting = true;
+        StateHasChanged();
+
+        try
+        {
+            await OnSubmit.InvokeAsync((CategoryId, RequestReason));
+            RequestReason = string.Empty;
+        }
+        finally
+        {
+            IsSubmitting = false;
+            StateHasChanged();
+        }
+    }
+}

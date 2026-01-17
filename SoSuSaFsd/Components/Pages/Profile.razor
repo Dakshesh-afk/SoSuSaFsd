@@ -1,18 +1,9 @@
 @page "/profile/{username}"
 @rendermode InteractiveServer
-@using SoSuSaFsd.Data
-@using SoSuSaFsd.Domain
-@using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
-@inject IDbContextFactory<SoSuSaFsdContext> DbFactory
-@inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthStateProvider
-@inject IServiceScopeFactory ScopeFactory
-@inject IJSRuntime JSRuntime
-@inject SoSuSaFsd.Services.IPostService PostService
+@inherits ProfileBase
+@using SoSuSaFsd.Components.Pages.ProfileComponents
 
-<PageTitle>@PageTitle</PageTitle>
+<PageTitle>@State.PageTitle</PageTitle>
 <link rel="stylesheet" href="/styles/category-details.css" />
 
 <header class="site-header">
@@ -27,10 +18,10 @@
 
 <div class="main-layout">
     <main class="feed-area">
-        @if (ProfileUser == null)
+        @if (State.ProfileUser == null)
         {
             <div class="loading-state">
-                @if (IsLoading)
+                @if (State.IsLoading)
                 {
                     <span>Loading...</span>
                 }
@@ -42,362 +33,38 @@
         }
         else
         {
-            <div class="category-header-card">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    @* UPDATED: Added background-size: cover; background-position: center; border-radius: 50%; to match post avatar styling *@
-                    <div class="profile-avatar-large" style="background-image: url('@(ProfileUser.ProfileImage ?? "")'); margin: 0 auto 15px; width: 120px; height: 120px; background-size: cover; background-position: center; border-radius: 50%;"></div>
-                    <h1 class="page-title" style="margin-bottom: 5px;">@(ProfileUser.DisplayName ?? ProfileUser.UserName)</h1>
-                    <p style="color: #666; font-size: 16px; margin: 0 0 15px 0;">@@@ProfileUser.UserName</p>
-                </div>
-
-                <div class="profile-stats" style="display: flex; justify-content: center; gap: 30px; margin-bottom: 12px;">
-                    <div class="stat-item" style="text-align: center;">
-                        <b style="font-size: 24px;">@UserPosts.Count</b>
-                        <span style="display: block; color: #666; font-size: 13px;">Posts</span>
-                    </div>
-                    <div class="stat-item" style="text-align: center;">
-                        <b style="font-size: 24px;">@FollowerCount</b>
-                        <span style="display: block; color: #666; font-size: 13px;">Followers</span>
-                    </div>
-                </div>
-
-                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
-                    <button class="login-btn" @onclick="ReportUserAsync" disabled="@(ProfileUser == null || CurrentUser == null)">Report User</button>
-                </div>
-
-                @if (!string.IsNullOrEmpty(reportStatusMessage))
-                {
-                    <div class="@(reportStatusMessage.Contains("Error") ? "error-msg" : "success-msg")" style="margin-bottom:12px; text-align:center;">
-                        @reportStatusMessage
-                    </div>
-                }
-
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="alert alert-error">
-                        <strong>Error:</strong> @errorMessage
-                    </div>
-                }
-            </div>
+            <ProfileHeader 
+                ProfileImage="@State.ProfileUser.ProfileImage"
+                DisplayName="@(State.ProfileUser.DisplayName ?? State.ProfileUser.UserName)"
+                Username="@State.ProfileUser.UserName"
+                PostCount="@State.UserPosts.Count"
+                FollowerCount="@State.FollowerCount"
+                IsReportDisabled="@State.IsReportDisabled"
+                ReportStatusMessage="@State.ReportStatusMessage"
+                ErrorMessage="@State.ErrorMessage"
+                OnReportUser="@ReportUserAsync" />
 
             <hr />
 
-            <h2 style="margin-bottom: 20px;">Posts by @(ProfileUser.DisplayName ?? ProfileUser.UserName)</h2>
-
-            @if (UserPosts != null && UserPosts.Any())
-            {
-                @foreach (var post in UserPosts)
-                {
-                    <div class="post-card">
-                        <div class="post-header">
-                            <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")'); width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0;"></div>
-                            <div>
-                                <b>@(post.User?.UserName ?? "User")</b>
-                                <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
-                                <div style="font-size: 12px; color: #999; margin-top: 4px;"><a href="/category/@post.CategoryId" style="color: #0066ff; text-decoration: none;">#@(post.Category?.CategoryName ?? "Unknown")</a></div>
-                            </div>
-                        </div>
-                        <div class="post-content">@post.Content</div>
-                        @if (post.Media != null && post.Media.Any())
-                        {
-                            @RenderCarousel(post)
-                        }
-                        <div class="post-actions">
-                            <button class="action-btn" @onclick="() => ToggleLike(post.Id)">
-                                @RenderLikeButton(post)
-                            </button>
-                            <button class="action-btn">
-                                <i class="far fa-comment"></i> Comment
-                            </button>
-                            <button class="action-btn" @onclick="@(() => OpenReportModal(post.Id))" title="Report Post">
-                                <i class="far fa-flag"></i> Report
-                            </button>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="empty-state center">
-                    @(ProfileUser.DisplayName ?? ProfileUser.UserName) hasn't posted yet.
-                </div>
-            }
+            <ProfilePostsFeed 
+                Posts="@State.UserPosts"
+                ProfileUserName="@(State.ProfileUser.DisplayName ?? State.ProfileUser.UserName)"
+                CurrentUser="@State.CurrentUser"
+                ShowComments="@State.ShowComments"
+                PostComments="@State.PostComments"
+                CommentDrafts="@State.CommentDrafts"
+                CarouselIndices="@State.CarouselIndices"
+                ActiveReplyBoxes="@State.ActiveReplyBoxes"
+                ReplyDrafts="@State.ReplyDrafts"
+                OnLike="@((postId) => ToggleLike(postId))"
+                OnComment="@((postId) => ToggleComments(postId))"
+                OnReport="@OpenReportModal"
+                OnUpdateDraft="@((args) => UpdateCommentDraft(args.PostId, args.Content))"
+                OnSubmitComment="@SubmitComment"
+                OnCarouselChange="@((args) => State.CarouselIndices[args.PostId] = args.Index)"
+                OnToggleReply="@ToggleReplyBox"
+                OnUpdateReplyDraft="@((args) => UpdateReplyDraft(args.ParentCommentId, args.Content))"
+                OnSubmitReply="@((args) => SubmitReply(args.PostId, args.ParentCommentId))" />
         }
     </main>
 </div>
-
-@code {
-    [Parameter] public string? Username { get; set; }
-
-    private Users? ProfileUser;
-    private List<Posts> UserPosts = new();
-    private Users? CurrentUser;
-
-    private bool IsLoading = true;
-    private string PageTitle = "User Profile";
-    private string errorMessage = "";
-    private int FollowerCount = 0;
-    private Dictionary<int, int> _carouselIndices = new();
-    private string reportStatusMessage = "";
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadProfileData();
-    }
-
-    private async Task LoadProfileData()
-    {
-        IsLoading = true;
-        errorMessage = "";
-        ProfileUser = null;
-        UserPosts = new();
-
-        try
-        {
-            // Get current authenticated user
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            if (user.Identity?.IsAuthenticated == true)
-            {
-                var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (!string.IsNullOrEmpty(userId))
-                {
-                    using var scope = ScopeFactory.CreateScope();
-                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
-                    CurrentUser = await userManager.FindByIdAsync(userId);
-                }
-            }
-
-            // User lookup still needs direct access (no UserService yet)
-            if (!string.IsNullOrEmpty(Username))
-            {
-                using var context = DbFactory.CreateDbContext();
-                ProfileUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
-
-                if (ProfileUser != null)
-                {
-                    PageTitle = $"{ProfileUser.DisplayName ?? ProfileUser.UserName} - Profile";
-
-                    // Use PostService
-                    UserPosts = await PostService.GetUserPostsAsync(ProfileUser.Id);
-
-                    // Follower count calculation still needs direct access
-                    FollowerCount = await context.CategoryFollows
-                        .Where(cf => context.Categories
-                            .Where(c => c.CreatedBy == ProfileUser.Id)
-                            .Select(c => c.Id)
-                            .Contains(cf.CategoryId))
-                        .Select(cf => cf.UserId)
-                        .Distinct()
-                        .CountAsync();
-                }
-                else
-                {
-                    errorMessage = $"User '{Username}' not found.";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMessage = "Error loading profile: " + ex.Message;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task ReportUserAsync()
-    {
-        if (ProfileUser == null || CurrentUser == null)
-            return;
-
-        try
-        {
-            var promptText = $"Report @{ProfileUser.UserName}. Please enter a brief reason:";
-            var reason = await JSRuntime.InvokeAsync<string>("prompt", promptText);
-
-            if (string.IsNullOrWhiteSpace(reason))
-            {
-                reportStatusMessage = "Report cancelled.";
-                return;
-            }
-
-            using var context = DbFactory.CreateDbContext();
-            var existing = await context.Reports.FirstOrDefaultAsync(r =>
-                r.TargetUserID == ProfileUser.Id && r.ReporterID == CurrentUser.Id);
-
-            if (existing != null)
-            {
-                reportStatusMessage = "You have already reported this user.";
-                return;
-            }
-
-            var newReport = new Reports
-            {
-                TargetUserID = ProfileUser.Id,
-                ReporterID = CurrentUser.Id,
-                Reason = reason,
-                Status = "Pending",
-                DateCreated = DateTime.Now
-            };
-
-            context.Reports.Add(newReport);
-            await context.SaveChangesAsync();
-
-            reportStatusMessage = "Report submitted successfully.";
-        }
-        catch (Exception ex)
-        {
-            reportStatusMessage = "Error: " + ex.Message;
-        }
-    }
-
-    private void OpenReportModal(int postId)
-    {
-        Console.WriteLine($"Report post {postId}");
-    }
-
-    private async Task ToggleLike(int postId)
-    {
-        if (CurrentUser == null)
-        {
-            Navigation.NavigateTo("/");
-            return;
-        }
-
-        try
-        {
-            // Use PostService
-            await PostService.ToggleLikeAsync(postId, CurrentUser.Id);
-
-            // Update local state
-            var post = UserPosts.FirstOrDefault(p => p.Id == postId);
-
-            if (post != null)
-            {
-                // Reload likes for this post
-                using var context = DbFactory.CreateDbContext();
-                post.Likes = await context.PostLikes.Where(l => l.PostID == postId).ToListAsync();
-            }
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error toggling like: {ex.Message}");
-        }
-    }
-
-    private int GetCurrentIndex(int postId)
-    {
-        if (!_carouselIndices.ContainsKey(postId))
-        {
-            _carouselIndices[postId] = 0;
-        }
-        return _carouselIndices[postId];
-    }
-
-    private void NextSlide(int postId, int totalCount)
-    {
-        var currentIndex = GetCurrentIndex(postId);
-        _carouselIndices[postId] = (currentIndex + 1) % totalCount;
-    }
-
-    private void PrevSlide(int postId, int totalCount)
-    {
-        var currentIndex = GetCurrentIndex(postId);
-        _carouselIndices[postId] = (currentIndex - 1 + totalCount) % totalCount;
-    }
-
-    private RenderFragment RenderCarousel(Posts post)
-    {
-        return builder =>
-        {
-            var mediaList = post.Media.ToList();
-            var totalMedia = mediaList.Count;
-            var currentIndex = GetCurrentIndex(post.Id);
-            var activeMedia = mediaList[currentIndex];
-
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "carousel-container");
-
-            if (totalMedia > 1)
-            {
-                builder.OpenElement(2, "button");
-                builder.AddAttribute(3, "class", "carousel-btn prev");
-                builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => PrevSlide(post.Id, totalMedia)));
-                builder.AddContent(5, "?");
-                builder.CloseElement();
-            }
-
-            if (activeMedia.MediaType == "Video")
-            {
-                builder.OpenElement(6, "video");
-                builder.AddAttribute(7, "class", "carousel-media");
-                builder.AddAttribute(8, "controls", true);
-                builder.AddAttribute(9, "src", activeMedia.MediaPath);
-                builder.CloseElement();
-            }
-            else
-            {
-                builder.OpenElement(11, "img");
-                builder.AddAttribute(12, "class", "carousel-media");
-                builder.AddAttribute(13, "src", activeMedia.MediaPath);
-                builder.AddAttribute(14, "alt", "Post Media");
-                builder.CloseElement();
-            }
-
-            if (totalMedia > 1)
-            {
-                builder.OpenElement(16, "button");
-                builder.AddAttribute(17, "class", "carousel-btn next");
-                builder.AddAttribute(18, "onclick", EventCallback.Factory.Create(this, () => NextSlide(post.Id, totalMedia)));
-                builder.AddContent(19, "?");
-                builder.CloseElement();
-
-                builder.OpenElement(20, "div");
-                builder.AddAttribute(21, "class", "carousel-counter");
-                builder.AddContent(22, $"{currentIndex + 1} / {totalMedia}");
-                builder.CloseElement();
-            }
-
-            builder.CloseElement();
-        };
-    }
-
-    private RenderFragment RenderLikeButton(Posts post)
-    {
-        return builder =>
-        {
-            var isLiked = CurrentUser != null && post.Likes.Any(l => l.UserID == CurrentUser.Id);
-            var likeCount = post.Likes.Count;
-
-            if (isLiked)
-            {
-                builder.OpenElement(0, "i");
-                builder.AddAttribute(1, "class", "fas fa-heart");
-                builder.AddAttribute(2, "style", "color: #e0245e; margin-right: 5px;");
-                builder.CloseElement();
-            }
-            else
-            {
-                builder.OpenElement(3, "i");
-                builder.AddAttribute(4, "class", "far fa-heart");
-                builder.AddAttribute(5, "style", "margin-right: 5px;");
-                builder.CloseElement();
-            }
-
-            builder.OpenElement(6, "span");
-            if (likeCount > 0)
-            {
-                builder.AddContent(7, likeCount);
-            }
-            else
-            {
-                builder.AddContent(7, "Like");
-            }
-            builder.CloseElement();
-        };
-    }
-}

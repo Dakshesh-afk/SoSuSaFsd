@@ -1,213 +1,146 @@
 @using SoSuSaFsd.Domain
+@using SoSuSaFsd.Components.Common
 
-@* ProfilePostsFeed - User's posts feed *@
+@* ProfilePostsFeed - Displays posts from a user's profile using SharedPostFeed *@
 
-<h2 style="margin-bottom: 20px;">Posts by @DisplayName</h2>
+<h2 style="margin-bottom: 20px;">Posts by @(ProfileUserName ?? "User")</h2>
 
-@if (UserPosts != null && UserPosts.Any())
+@if (Posts != null && Posts.Any())
 {
-    @foreach (var post in UserPosts)
-    {
-        <div class="post-card">
-            <div class="post-header">
-                <div class="post-avatar" 
-                     style="background-image: url('@(post.User?.ProfileImage ?? "")'); width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0;"></div>
-                <div>
-                    <b>@(post.User?.UserName ?? "User")</b>
-                    <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
-                    <div style="font-size: 12px; color: #999; margin-top: 4px;">
-                        <a href="/category/@post.CategoryId" style="color: #0066ff; text-decoration: none;">
-                            #@(post.Category?.CategoryName ?? "Unknown")
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="post-content">@post.Content</div>
-            @if (post.Media != null && post.Media.Any())
-            {
-                @RenderCarousel(post)
-            }
-            <div class="post-actions">
-                <button class="action-btn" @onclick="@(() => OnLike.InvokeAsync(post.Id))">
-                    @RenderLikeButton(post)
-                </button>
-                <button class="action-btn">
-                    <i class="far fa-comment"></i> Comment
-                </button>
-                <button class="action-btn" @onclick="@(() => OnReport.InvokeAsync(post.Id))" title="Report Post">
-                    <i class="far fa-flag"></i> Report
-                </button>
-            </div>
-        </div>
-    }
+    <SharedPostFeed 
+        Posts="@Posts"
+        CurrentUser="@CurrentUser"
+        EmptyStateTitle=""
+        EmptyStateMessage=""
+        ShowComments="@ShowComments"
+        PostComments="@PostComments"
+        CommentDrafts="@CommentDrafts"
+        CarouselIndices="@CarouselIndices"
+        ActiveReplyBoxes="@ActiveReplyBoxes"
+        ReplyDrafts="@ReplyDrafts"
+        OnLike="@OnLike"
+        OnComment="@OnComment"
+        OnReport="@OnReport"
+        OnUpdateDraft="@OnUpdateDraft"
+        OnSubmitComment="@OnSubmitComment"
+        OnCarouselChange="@OnCarouselChange"
+        OnToggleReply="@OnToggleReply"
+        OnUpdateReplyDraft="@OnUpdateReplyDraft"
+        OnSubmitReply="@OnSubmitReply" />
 }
 else
 {
     <div class="empty-state center">
-        @DisplayName hasn't posted yet.
+        @(ProfileUserName ?? "User") hasn't posted yet.
     </div>
 }
 
 @code {
     /// <summary>
-    /// Display name of the profile user
+    /// Posts to display
     /// </summary>
     [Parameter]
-    public string DisplayName { get; set; } = string.Empty;
+    public List<Posts> Posts { get; set; } = new();
 
     /// <summary>
-    /// List of posts by the user
+    /// Profile user's display name
     /// </summary>
     [Parameter]
-    public List<Posts> UserPosts { get; set; } = new();
+    public string? ProfileUserName { get; set; }
 
     /// <summary>
-    /// Current logged-in user ID
+    /// Currently logged-in user
     /// </summary>
     [Parameter]
-    public string? CurrentUserId { get; set; }
+    public Users? CurrentUser { get; set; }
 
     /// <summary>
-    /// Dictionary of carousel indices for posts with media
+    /// Tracks which posts have comments visible
+    /// </summary>
+    [Parameter]
+    public Dictionary<int, bool> ShowComments { get; set; } = new();
+
+    /// <summary>
+    /// Comments for each post
+    /// </summary>
+    [Parameter]
+    public Dictionary<int, List<Comments>> PostComments { get; set; } = new();
+
+    /// <summary>
+    /// Comment drafts
+    /// </summary>
+    [Parameter]
+    public Dictionary<int, string> CommentDrafts { get; set; } = new();
+
+    /// <summary>
+    /// Carousel indices
     /// </summary>
     [Parameter]
     public Dictionary<int, int> CarouselIndices { get; set; } = new();
 
     /// <summary>
-    /// Callback when user likes a post
+    /// Active reply boxes
+    /// </summary>
+    [Parameter]
+    public Dictionary<int, bool> ActiveReplyBoxes { get; set; } = new();
+
+    /// <summary>
+    /// Reply drafts
+    /// </summary>
+    [Parameter]
+    public Dictionary<int, string> ReplyDrafts { get; set; } = new();
+
+    /// <summary>
+    /// Callback when post is liked
     /// </summary>
     [Parameter]
     public EventCallback<int> OnLike { get; set; }
 
     /// <summary>
-    /// Callback when user reports a post
+    /// Callback when comments are toggled
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnComment { get; set; }
+
+    /// <summary>
+    /// Callback when post is reported
     /// </summary>
     [Parameter]
     public EventCallback<int> OnReport { get; set; }
 
     /// <summary>
+    /// Callback when comment draft is updated
+    /// </summary>
+    [Parameter]
+    public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+
+    /// <summary>
+    /// Callback when comment is submitted
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnSubmitComment { get; set; }
+
+    /// <summary>
     /// Callback when carousel changes
     /// </summary>
     [Parameter]
-    public EventCallback<CarouselEventArgs> OnCarouselChange { get; set; }
-
-    private int GetCurrentIndex(int postId)
-    {
-        if (!CarouselIndices.ContainsKey(postId))
-        {
-            return 0;
-        }
-        return CarouselIndices[postId];
-    }
-
-    private void NextSlide(int postId, int totalCount)
-    {
-        OnCarouselChange.InvokeAsync(new CarouselEventArgs { PostId = postId, Direction = 1, TotalCount = totalCount });
-    }
-
-    private void PrevSlide(int postId, int totalCount)
-    {
-        OnCarouselChange.InvokeAsync(new CarouselEventArgs { PostId = postId, Direction = -1, TotalCount = totalCount });
-    }
-
-    private RenderFragment RenderCarousel(Posts post)
-    {
-        return builder =>
-        {
-            var mediaList = post.Media.ToList();
-            var totalMedia = mediaList.Count;
-            var currentIndex = GetCurrentIndex(post.Id);
-            var activeMedia = mediaList[currentIndex];
-
-            builder.OpenElement(0, "div");
-            builder.AddAttribute(1, "class", "carousel-container");
-
-            if (totalMedia > 1)
-            {
-                builder.OpenElement(2, "button");
-                builder.AddAttribute(3, "class", "carousel-btn prev");
-                builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => PrevSlide(post.Id, totalMedia)));
-                builder.AddContent(5, "?");
-                builder.CloseElement();
-            }
-
-            if (activeMedia.MediaType == "Video")
-            {
-                builder.OpenElement(6, "video");
-                builder.AddAttribute(7, "class", "carousel-media");
-                builder.AddAttribute(8, "controls", true);
-                builder.AddAttribute(9, "src", activeMedia.MediaPath);
-                builder.CloseElement();
-            }
-            else
-            {
-                builder.OpenElement(11, "img");
-                builder.AddAttribute(12, "class", "carousel-media");
-                builder.AddAttribute(13, "src", activeMedia.MediaPath);
-                builder.AddAttribute(14, "alt", "Post Media");
-                builder.CloseElement();
-            }
-
-            if (totalMedia > 1)
-            {
-                builder.OpenElement(16, "button");
-                builder.AddAttribute(17, "class", "carousel-btn next");
-                builder.AddAttribute(18, "onclick", EventCallback.Factory.Create(this, () => NextSlide(post.Id, totalMedia)));
-                builder.AddContent(19, "?");
-                builder.CloseElement();
-
-                builder.OpenElement(20, "div");
-                builder.AddAttribute(21, "class", "carousel-counter");
-                builder.AddContent(22, $"{currentIndex + 1} / {totalMedia}");
-                builder.CloseElement();
-            }
-
-            builder.CloseElement();
-        };
-    }
-
-    private RenderFragment RenderLikeButton(Posts post)
-    {
-        return builder =>
-        {
-            var isLiked = !string.IsNullOrEmpty(CurrentUserId) && post.Likes.Any(l => l.UserID == CurrentUserId);
-            var likeCount = post.Likes.Count;
-
-            if (isLiked)
-            {
-                builder.OpenElement(0, "i");
-                builder.AddAttribute(1, "class", "fas fa-heart");
-                builder.AddAttribute(2, "style", "color: #e0245e; margin-right: 5px;");
-                builder.CloseElement();
-            }
-            else
-            {
-                builder.OpenElement(3, "i");
-                builder.AddAttribute(4, "class", "far fa-heart");
-                builder.AddAttribute(5, "style", "margin-right: 5px;");
-                builder.CloseElement();
-            }
-
-            builder.OpenElement(6, "span");
-            if (likeCount > 0)
-            {
-                builder.AddContent(7, likeCount);
-            }
-            else
-            {
-                builder.AddContent(7, "Like");
-            }
-            builder.CloseElement();
-        };
-    }
+    public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
 
     /// <summary>
-    /// Event args for carousel changes
+    /// Callback when reply box is toggled
     /// </summary>
-    public class CarouselEventArgs
-    {
-        public int PostId { get; set; }
-        public int Direction { get; set; }
-        public int TotalCount { get; set; }
-    }
+    [Parameter]
+    public EventCallback<int> OnToggleReply { get; set; }
+
+    /// <summary>
+    /// Callback when reply draft is updated
+    /// </summary>
+    [Parameter]
+    public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+
+    /// <summary>
+    /// Callback when reply is submitted
+    /// </summary>
+    [Parameter]
+    public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
 }

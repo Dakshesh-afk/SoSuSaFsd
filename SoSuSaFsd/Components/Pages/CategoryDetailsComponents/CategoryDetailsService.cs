@@ -78,6 +78,13 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                     state.IsFollowing = await _categoryService.IsUserFollowingAsync(userId, state.CurrentCategory.Id);
                     state.HasApprovedAccess = await _categoryService.HasApprovedAccessAsync(userId, state.CurrentCategory.Id);
                     state.HasPendingRequest = await _categoryService.HasPendingAccessRequestAsync(userId, state.CurrentCategory.Id);
+                    
+                    // Load existing access request for this category
+                    using var context = _contextFactory.CreateDbContext();
+                    state.ExistingAccessRequest = await context.CategoryAccessRequests
+                        .Include(r => r.Category)
+                        .FirstOrDefaultAsync(r => r.UserId == userId && r.CategoryId == state.CurrentCategory.Id);
+                    
                     state.RecentCategories = await _categoryService.GetRecentCategoriesAsync(userId, 5);
                     state.FollowedCategories = await _categoryService.GetFollowedCategoriesAsync(userId);
                 }

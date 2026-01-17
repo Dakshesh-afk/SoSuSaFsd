@@ -90,20 +90,26 @@
         <form @onsubmit="HandleAccessRequestSubmit" @onsubmit:preventDefault>
             <div class="settings-form-group">
                 <label>Select Category</label>
-                <select @bind="SelectedCategoryId" 
+                <select value="@SelectedCategoryId" 
+                        @onchange="@((ChangeEventArgs e) => HandleCategoryChange(e))"
                         class="settings-form-group" 
                         style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
                     <option value="0">-- Select a verified category --</option>
                     @foreach (var cat in VerifiedCategories)
                     {
-                        <option value="@cat.Id"># @cat.CategoryName</option>
+                        @* Check if user already has a pending or approved request for this category *@
+                        var hasRequest = UserAccessRequests.Any(r => r.CategoryId == cat.Id && (r.Status == "Pending" || r.Status == "Approved"));
+                        <option value="@cat.Id" disabled="@hasRequest">
+                            # @cat.CategoryName @(hasRequest ? "(Already requested)" : "")
+                        </option>
                     }
                 </select>
             </div>
             <div class="settings-form-group">
                 <label>Reason for Request</label>
                 <textarea rows="5" 
-                          @bind="AccessReason" 
+                          value="@AccessReason"
+                          @oninput="@((ChangeEventArgs e) => HandleReasonChange(e))"
                           placeholder="Explain why you need access..." 
                           style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
             </div>
@@ -124,13 +130,46 @@
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                             <div>
                                 <strong># @request.Category?.CategoryName</strong>
-                                <div style="font-size: 12px; color: #666; margin-top: 5px;">@request.DateCreated.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                    Submitted: @request.DateCreated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                </div>
+                                @if (request.Status == "Rejected" && request.DateUpdated != DateTime.MinValue)
+                                {
+                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">
+                                        Rejected: @request.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                    </div>
+                                }
+                                @if (request.Status == "Approved" && request.DateUpdated != DateTime.MinValue && request.DateUpdated != request.DateCreated)
+                                {
+                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">
+                                        Approved: @request.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                    </div>
+                                }
                             </div>
                             <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; background: @(request.Status == "Approved" ? "#d4edda" : request.Status == "Rejected" ? "#f8d7da" : "#fff3cd"); color: @(request.Status == "Approved" ? "#155724" : request.Status == "Rejected" ? "#721c24" : "#856404");">@request.Status</span>
                         </div>
                         @if (!string.IsNullOrEmpty(request.Reason))
                         {
                             <div style="font-size: 14px; color: #555; margin-top: 8px;"><strong>Reason:</strong> @request.Reason</div>
+                        }
+                        @if (request.Status == "Rejected" && request.DateUpdated != DateTime.MinValue)
+                        {
+                            var canResubmitDate = request.DateUpdated.AddDays(7);
+                            var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
+                            
+                            @if (daysRemaining > 0)
+                            {
+                                <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 12px; color: #856404;">
+                                    <strong>&#9200; Can resubmit on:</strong> @canResubmitDate.ToString("MMM dd, yyyy 'at' h:mm tt")<br/>
+                                    <span style="font-size: 11px;">(@Math.Ceiling(daysRemaining) day(s) remaining)</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div style="margin-top: 10px; padding: 8px; background: #d4edda; border-left: 3px solid #28a745; border-radius: 4px; font-size: 12px; color: #155724;">
+                                    <strong>&#10004; You can now resubmit this request</strong>
+                                </div>
+                            }
                         }
                     </div>
                 }
@@ -260,6 +299,21 @@
     private async Task HandleImageChange(InputFileChangeEventArgs e)
     {
         await OnImageChange.InvokeAsync(e);
+    }
+
+    private async Task HandleCategoryChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int categoryId))
+        {
+            SelectedCategoryId = categoryId;
+            await OnSelectedCategoryChanged.InvokeAsync(categoryId);
+        }
+    }
+
+    private async Task HandleReasonChange(ChangeEventArgs e)
+    {
+        AccessReason = e.Value?.ToString() ?? string.Empty;
+        await OnAccessReasonChanged.InvokeAsync(AccessReason);
     }
 
     /// <summary>

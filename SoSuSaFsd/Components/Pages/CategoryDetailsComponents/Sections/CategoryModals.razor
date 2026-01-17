@@ -48,21 +48,15 @@
 }
 
 @* REQUEST ACCESS MODAL *@
-@if (State.ShowRequestModal)
-{
-    <div class="modal">
-        <div class="modal-content">
-            <span class="modal-close" @onclick="@(() => State.ShowRequestModal = false)">×</span>
-            <h2>Request Access</h2>
-            <div class="modal-subtitle">Requesting permission to post in verified category <b>#@State.CurrentCategory?.CategoryName</b></div>
-            <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="State.RequestReason"></textarea>
-            <div class="modal-actions">
-                <button class="login-btn secondary" @onclick="@(() => State.ShowRequestModal = false)">Cancel</button>
-                <button class="login-btn" @onclick="OnSubmitRequest">Submit Request</button>
-            </div>
-        </div>
-    </div>
-}
+<AccessRequestModal 
+    ShowModal="@State.ShowRequestModal"
+    CategoryName="@(State.CurrentCategory?.CategoryName ?? "")"
+    CategoryId="@(State.CurrentCategory?.Id ?? 0)"
+    ExistingRequest="@State.ExistingAccessRequest"
+    StatusMessage="@State.ErrorMessage"
+    IsSuccess="false"
+    OnClose="@(() => State.ShowRequestModal = false)"
+    OnSubmit="@HandleAccessRequestSubmit" />
 
 @* REPORT MODAL *@
 @if (State.ShowReportModal)
@@ -122,4 +116,10 @@
     [Parameter] public EventCallback OnSubmitRequest { get; set; }
     [Parameter] public EventCallback OnSubmitReport { get; set; }
     [Parameter] public EventCallback OnNavigateToCreate { get; set; }
+
+    private async Task HandleAccessRequestSubmit((int CategoryId, string Reason) args)
+    {
+        State.RequestReason = args.Reason;
+        await OnSubmitRequest.InvokeAsync();
+    }
 }

@@ -29,6 +29,7 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
         public bool IsFollowing { get; set; } = false;
         public bool HasApprovedAccess { get; set; } = false;
         public bool HasPendingRequest { get; set; } = false;
+        public CategoryAccessRequests? ExistingAccessRequest { get; set; }
 
         // ========== MODAL VISIBILITY ==========
         public bool ShowPostModal { get; set; } = false;

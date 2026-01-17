@@ -52,6 +52,8 @@ try
         SoSuSaFsd.Components.Pages.HomeComponents.HomePageService>();
     builder.Services.AddScoped<SoSuSaFsd.Components.Pages.CategoryDetailsComponents.ICategoryDetailsService,
         SoSuSaFsd.Components.Pages.CategoryDetailsComponents.CategoryDetailsService>();
+    builder.Services.AddScoped<SoSuSaFsd.Components.Pages.ProfileComponents.IProfileService,
+        SoSuSaFsd.Components.Pages.ProfileComponents.ProfileService>();
 
     // ========== SIGNALR ==========
     builder.Services.Configure<HubOptions>(options =>

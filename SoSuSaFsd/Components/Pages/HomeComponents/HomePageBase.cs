@@ -392,42 +392,92 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
 
             if (State.SelectedCategoryId == 0)
             {
-                State.ShowNotification("Please select a category.", "error");
+                State.AccessRequestMessage = "Please select a category.";
+                State.IsAccessRequestSuccess = false;
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(State.AccessRequestReason))
             {
-                State.ShowNotification("Please provide a reason for the request.", "error");
+                State.AccessRequestMessage = "Please provide a reason for the request.";
+                State.IsAccessRequestSuccess = false;
                 return;
             }
 
             try
             {
                 using var context = DbFactory.CreateDbContext();
+                
+                // Check for ANY existing request (Pending, Approved, or recently Rejected)
                 var existingRequest = await context.CategoryAccessRequests
                     .FirstOrDefaultAsync(r => r.UserId == State.CurrentUser!.Id && 
                         r.CategoryId == State.SelectedCategoryId);
 
                 if (existingRequest != null)
                 {
-                    State.ShowNotification("You have already submitted a request for this category.", "error");
-                    return;
+                    if (existingRequest.Status == "Pending")
+                    {
+                        State.AccessRequestMessage = "You already have a pending request for this category.";
+                        State.IsAccessRequestSuccess = false;
+                        return;
+                    }
+                    else if (existingRequest.Status == "Approved")
+                    {
+                        State.AccessRequestMessage = "You already have access to this category.";
+                        State.IsAccessRequestSuccess = false;
+                        return;
+                    }
+                    else if (existingRequest.Status == "Rejected")
+                    {
+                        // Allow resubmitting rejected requests after 7 days
+                        var canResubmitDate = existingRequest.DateUpdated.AddDays(7);
+                        var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
+                        
+                        if (daysRemaining > 0)
+                        {
+                            State.AccessRequestMessage = $"Your previous request was rejected on {existingRequest.DateUpdated:MMM dd, yyyy 'at' h:mm tt}. You can resubmit on {canResubmitDate:MMM dd, yyyy 'at' h:mm tt} ({Math.Ceiling(daysRemaining)} day(s) remaining).";
+                            State.IsAccessRequestSuccess = false;
+                            return;
+                        }
+                        
+                        // Update existing rejected request to pending with new reason
+                        existingRequest.Reason = State.AccessRequestReason;
+                        existingRequest.Status = "Pending";
+                        existingRequest.DateUpdated = DateTime.Now;
+                        existingRequest.UpdatedBy = null; // Clear previous admin action
+                        
+                        await context.SaveChangesAsync();
+                        
+                        State.AccessRequestMessage = "Request resubmitted successfully!";
+                        State.IsAccessRequestSuccess = true;
+                        State.SelectedCategoryId = 0;
+                        State.AccessRequestReason = "";
+                        StateHasChanged();
+
+                        await LoadUserAndCategories();
+                        return;
+                    }
                 }
 
+                // Create new request
                 var newRequest = new CategoryAccessRequests
                 {
                     UserId = State.CurrentUser!.Id,
                     CategoryId = State.SelectedCategoryId,
                     Reason = State.AccessRequestReason,
                     Status = "Pending",
-                    DateCreated = DateTime.Now
+                    DateCreated = DateTime.Now,
+                    DateUpdated = DateTime.Now,
+                    CreatedBy = State.CurrentUser.Id
                 };
 
-                await CategoryService.CreateAccessRequestAsync(newRequest);
+                context.CategoryAccessRequests.Add(newRequest);
+                await context.SaveChangesAsync();
 
                 State.AccessRequestMessage = "Request submitted successfully!";
                 State.IsAccessRequestSuccess = true;
+                State.SelectedCategoryId = 0;
+                State.AccessRequestReason = "";
                 StateHasChanged();
 
                 await LoadUserAndCategories();
@@ -478,7 +528,57 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             StateHasChanged();
         }
 
-        protected async Task HandlePasswordChange() { }
+        protected async Task HandlePasswordChange()
+        {
+            if (!EnsureAuthenticated()) return;
+
+            try
+            {
+                using var scope = ScopeFactory.CreateScope();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
+
+                // Verify old password
+                var user = await userManager.FindByIdAsync(State.CurrentUser!.Id);
+                if (user == null)
+                {
+                    State.PasswordMessage = "User not found.";
+                    State.IsPasswordSuccess = false;
+                    return;
+                }
+
+                // Check if old password is correct
+                var isCorrectPassword = await userManager.CheckPasswordAsync(user, PasswordModel.OldPassword);
+                if (!isCorrectPassword)
+                {
+                    State.PasswordMessage = "Current password is incorrect.";
+                    State.IsPasswordSuccess = false;
+                    return;
+                }
+
+                // Change password
+                var result = await userManager.ChangePasswordAsync(user, PasswordModel.OldPassword, PasswordModel.NewPassword);
+
+                if (result.Succeeded)
+                {
+                    State.PasswordMessage = "Password changed successfully!";
+                    State.IsPasswordSuccess = true;
+                    
+                    // Clear the form
+                    PasswordModel = new SettingsPanel.PasswordChangeModel();
+                    StateHasChanged();
+                }
+                else
+                {
+                    State.PasswordMessage = "Error: " + string.Join(", ", result.Errors.Select(e => e.Description));
+                    State.IsPasswordSuccess = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                State.PasswordMessage = "Error changing password: " + ex.Message;
+                State.IsPasswordSuccess = false;
+            }
+        }
 
         // ========== PRIVATE HELPERS ==========
         private async Task<string?> GetUserIdAsync(System.Security.Claims.ClaimsPrincipal userPrincipal)
