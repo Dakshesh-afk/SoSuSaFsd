@@ -1,334 +1,51 @@
 @using SoSuSaFsd.Domain
 @using Microsoft.AspNetCore.Components.Forms
-@using System.ComponentModel.DataAnnotations
+@using SoSuSaFsd.Components.Pages.HomeComponents.SettingsPanelComponents
 
-@* SettingsPanel - All settings forms (Edit Profile, Change Password, Request Verification) *@
+@* SettingsPanel - All settings forms (orchestration only) *@
 
-@* EDIT PROFILE FORM *@
-<div id="settings-form-profile" class="settings-content active">
-    <h1 class="page-title">Edit Profile</h1>
-    <hr />
-    <div class="post-card" style="padding: 20px;">
-        @if (CurrentUser != null)
-        {
-            <form @onsubmit="HandleProfileUpdate" @onsubmit:preventDefault>
-                <div class="settings-form-group" style="display:flex; flex-direction:column; align-items:center;">
-                    @* Profile Avatar *@
-                    <div class="profile-avatar-large" 
-                         style="background-image: url('@(CurrentUser.ProfileImage ?? "")'); margin: 0 auto 15px; width: 120px; height: 120px; background-size: cover; background-position: center; border-radius: 50%;"></div>
-                    <label class="login-btn secondary" 
-                           style="cursor: pointer; font-weight:normal; font-size:13px; padding: 5px 15px; position: relative; overflow: hidden;">
-                        Change Photo
-                        <InputFile OnChange="HandleImageChange" 
-                                   accept=".jpg,.jpeg,.png" 
-                                   style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
-                    </label>
-                </div>
-                <div class="settings-form-group">
-                    <label>Display Name</label>
-                    <input type="text" @bind="CurrentUser.DisplayName" />
-                </div>
-                <div class="settings-form-group">
-                    <label>Bio</label>
-                    <textarea rows="4" @bind="CurrentUser.Bio"></textarea>
-                </div>
-                @if (!string.IsNullOrEmpty(StatusMessage))
-                {
-                    <div class="@(StatusMessage.Contains("Error") ? "error-msg" : "success-msg")">@StatusMessage</div>
-                }
-                <button type="submit" class="login-btn">Save Changes</button>
-            </form>
-        }
-        else
-        {
-            <p>Please login to edit profile.</p>
-        }
-    </div>
-</div>
+<EditProfileForm 
+    CurrentUser="@CurrentUser"
+    StatusMessage="@StatusMessage"
+    OnProfileUpdate="@OnProfileUpdate"
+    OnImageChange="@OnImageChange" />
 
-@* CHANGE PASSWORD FORM *@
-<div id="settings-form-password" class="settings-content hidden">
-    <h1 class="page-title">Change Password</h1>
-    <hr />
-    <div class="post-card" style="padding: 20px;">
-        <EditForm Model="PasswordModel" OnValidSubmit="HandlePasswordUpdate" FormName="passwordChangeForm">
-            <DataAnnotationsValidator />
-            <div class="settings-form-group">
-                <label>Current Password</label>
-                <InputText type="password" @bind-Value="PasswordModel.OldPassword" />
-                <ValidationMessage For="() => PasswordModel.OldPassword" class="text-danger" />
-            </div>
-            <div class="settings-form-group">
-                <label>New Password</label>
-                <InputText type="password" @bind-Value="PasswordModel.NewPassword" />
-                <ValidationMessage For="() => PasswordModel.NewPassword" class="text-danger" />
-            </div>
-            <div class="settings-form-group">
-                <label>Confirm New Password</label>
-                <InputText type="password" @bind-Value="PasswordModel.ConfirmPassword" />
-                <ValidationMessage For="() => PasswordModel.ConfirmPassword" class="text-danger" />
-            </div>
-            @if (!string.IsNullOrEmpty(PasswordMessage))
-            {
-                <div class="@(IsPasswordSuccess ? "success-msg" : "error-msg")">@PasswordMessage</div>
-            }
-            <button type="submit" class="login-btn">Update Password</button>
-        </EditForm>
-    </div>
-</div>
+<ChangePasswordForm 
+    PasswordModel="@PasswordModel"
+    PasswordMessage="@PasswordMessage"
+    IsPasswordSuccess="@IsPasswordSuccess"
+    OnPasswordChange="@OnPasswordChange" />
 
-@* REQUEST VERIFICATION FORM *@
-<div id="settings-form-verification" class="settings-content hidden">
-    <h1 class="page-title">Request Category Access</h1>
-    <hr />
-    <div class="post-card" style="padding: 20px;">
-        <p style="margin-bottom: 20px; color: #666;">Request access to post in verified categories. Your request will be reviewed by administrators.</p>
-        @if (!string.IsNullOrEmpty(AccessMessage))
-        {
-            <div class="@(IsAccessSuccess ? "success-msg" : "error-msg")">@AccessMessage</div>
-        }
-        <form @onsubmit="HandleAccessRequestSubmit" @onsubmit:preventDefault>
-            <div class="settings-form-group">
-                <label>Select Category</label>
-                <select value="@SelectedCategoryId" 
-                        @onchange="@((ChangeEventArgs e) => HandleCategoryChange(e))"
-                        class="settings-form-group" 
-                        style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
-                    <option value="0">-- Select a verified category --</option>
-                    @foreach (var cat in VerifiedCategories)
-                    {
-                        @* Check if user already has a pending or approved request for this category *@
-                        var hasRequest = UserAccessRequests.Any(r => r.CategoryId == cat.Id && (r.Status == "Pending" || r.Status == "Approved"));
-                        <option value="@cat.Id" disabled="@hasRequest">
-                            # @cat.CategoryName @(hasRequest ? "(Already requested)" : "")
-                        </option>
-                    }
-                </select>
-            </div>
-            <div class="settings-form-group">
-                <label>Reason for Request</label>
-                <textarea rows="5" 
-                          value="@AccessReason"
-                          @oninput="@((ChangeEventArgs e) => HandleReasonChange(e))"
-                          placeholder="Explain why you need access..." 
-                          style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
-            </div>
-            @{
-                bool isSubmitDisabled = CurrentUser == null || SelectedCategoryId == 0 || string.IsNullOrWhiteSpace(AccessReason);
-            }
-            <button type="submit" class="login-btn" disabled="@isSubmitDisabled">Submit Request</button>
-        </form>
-
-        @if (UserAccessRequests != null && UserAccessRequests.Any())
-        {
-            <hr style="margin: 30px 0;" />
-            <h3 style="margin-bottom: 15px;">Your Requests</h3>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-                @foreach (var request in UserAccessRequests.OrderByDescending(r => r.DateCreated))
-                {
-                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                            <div>
-                                <strong># @request.Category?.CategoryName</strong>
-                                <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                                    Submitted: @request.DateCreated.ToString("MMM dd, yyyy 'at' h:mm tt")
-                                </div>
-                                @if (request.Status == "Rejected" && request.DateUpdated != DateTime.MinValue)
-                                {
-                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">
-                                        Rejected: @request.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
-                                    </div>
-                                }
-                                @if (request.Status == "Approved" && request.DateUpdated != DateTime.MinValue && request.DateUpdated != request.DateCreated)
-                                {
-                                    <div style="font-size: 12px; color: #666; margin-top: 3px;">
-                                        Approved: @request.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
-                                    </div>
-                                }
-                            </div>
-                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; background: @(request.Status == "Approved" ? "#d4edda" : request.Status == "Rejected" ? "#f8d7da" : "#fff3cd"); color: @(request.Status == "Approved" ? "#155724" : request.Status == "Rejected" ? "#721c24" : "#856404");">@request.Status</span>
-                        </div>
-                        @if (!string.IsNullOrEmpty(request.Reason))
-                        {
-                            <div style="font-size: 14px; color: #555; margin-top: 8px;"><strong>Reason:</strong> @request.Reason</div>
-                        }
-                        @if (request.Status == "Rejected" && request.DateUpdated != DateTime.MinValue)
-                        {
-                            var canResubmitDate = request.DateUpdated.AddDays(7);
-                            var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
-                            
-                            @if (daysRemaining > 0)
-                            {
-                                <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 12px; color: #856404;">
-                                    <strong>&#9200; Can resubmit on:</strong> @canResubmitDate.ToString("MMM dd, yyyy 'at' h:mm tt")<br/>
-                                    <span style="font-size: 11px;">(@Math.Ceiling(daysRemaining) day(s) remaining)</span>
-                                </div>
-                            }
-                            else
-                            {
-                                <div style="margin-top: 10px; padding: 8px; background: #d4edda; border-left: 3px solid #28a745; border-radius: 4px; font-size: 12px; color: #155724;">
-                                    <strong>&#10004; You can now resubmit this request</strong>
-                                </div>
-                            }
-                        }
-                    </div>
-                }
-            </div>
-        }
-    </div>
-</div>
+<RequestAccessForm 
+    CurrentUser="@CurrentUser"
+    VerifiedCategories="@VerifiedCategories"
+    UserAccessRequests="@UserAccessRequests"
+    AccessMessage="@AccessMessage"
+    IsAccessSuccess="@IsAccessSuccess"
+    SelectedCategoryId="@SelectedCategoryId"
+    AccessReason="@AccessReason"
+    OnAccessRequest="@OnAccessRequest"
+    OnSelectedCategoryChanged="@OnSelectedCategoryChanged"
+    OnAccessReasonChanged="@OnAccessReasonChanged"
+    OnFileSelected="@OnFileSelected" />
 
 @code {
-    /// <summary>
-    /// Current logged-in user
-    /// </summary>
-    [Parameter]
-    public Users? CurrentUser { get; set; }
-
-    /// <summary>
-    /// List of verified categories for access request dropdown
-    /// </summary>
-    [Parameter]
-    public List<Categories> VerifiedCategories { get; set; } = new();
-
-    /// <summary>
-    /// List of user's access requests
-    /// </summary>
-    [Parameter]
-    public List<CategoryAccessRequests> UserAccessRequests { get; set; } = new();
-
-    /// <summary>
-    /// Profile update status message
-    /// </summary>
-    [Parameter]
-    public string StatusMessage { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Password change message
-    /// </summary>
-    [Parameter]
-    public string PasswordMessage { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Whether password change was successful
-    /// </summary>
-    [Parameter]
-    public bool IsPasswordSuccess { get; set; }
-
-    /// <summary>
-    /// Access request message
-    /// </summary>
-    [Parameter]
-    public string AccessMessage { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Whether access request was successful
-    /// </summary>
-    [Parameter]
-    public bool IsAccessSuccess { get; set; }
-
-    /// <summary>
-    /// Selected category ID for access request
-    /// </summary>
-    [Parameter]
-    public int SelectedCategoryId { get; set; }
-
-    /// <summary>
-    /// Access request reason
-    /// </summary>
-    [Parameter]
-    public string AccessReason { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Password change model
-    /// </summary>
-    [Parameter]
-    public PasswordChangeModel PasswordModel { get; set; } = new();
-
-    /// <summary>
-    /// Callback when profile is updated
-    /// </summary>
-    [Parameter]
-    public EventCallback OnProfileUpdate { get; set; }
-
-    /// <summary>
-    /// Callback when password is changed
-    /// </summary>
-    [Parameter]
-    public EventCallback OnPasswordChange { get; set; }
-
-    /// <summary>
-    /// Callback when access request is submitted
-    /// </summary>
-    [Parameter]
-    public EventCallback OnAccessRequest { get; set; }
-
-    /// <summary>
-    /// Callback when profile image is selected
-    /// </summary>
-    [Parameter]
-    public EventCallback<InputFileChangeEventArgs> OnImageChange { get; set; }
-
-    /// <summary>
-    /// Callback when selected category changes
-    /// </summary>
-    [Parameter]
-    public EventCallback<int> OnSelectedCategoryChanged { get; set; }
-
-    /// <summary>
-    /// Callback when access reason changes
-    /// </summary>
-    [Parameter]
-    public EventCallback<string> OnAccessReasonChanged { get; set; }
-
-    private async Task HandleProfileUpdate()
-    {
-        await OnProfileUpdate.InvokeAsync();
-    }
-
-    private async Task HandlePasswordUpdate()
-    {
-        await OnPasswordChange.InvokeAsync();
-    }
-
-    private async Task HandleAccessRequestSubmit()
-    {
-        await OnAccessRequest.InvokeAsync();
-    }
-
-    private async Task HandleImageChange(InputFileChangeEventArgs e)
-    {
-        await OnImageChange.InvokeAsync(e);
-    }
-
-    private async Task HandleCategoryChange(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out int categoryId))
-        {
-            SelectedCategoryId = categoryId;
-            await OnSelectedCategoryChanged.InvokeAsync(categoryId);
-        }
-    }
-
-    private async Task HandleReasonChange(ChangeEventArgs e)
-    {
-        AccessReason = e.Value?.ToString() ?? string.Empty;
-        await OnAccessReasonChanged.InvokeAsync(AccessReason);
-    }
-
-    /// <summary>
-    /// Password change model for validation
-    /// </summary>
-    public class PasswordChangeModel
-    {
-        [Required]
-        public string OldPassword { get; set; } = "";
-
-        [Required]
-        [StringLength(100, MinimumLength = 6)]
-        public string NewPassword { get; set; } = "";
-
-        [Compare("NewPassword")]
-        public string ConfirmPassword { get; set; } = "";
-    }
+    [Parameter] public Users? CurrentUser { get; set; }
+    [Parameter] public List<Categories> VerifiedCategories { get; set; } = new();
+    [Parameter] public List<CategoryAccessRequests> UserAccessRequests { get; set; } = new();
+    [Parameter] public string StatusMessage { get; set; } = string.Empty;
+    [Parameter] public string PasswordMessage { get; set; } = string.Empty;
+    [Parameter] public bool IsPasswordSuccess { get; set; }
+    [Parameter] public string AccessMessage { get; set; } = string.Empty;
+    [Parameter] public bool IsAccessSuccess { get; set; }
+    [Parameter] public int SelectedCategoryId { get; set; }
+    [Parameter] public string AccessReason { get; set; } = string.Empty;
+    [Parameter] public ChangePasswordForm.PasswordChangeModel PasswordModel { get; set; } = new();
+    [Parameter] public EventCallback OnProfileUpdate { get; set; }
+    [Parameter] public EventCallback OnPasswordChange { get; set; }
+    [Parameter] public EventCallback OnAccessRequest { get; set; }
+    [Parameter] public EventCallback<InputFileChangeEventArgs> OnImageChange { get; set; }
+    [Parameter] public EventCallback<int> OnSelectedCategoryChanged { get; set; }
+    [Parameter] public EventCallback<string> OnAccessReasonChanged { get; set; }
+    [Parameter] public EventCallback<IBrowserFile> OnFileSelected { get; set; }
 }

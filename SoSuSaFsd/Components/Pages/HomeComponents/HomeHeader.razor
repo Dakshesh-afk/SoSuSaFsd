@@ -53,7 +53,7 @@
                     <button class="login-btn" @onclick="@OnLogout">Logout</button>
                 </Authorized>
                 <NotAuthorized>
-                    <button class="login-btn" onclick="showLoginOverlay()">Login</button>
+                    <button class="login-btn" @onclick="@OnShowLogin">Login</button>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
@@ -108,6 +108,12 @@
     /// </summary>
     [Parameter]
     public EventCallback OnNavigateToAdmin { get; set; }
+
+    /// <summary>
+    /// Callback for showing login overlay
+    /// </summary>
+    [Parameter]
+    public EventCallback OnShowLogin { get; set; }
 
     private async Task HandleSearchInput(ChangeEventArgs e)
     {

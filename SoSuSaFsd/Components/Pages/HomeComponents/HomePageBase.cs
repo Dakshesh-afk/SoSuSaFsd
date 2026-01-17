@@ -9,16 +9,13 @@ using SoSuSaFsd.Data;
 using SoSuSaFsd.Domain;
 using SoSuSaFsd.Services;
 using SoSuSaFsd.Components.Common;
+using SoSuSaFsd.Components.Common.PostCardComponents;
+using SoSuSaFsd.Components.Pages.HomeComponents.SettingsPanelComponents;
 
 namespace SoSuSaFsd.Components.Pages.HomeComponents
 {
-    /// <summary>
-    /// Base class for Home page providing common functionality
-    /// Reduces Home.razor to pure UI orchestration
-    /// </summary>
     public abstract class HomePageBase : ComponentBase
     {
-        // ========== INJECTED DEPENDENCIES ==========
         [Inject] protected IDbContextFactory<SoSuSaFsdContext> DbFactory { get; set; } = default!;
         [Inject] protected IServiceScopeFactory ScopeFactory { get; set; } = default!;
         [Inject] protected NavigationManager Navigation { get; set; } = default!;
@@ -28,14 +25,11 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
         [Inject] protected ICategoryService CategoryService { get; set; } = default!;
         [Inject] protected IHomePageService HomePageService { get; set; } = default!;
 
-        // ========== PARAMETERS ==========
         [SupplyParameterFromQuery] public string? Error { get; set; }
 
-        // ========== STATE ==========
         protected HomePageState State { get; set; } = new();
-        protected SettingsPanel.PasswordChangeModel PasswordModel { get; set; } = new();
+        protected ChangePasswordForm.PasswordChangeModel PasswordModel { get; set; } = new();
 
-        // ========== LIFECYCLE ==========
         protected override async Task OnInitializedAsync()
         {
             if (!string.IsNullOrEmpty(Error))
@@ -68,7 +62,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             await base.OnAfterRenderAsync(firstRender);
         }
 
-        // ========== DATA LOADING ==========
         protected async Task LoadUserAndCategories()
         {
             try
@@ -95,6 +88,11 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                     }
 
                     await HomePageService.LoadUserDataAsync(State, userId);
+                }
+                else
+                {
+                    State.CurrentUser = null;
+                    await HomePageService.LoadUserDataAsync(State, string.Empty);
                 }
             }
             catch (Exception ex)
@@ -124,7 +122,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== SEARCH ==========
         protected async Task HandleHeaderSearch()
         {
             var section = await GetCurrentSectionAsync();
@@ -177,7 +174,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                 State.ShowCreateConfirm = true;
         }
 
-        // ========== POST INTERACTIONS ==========
         protected async Task ToggleLike(int postId)
         {
             if (!EnsureAuthenticated()) return;
@@ -240,7 +236,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== REPLIES ==========
         protected void ToggleReplyBox(int commentId)
         {
             if (!State.ActiveReplyBoxes.ContainsKey(commentId))
@@ -254,7 +249,7 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             StateHasChanged();
         }
 
-        protected async Task SubmitReply(PostCard.SubmitReplyEventArgs args)
+        protected async Task SubmitReply(PostCardComments.SubmitReplyEventArgs args)
         {
             if (!EnsureAuthenticated()) return;
             if (!State.ReplyDrafts.ContainsKey(args.ParentCommentId) || 
@@ -280,7 +275,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== REPORTS ==========
         protected void OpenReportModal(int postId)
         {
             if (!EnsureAuthenticated()) return;
@@ -318,7 +312,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== USER PROFILE ==========
         protected async Task UpdateProfile()
         {
             if (State.CurrentUser == null) return;
@@ -370,7 +363,39 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== CATEGORY MANAGEMENT ==========
+        protected async Task HandleVerificationDocumentSelected(IBrowserFile file)
+        {
+            if (!EnsureAuthenticated()) return;
+
+            try
+            {
+                if (file.Size > 5 * 1024 * 1024)
+                {
+                    State.AccessRequestMessage = "File size must be less than 5MB";
+                    State.IsAccessRequestSuccess = false;
+                    return;
+                }
+
+                var uploadsPath = Path.Combine("wwwroot", "uploads", "verification");
+                Directory.CreateDirectory(uploadsPath);
+
+                var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.Name)}";
+                var filePath = Path.Combine(uploadsPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(stream);
+                }
+
+                State.VerificationDocumentPath = $"/uploads/verification/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                State.AccessRequestMessage = "Error uploading file: " + ex.Message;
+                State.IsAccessRequestSuccess = false;
+            }
+        }
+
         protected async Task UnfollowCategory(int categoryId)
         {
             if (string.IsNullOrEmpty(State.CurrentUser?.Id)) return;
@@ -408,7 +433,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             {
                 using var context = DbFactory.CreateDbContext();
                 
-                // Check for ANY existing request (Pending, Approved, or recently Rejected)
                 var existingRequest = await context.CategoryAccessRequests
                     .FirstOrDefaultAsync(r => r.UserId == State.CurrentUser!.Id && 
                         r.CategoryId == State.SelectedCategoryId);
@@ -429,7 +453,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                     }
                     else if (existingRequest.Status == "Rejected")
                     {
-                        // Allow resubmitting rejected requests after 7 days
                         var canResubmitDate = existingRequest.DateUpdated.AddDays(7);
                         var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
                         
@@ -440,11 +463,11 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                             return;
                         }
                         
-                        // Update existing rejected request to pending with new reason
                         existingRequest.Reason = State.AccessRequestReason;
                         existingRequest.Status = "Pending";
                         existingRequest.DateUpdated = DateTime.Now;
-                        existingRequest.UpdatedBy = null; // Clear previous admin action
+                        existingRequest.UpdatedBy = null;
+                        existingRequest.SupportingDocumentPath = State.VerificationDocumentPath;
                         
                         await context.SaveChangesAsync();
                         
@@ -452,6 +475,7 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                         State.IsAccessRequestSuccess = true;
                         State.SelectedCategoryId = 0;
                         State.AccessRequestReason = "";
+                        State.VerificationDocumentPath = null;
                         StateHasChanged();
 
                         await LoadUserAndCategories();
@@ -459,13 +483,13 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                     }
                 }
 
-                // Create new request
                 var newRequest = new CategoryAccessRequests
                 {
                     UserId = State.CurrentUser!.Id,
                     CategoryId = State.SelectedCategoryId,
                     Reason = State.AccessRequestReason,
                     Status = "Pending",
+                    SupportingDocumentPath = State.VerificationDocumentPath,
                     DateCreated = DateTime.Now,
                     DateUpdated = DateTime.Now,
                     CreatedBy = State.CurrentUser.Id
@@ -478,6 +502,7 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                 State.IsAccessRequestSuccess = true;
                 State.SelectedCategoryId = 0;
                 State.AccessRequestReason = "";
+                State.VerificationDocumentPath = null;
                 StateHasChanged();
 
                 await LoadUserAndCategories();
@@ -489,7 +514,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== NAVIGATION ==========
         protected void OnSearchPostClicked((int CategoryId, int PostId) data)
         {
             State.ClearSearchState();
@@ -509,20 +533,25 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
         protected void RefreshPage() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
         protected void ForceLogout() => Navigation.NavigateTo("/api/Account/logout", true);
 
-        // ========== HELPER METHODS ==========
-        protected void UpdateCommentDraft(PostCard.CommentDraftEventArgs args)
+        protected void ShowLoginOverlay()
+        {
+            State.ShowLoginOverlay = true;
+            StateHasChanged();
+        }
+
+        protected void UpdateCommentDraft(PostCardComments.CommentDraftEventArgs args)
         {
             if (args.Content != null)
                 State.CommentDrafts[args.PostId] = args.Content;
         }
 
-        protected void UpdateReplyDraft(PostCard.ReplyDraftEventArgs args)
+        protected void UpdateReplyDraft(PostCardComments.ReplyDraftEventArgs args)
         {
             if (args.Content != null)
                 State.ReplyDrafts[args.ParentCommentId] = args.Content;
         }
 
-        protected void UpdateCarouselIndex(PostCard.CarouselEventArgs args)
+        protected void UpdateCarouselIndex(PostCardMedia.CarouselEventArgs args)
         {
             State.CarouselIndices[args.PostId] = args.Index;
             StateHasChanged();
@@ -537,7 +566,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                 using var scope = ScopeFactory.CreateScope();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Users>>();
 
-                // Verify old password
                 var user = await userManager.FindByIdAsync(State.CurrentUser!.Id);
                 if (user == null)
                 {
@@ -546,7 +574,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                     return;
                 }
 
-                // Check if old password is correct
                 var isCorrectPassword = await userManager.CheckPasswordAsync(user, PasswordModel.OldPassword);
                 if (!isCorrectPassword)
                 {
@@ -555,7 +582,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                     return;
                 }
 
-                // Change password
                 var result = await userManager.ChangePasswordAsync(user, PasswordModel.OldPassword, PasswordModel.NewPassword);
 
                 if (result.Succeeded)
@@ -563,8 +589,7 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                     State.PasswordMessage = "Password changed successfully!";
                     State.IsPasswordSuccess = true;
                     
-                    // Clear the form
-                    PasswordModel = new SettingsPanel.PasswordChangeModel();
+                    PasswordModel = new ChangePasswordForm.PasswordChangeModel();
                     StateHasChanged();
                 }
                 else
@@ -580,7 +605,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             }
         }
 
-        // ========== PRIVATE HELPERS ==========
         private async Task<string?> GetUserIdAsync(System.Security.Claims.ClaimsPrincipal userPrincipal)
         {
             var userId = userPrincipal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

@@ -112,7 +112,7 @@ else
     /// Callback when comment draft is updated
     /// </summary>
     [Parameter]
-    public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    public EventCallback<PostCardComments.CommentDraftEventArgs> OnUpdateDraft { get; set; }
 
     /// <summary>
     /// Callback when comment is submitted
@@ -124,7 +124,7 @@ else
     /// Callback when carousel changes
     /// </summary>
     [Parameter]
-    public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
+    public EventCallback<PostCardMedia.CarouselEventArgs> OnCarouselChange { get; set; }
 
     /// <summary>
     /// Callback when reply box is toggled
@@ -136,11 +136,11 @@ else
     /// Callback when reply draft is updated
     /// </summary>
     [Parameter]
-    public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    public EventCallback<PostCardComments.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
 
     /// <summary>
     /// Callback when reply is submitted
     /// </summary>
     [Parameter]
-    public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
+    public EventCallback<PostCardComments.SubmitReplyEventArgs> OnSubmitReply { get; set; }
 }

@@ -79,33 +79,47 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             {
                 _logger.LogInformation("Loading home page data for user {UserId}", userId);
 
-                // Load categories
+                // Load categories (visible to all users including guests)
                 state.VerifiedCategories = await _categoryService.GetVerifiedCategoriesAsync(5);
-                state.VerifiedCategoriesForRequest = await _categoryService.GetVerifiedCategoriesAsync(100);
                 state.RecentCategories = await _categoryService.GetRecentCategoriesAsync(userId, 5);
-                state.FollowedCategories = await _categoryService.GetFollowedCategoriesAsync(userId);
 
-                // Load feed posts
-                var followedCategoryIds = state.FollowedCategories.Select(c => c.Id).ToList();
-                if (followedCategoryIds.Any())
+                // Only load authenticated user data if userId is provided
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    state.FeedPosts = await _postService.GetUserFeedPostsAsync(followedCategoryIds);
+                    state.VerifiedCategoriesForRequest = await _categoryService.GetVerifiedCategoriesAsync(100);
+                    state.FollowedCategories = await _categoryService.GetFollowedCategoriesAsync(userId);
+
+                    // Load feed posts
+                    var followedCategoryIds = state.FollowedCategories.Select(c => c.Id).ToList();
+                    if (followedCategoryIds.Any())
+                    {
+                        state.FeedPosts = await _postService.GetUserFeedPostsAsync(followedCategoryIds);
+                    }
+                    else
+                    {
+                        state.FeedPosts = new List<Posts>();
+                    }
+
+                    // Load user posts
+                    state.UserPosts = await _postService.GetUserPostsAsync(userId);
+
+                    // Load access requests
+                    using var context = _contextFactory.CreateDbContext();
+                    state.UserAccessRequests = await context.CategoryAccessRequests
+                        .Where(r => r.UserId == userId)
+                        .Include(r => r.Category)
+                        .OrderByDescending(r => r.DateCreated)
+                        .ToListAsync();
                 }
                 else
                 {
+                    // Guests see empty collections
+                    state.VerifiedCategoriesForRequest = new List<Categories>();
+                    state.FollowedCategories = new List<Categories>();
                     state.FeedPosts = new List<Posts>();
+                    state.UserPosts = new List<Posts>();
+                    state.UserAccessRequests = new List<CategoryAccessRequests>();
                 }
-
-                // Load user posts
-                state.UserPosts = await _postService.GetUserPostsAsync(userId);
-
-                // Load access requests
-                using var context = _contextFactory.CreateDbContext();
-                state.UserAccessRequests = await context.CategoryAccessRequests
-                    .Where(r => r.UserId == userId)
-                    .Include(r => r.Category)
-                    .OrderByDescending(r => r.DateCreated)
-                    .ToListAsync();
 
                 _logger.LogInformation("Successfully loaded home page data for user {UserId}", userId);
             }

@@ -10,7 +10,8 @@
     OnSearch="@OnSearch"
     OnRefresh="@OnRefresh"
     OnLogout="@OnLogout"
-    OnNavigateToAdmin="@OnNavigateToAdmin" />
+    OnNavigateToAdmin="@OnNavigateToAdmin"
+    OnShowLogin="@OnShowLogin" />
 
 <SearchResultsDropdown 
     HasSearchedPosts="@State.HasSearchedPosts"
@@ -28,6 +29,7 @@
     [Parameter] public EventCallback OnRefresh { get; set; }
     [Parameter] public EventCallback OnLogout { get; set; }
     [Parameter] public EventCallback OnNavigateToAdmin { get; set; }
+    [Parameter] public EventCallback OnShowLogin { get; set; }
     [Parameter] public EventCallback<(int, int)> OnPostClick { get; set; }
     [Parameter] public EventCallback<string?> OnUserClick { get; set; }
 }

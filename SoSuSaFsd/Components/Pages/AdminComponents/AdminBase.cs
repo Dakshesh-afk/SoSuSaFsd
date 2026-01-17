@@ -13,10 +13,8 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
 
         protected AdminState State { get; set; } = new();
 
-        // ========== LIFECYCLE ==========
         protected override async Task OnInitializedAsync() => await LoadData();
 
-        // ========== DATA LOADING ==========
         protected async Task LoadData()
         {
             State.AllUsers = await AdminService.GetAllUsersAsync();
@@ -25,7 +23,6 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
             State.AllReports = await AdminService.GetAllReportsAsync();
         }
 
-        // ========== REPORTS ==========
         protected async Task DismissReportGroup(int reportId)
         {
             await AdminService.DismissReportGroupAsync(reportId);
@@ -38,7 +35,6 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
             await LoadData();
         }
 
-        // ========== DELETE ==========
         protected void RequestDelete(int reportId)
         {
             State.PendingDeleteReportId = reportId;
@@ -66,7 +62,6 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
             await LoadData();
         }
 
-        // ========== CATEGORIES ==========
         protected async Task ToggleVerification(int categoryId)
         {
             try
@@ -77,7 +72,6 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
             catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
         }
 
-        // ========== ACCESS REQUESTS ==========
         protected async Task ApproveRequest(int requestId)
         {
             try
@@ -98,7 +92,6 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
             catch { }
         }
 
-        // ========== USER MANAGEMENT ==========
         protected async Task ToggleUserBan(string userId)
         {
             try
@@ -109,7 +102,6 @@ namespace SoSuSaFsd.Components.Pages.AdminComponents
             catch { }
         }
 
-        // ========== HELPERS ==========
         protected void ExitAdmin() => NavigationManager.NavigateTo("/", forceLoad: true);
 
         protected void OpenContentModal(int reportId)

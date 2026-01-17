@@ -1,4 +1,5 @@
 @using SoSuSaFsd.Domain
+@using SoSuSaFsd.Components.Pages.AdminComponents.ReportCardComponents
 
 @* AdminReportsPanel - Reports management with grouping and filtering *@
 
@@ -26,7 +27,12 @@
 
     @foreach (var group in sortedGroups)
     {
-        <div class="report-card">@RenderReportCard(group)</div>
+        <ReportCard 
+            Group="@group"
+            OnOpenContentModal="@OnOpenContentModal"
+            OnDismissReportGroup="@OnDismissReportGroup"
+            OnUndoDismiss="@OnUndoDismiss"
+            OnRequestDelete="@OnRequestDelete" />
     }
 
     @if (!sortedGroups.Any())
@@ -40,175 +46,10 @@
 </div>
 
 @code {
-    /// <summary>
-    /// List of all reports
-    /// </summary>
-    [Parameter]
-    public List<Reports> AllReports { get; set; } = new();
-
-    /// <summary>
-    /// Current filter selection
-    /// </summary>
-    [Parameter]
-    public string ReportFilter { get; set; } = "recent_all";
-
-    /// <summary>
-    /// Callback to open content modal
-    /// </summary>
-    [Parameter]
-    public EventCallback<int> OnOpenContentModal { get; set; }
-
-    /// <summary>
-    /// Callback to dismiss report group
-    /// </summary>
-    [Parameter]
-    public EventCallback<int> OnDismissReportGroup { get; set; }
-
-    /// <summary>
-    /// Callback to undo dismiss
-    /// </summary>
-    [Parameter]
-    public EventCallback<int> OnUndoDismiss { get; set; }
-
-    /// <summary>
-    /// Callback to request delete
-    /// </summary>
-    [Parameter]
-    public EventCallback<int> OnRequestDelete { get; set; }
-
-    private string GetStatusBadgeClass(string status) =>
-        status switch
-        {
-            "Resolved" => "badge-resolved",
-            "Dismissed" => "badge-dismissed",
-            _ => "badge-pending"
-        };
-
-    private RenderFragment RenderReportCard(IGrouping<dynamic, Reports> group) => __builder =>
-    {
-        var isResolved = group.Any(r => r.Status == "Resolved" || r.Status == "Dismissed");
-        var effectiveStatus = isResolved ? "Dismissed" : "Pending";
-        var resolvedDate = group.Where(r => r.Status != "Pending").OrderByDescending(r => r.DateCreated).FirstOrDefault()?.DateCreated;
-        var latestDate = group.Max(r => r.DateCreated);
-        var reportCount = group.Count();
-        var newReportsCount = group.Count(r => r.Status == "Pending");
-        var uniqueCategories = group.Select(r => r.Reason.Contains(":") ? r.Reason.Split(':')[0].Trim() : r.Reason.Trim()).Distinct().ToList();
-        var title = string.Join(", ", uniqueCategories);
-        var rep = group.First();
-
-        <div class="report-header">
-            <div class="flex items-start gap-3 w-full">
-                <span class="status-badge @GetStatusBadgeClass(effectiveStatus) mt-1 flex-shrink-0">@effectiveStatus</span>
-
-                <div class="flex-grow">
-                    <div class="flex flex-wrap items-baseline gap-2 mb-1">
-                        <span class="font-bold text-gray-900 text-lg leading-tight">@title</span>
-                        @if (isResolved && newReportsCount > 0)
-                        {
-                            <span class="text-xs font-medium text-gray-500 px-2 py-0.5">(@newReportsCount new reports)</span>
-                        }
-                        else if (reportCount > 1)
-                        {
-                            <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">@reportCount reports</span>
-                        }
-                    </div>
-
-                    <div class="flex gap-2">
-                        @if (rep.PostID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">Post</span>
-                        }
-                        else if (rep.CommentID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-600 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">Comment</span>
-                        }
-                        else if (rep.CategoryID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded">Category</span>
-                        }
-                        else if (rep.TargetUserID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded">User</span>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-right flex-shrink-0 ml-4">
-                @if (isResolved && resolvedDate.HasValue)
-                {
-                    <span class="text-xs text-gray-500 block">Resolved:</span>
-                    <span class="text-xs font-bold text-gray-700">@resolvedDate.Value.ToString("MMM dd")</span>
-                }
-                else
-                {
-                    <span class="text-xs text-gray-400 block">Latest:</span>
-                    <span class="text-xs font-bold text-gray-600">@latestDate.ToString("MMM dd")</span>
-                }
-            </div>
-        </div>
-
-        <div class="report-body">
-            <div class="flex flex-col gap-2">
-                @foreach (var item in group.Take(2))
-                {
-                    <div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
-                        <div class="flex items-start gap-2 overflow-hidden">
-                            <div class="font-bold text-gray-700 whitespace-nowrap">@(item.Reporter?.UserName ?? "Unknown"):</div>
-                            <div class="text-gray-600 italic truncate">
-                                "@(item.Reason.Contains(":") ? item.Reason.Substring(item.Reason.IndexOf(":") + 1).Trim() : item.Reason)"
-                            </div>
-                        </div>
-                        <span class="text-[10px] text-gray-400 whitespace-nowrap">@item.DateCreated.ToString("MMM dd")</span>
-                    </div>
-                }
-
-                @if (reportCount > 2)
-                {
-                    <details class="group">
-                        <summary class="cursor-pointer text-xs font-bold text-blue-500 hover:text-blue-700 select-none list-none mb-2">
-                            <span class="group-open:hidden"><i class="fas fa-chevron-down mr-1"></i> View @(reportCount - 2) more reports...</span>
-                            <span class="hidden group-open:inline"><i class="fas fa-chevron-up mr-1"></i> Hide extra reports</span>
-                        </summary>
-                        <div class="flex flex-col gap-2 mt-2">
-                            @foreach (var item in group.Skip(2))
-                            {
-                                <div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
-                                    <div class="flex items-start gap-2 overflow-hidden">
-                                        <div class="font-bold text-gray-700 whitespace-nowrap">@(item.Reporter?.UserName ?? "Unknown"):</div>
-                                        <div class="text-gray-600 italic truncate">
-                                            "@(item.Reason.Contains(":") ? item.Reason.Substring(item.Reason.IndexOf(":") + 1).Trim() : item.Reason)"
-                                        </div>
-                                    </div>
-                                    <span class="text-[10px] text-gray-400 whitespace-nowrap">@item.DateCreated.ToString("MMM dd")</span>
-                                </div>
-                            }
-                        </div>
-                    </details>
-                }
-            </div>
-        </div>
-
-        <div class="report-actions">
-            @if (rep.PostID != null)
-            {
-                <button class="btn-view-content" @onclick="@(() => OnOpenContentModal.InvokeAsync(rep.ReportID))">
-                    <i class="fas fa-eye mr-2"></i> View Content
-                </button>
-            }
-
-            @if (!isResolved)
-            {
-                <button class="btn-action btn-dismiss" @onclick="@(() => OnDismissReportGroup.InvokeAsync(rep.ReportID))">Dismiss All</button>
-                <button class="btn-action btn-delete" @onclick="@(() => OnRequestDelete.InvokeAsync(rep.ReportID))">Delete Content</button>
-            }
-            else
-            {
-                <span class="text-gray-400 text-xs font-medium mr-2">Problem Resolved</span>
-                <button class="btn-action btn-undo" @onclick="@(() => OnUndoDismiss.InvokeAsync(rep.ReportID))">
-                    <i class="fas fa-undo mr-1"></i> Undo Dismiss
-                </button>
-            }
-        </div>
-    };
+    [Parameter] public List<Reports> AllReports { get; set; } = new();
+    [Parameter] public string ReportFilter { get; set; } = "recent_all";
+    [Parameter] public EventCallback<int> OnOpenContentModal { get; set; }
+    [Parameter] public EventCallback<int> OnDismissReportGroup { get; set; }
+    [Parameter] public EventCallback<int> OnUndoDismiss { get; set; }
+    [Parameter] public EventCallback<int> OnRequestDelete { get; set; }
 }

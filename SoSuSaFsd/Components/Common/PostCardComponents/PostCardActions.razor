@@ -1,0 +1,48 @@
+@using SoSuSaFsd.Domain
+
+@* PostCardActions - Like, Comment, Report buttons *@
+
+<div class="post-actions">
+    <button class="action-btn" @onclick="HandleLike">
+        @{
+            var isLiked = Post.Likes.Any(l => l.UserID == CurrentUser?.Id);
+            var likeCount = Post.Likes.Count;
+        }
+        @if (isLiked)
+        {
+            <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
+        }
+        else
+        {
+            <i class="far fa-heart" style="margin-right: 5px;"></i>
+        }
+        @if (likeCount > 0)
+        {
+            <span>@likeCount</span>
+        }
+        else
+        {
+            <span>Like</span>
+        }
+    </button>
+
+    <button class="action-btn" @onclick="HandleComment">
+        <i class="far fa-comment"></i> Comment
+    </button>
+
+    <button class="action-btn" style="color: #666; font-size: 14px;" @onclick="HandleReport" title="Report Post">
+        <i class="far fa-flag"></i> Report
+    </button>
+</div>
+
+@code {
+    [Parameter] public Posts Post { get; set; } = null!;
+    [Parameter] public Users? CurrentUser { get; set; }
+    [Parameter] public EventCallback<int> OnLike { get; set; }
+    [Parameter] public EventCallback<int> OnComment { get; set; }
+    [Parameter] public EventCallback<int> OnReport { get; set; }
+
+    private async Task HandleLike() => await OnLike.InvokeAsync(Post.Id);
+    private async Task HandleComment() => await OnComment.InvokeAsync(Post.Id);
+    private async Task HandleReport() => await OnReport.InvokeAsync(Post.Id);
+}

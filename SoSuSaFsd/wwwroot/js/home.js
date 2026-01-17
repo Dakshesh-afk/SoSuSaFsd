@@ -1,5 +1,5 @@
 // Home.js - JavaScript functions for Home.razor
-// Handles section switching, settings forms, and auth overlay
+// Handles section switching and settings forms
 
 function showSection(section) {
     document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
@@ -64,20 +64,4 @@ function showSettingsForm(formName) {
     document.querySelectorAll('.sidebar-section .category-link').forEach(el => el.classList.remove('active-setting'));
     var link = document.getElementById('set-link-' + formName);
     if (link) link.classList.add('active-setting');
-}
-
-function showLoginOverlay() {
-    document.getElementById('auth-overlay').style.display = 'flex';
-}
-
-function toggleAuthMode() {
-    var login = document.getElementById('login-view');
-    var reg = document.getElementById('register-view');
-    if (login.classList.contains('hidden')) {
-        login.classList.remove('hidden');
-        reg.classList.add('hidden');
-    } else {
-        login.classList.add('hidden');
-        reg.classList.remove('hidden');
-    }
 }

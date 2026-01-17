@@ -1,6 +1,6 @@
 @using SoSuSaFsd.Domain
 
-@* LeftSidebar - Sidebar with Following list, Profile card, and Settings menu *@
+@* HomeLeftSidebar - Sidebar with Following list, Profile card, and Settings menu *@
 
 <aside class="sidebar sidebar-left">
     @* HOME SIDEBAR VIEW *@
@@ -80,45 +80,24 @@
 </aside>
 
 @code {
-    /// <summary>
-    /// Current logged-in user
-    /// </summary>
     [Parameter]
     public Users? CurrentUser { get; set; }
 
-    /// <summary>
-    /// List of categories the user follows
-    /// </summary>
     [Parameter]
     public List<Categories> FollowedCategories { get; set; } = new();
 
-    /// <summary>
-    /// Number of posts the user has created
-    /// </summary>
     [Parameter]
     public int UserPostsCount { get; set; }
 
-    /// <summary>
-    /// Category search term
-    /// </summary>
     [Parameter]
     public string CategorySearchTerm { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Callback when category search term changes
-    /// </summary>
     [Parameter]
     public EventCallback<string> OnCategorySearchTermChanged { get; set; }
 
-    /// <summary>
-    /// Callback when category search is triggered
-    /// </summary>
     [Parameter]
     public EventCallback OnCategorySearch { get; set; }
 
-    /// <summary>
-    /// Callback when a category is clicked
-    /// </summary>
     [Parameter]
     public EventCallback<int> OnCategoryClick { get; set; }
 

@@ -189,7 +189,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.CategoryAccessRequests", b =>
@@ -219,6 +219,9 @@ namespace SoSuSaFsd.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("SupportingDocumentPath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -232,7 +235,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CategoryAccessRequests");
+                    b.ToTable("CategoryAccessRequests", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.CategoryFollows", b =>
@@ -268,7 +271,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CategoryFollows");
+                    b.ToTable("CategoryFollows", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Comments", b =>
@@ -308,7 +311,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("UserID");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.PostLikes", b =>
@@ -333,7 +336,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("PostID");
 
-                    b.ToTable("PostLikes");
+                    b.ToTable("PostLikes", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.PostMedia", b =>
@@ -359,7 +362,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostMedia");
+                    b.ToTable("PostMedia", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Posts", b =>
@@ -401,7 +404,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Reports", b =>
@@ -451,7 +454,7 @@ namespace SoSuSaFsd.Migrations
 
                     b.HasIndex("TargetUserID");
 
-                    b.ToTable("Reports");
+                    b.ToTable("Reports", (string)null);
                 });
 
             modelBuilder.Entity("SoSuSaFsd.Domain.Users", b =>

@@ -1,0 +1,34 @@
+@using SoSuSaFsd.Domain
+
+@* ReportCard - Individual report group card *@
+
+<div class="report-card">
+    <ReportCardHeader 
+        Group="@Group"
+        GetStatusBadgeClass="@GetStatusBadgeClass" />
+
+    <ReportCardBody Group="@Group" />
+
+    <ReportCardActions 
+        Group="@Group"
+        OnOpenContentModal="@OnOpenContentModal"
+        OnDismissReportGroup="@OnDismissReportGroup"
+        OnRequestDelete="@OnRequestDelete"
+        OnUndoDismiss="@OnUndoDismiss" />
+</div>
+
+@code {
+    [Parameter] public IGrouping<dynamic, Reports> Group { get; set; } = null!;
+    [Parameter] public EventCallback<int> OnOpenContentModal { get; set; }
+    [Parameter] public EventCallback<int> OnDismissReportGroup { get; set; }
+    [Parameter] public EventCallback<int> OnUndoDismiss { get; set; }
+    [Parameter] public EventCallback<int> OnRequestDelete { get; set; }
+
+    private string GetStatusBadgeClass(string status) =>
+        status switch
+        {
+            "Resolved" => "badge-resolved",
+            "Dismissed" => "badge-dismissed",
+            _ => "badge-pending"
+        };
+}

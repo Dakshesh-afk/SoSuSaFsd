@@ -1,0 +1,32 @@
+@using SoSuSaFsd.Domain
+@inject NavigationManager Navigation
+
+@* PostCardHeader - Post author info, timestamp, and category badge *@
+
+<div class="post-header">
+    <div class="post-avatar" style="background-image: url('@(Post.User?.ProfileImage ?? "")');"></div>
+    <div>
+        <b>@(Post.User?.UserName ?? "User")</b>
+        <div class="post-meta">
+            <span style="font-size: 12px; color: #888;">@Post.DateCreated.ToString("MMM dd, yyyy · HH:mm")</span>
+            <div class="post-category-tag">
+                Posted in <a href="#" @onclick:preventDefault @onclick="NavigateToCategory">
+                    #@Post.Category?.CategoryName
+                    @if (Post.Category?.IsVerified == true)
+                    {
+                        <i class="fas fa-check-circle verified-badge" style="font-size:12px;" title="Verified"></i>
+                    }
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Posts Post { get; set; } = null!;
+
+    private void NavigateToCategory()
+    {
+        Navigation.NavigateTo($"/category/{Post.CategoryId}", forceLoad: true);
+    }
+}

@@ -14,13 +14,14 @@
     OnRefresh="@RefreshPage"
     OnLogout="@ForceLogout"
     OnNavigateToAdmin="@NavigateToAdmin"
+    OnShowLogin="@ShowLoginOverlay"
     OnPostClick="@OnSearchPostClicked"
     OnUserClick="@OnSearchUserClicked" />
 
 @* MAIN LAYOUT *@
 <div class="main-layout">
     @* LEFT SIDEBAR *@
-    <LeftSidebar 
+    <HomeLeftSidebar 
         CurrentUser="@State.CurrentUser"
         FollowedCategories="@State.FollowedCategories"
         UserPostsCount="@State.UserPosts.Count"
@@ -46,7 +47,8 @@
         OnProfileUpdate="@UpdateProfile"
         OnImageChange="@HandleProfileImageSelected"
         OnPasswordChange="@HandlePasswordChange"
-        OnAccessRequest="@HandleAccessRequest" />
+        OnAccessRequest="@HandleAccessRequest"
+        OnFileSelected="@HandleVerificationDocumentSelected" />
 
     @* RIGHT SIDEBAR *@
     <SharedRightSidebar 

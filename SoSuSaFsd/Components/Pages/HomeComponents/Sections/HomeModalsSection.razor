@@ -1,16 +1,38 @@
 @using SoSuSaFsd.Components.Common
+@using SoSuSaFsd.Components.Pages.HomeComponents
 
 @* HOME MODALS SECTION - All modal dialogs *@
 
 @* REPORT MODAL *@
-<HomeReportModal 
-    IsVisible="@State.ShowReportModal"
-    ReasonSelection="@State.ReportReasonSelection"
-    ReasonDetails="@State.ReportReasonDetails"
-    OnCancel="@(() => State.ShowReportModal = false)"
-    OnReasonChange="@((value) => State.ReportReasonSelection = value)"
-    OnDetailsChange="@((value) => State.ReportReasonDetails = value)"
-    OnSubmit="@OnSubmitReport" />
+@if (State.ShowReportModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="@(() => State.ShowReportModal = false)">×</span>
+            <h2 class="modal-title-error">Report Content</h2>
+            <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
+            <div class="form-group">
+                <label>Reason:</label>
+                <select class="form-select" @bind="State.ReportReasonSelection">
+                    <option value="Spam">Spam</option>
+                    <option value="Harassment">Harassment or Bullying</option>
+                    <option value="Misinformation">Misinformation</option>
+                    <option value="Hate Speech">Hate Speech</option>
+                    <option value="Inappropriate">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Additional Details (Optional):</label>
+                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="State.ReportReasonDetails"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="login-btn secondary" @onclick="@(() => State.ShowReportModal = false)">Cancel</button>
+                <button class="login-btn btn-error" @onclick="OnSubmitReport">Submit Report</button>
+            </div>
+        </div>
+    </div>
+}
 
 @* NOTIFICATION MODAL *@
 <NotificationModal 
@@ -29,7 +51,8 @@
 @* AUTH OVERLAY *@
 <AuthOverlay 
     IsVisible="@State.ShowLoginOverlay"
-    ErrorMessage="@State.ErrorMessage" />
+    ErrorMessage="@State.ErrorMessage"
+    OnClose="@(() => State.ShowLoginOverlay = false)" />
 
 @code {
     [Parameter] public HomePageState State { get; set; } = default!;

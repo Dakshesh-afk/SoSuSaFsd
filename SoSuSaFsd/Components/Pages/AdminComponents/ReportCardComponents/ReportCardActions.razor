@@ -1,0 +1,38 @@
+@using SoSuSaFsd.Domain
+
+@* ReportCardActions - Action buttons (View, Dismiss, Delete, Undo) *@
+
+@{
+    var isResolved = Group.Any(r => r.Status == "Resolved" || r.Status == "Dismissed");
+    var rep = Group.First();
+}
+
+<div class="report-actions">
+    @if (rep.PostID != null)
+    {
+        <button class="btn-view-content" @onclick="@(() => OnOpenContentModal.InvokeAsync(rep.ReportID))">
+            <i class="fas fa-eye mr-2"></i> View Content
+        </button>
+    }
+
+    @if (!isResolved)
+    {
+        <button class="btn-action btn-dismiss" @onclick="@(() => OnDismissReportGroup.InvokeAsync(rep.ReportID))">Dismiss All</button>
+        <button class="btn-action btn-delete" @onclick="@(() => OnRequestDelete.InvokeAsync(rep.ReportID))">Delete Content</button>
+    }
+    else
+    {
+        <span class="text-gray-400 text-xs font-medium mr-2">Problem Resolved</span>
+        <button class="btn-action btn-undo" @onclick="@(() => OnUndoDismiss.InvokeAsync(rep.ReportID))">
+            <i class="fas fa-undo mr-1"></i> Undo Dismiss
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public IGrouping<dynamic, Reports> Group { get; set; } = null!;
+    [Parameter] public EventCallback<int> OnOpenContentModal { get; set; }
+    [Parameter] public EventCallback<int> OnDismissReportGroup { get; set; }
+    [Parameter] public EventCallback<int> OnRequestDelete { get; set; }
+    [Parameter] public EventCallback<int> OnUndoDismiss { get; set; }
+}

@@ -17,8 +17,6 @@ namespace SoSuSaFsd.Services
         Task<bool> ToggleCategoryVerificationAsync(int categoryId);
         Task ApproveAccessRequestAsync(int requestId);
         Task RejectAccessRequestAsync(int requestId);
-
-        // CHANGED: int -> string
         Task<bool> ToggleUserBanAsync(string userId);
     }
 
@@ -197,7 +195,6 @@ namespace SoSuSaFsd.Services
             }
         }
 
-        // CHANGED: int -> string
         public async Task<bool> ToggleUserBanAsync(string userId)
         {
             using var context = _contextFactory.CreateDbContext();

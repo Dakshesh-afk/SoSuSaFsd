@@ -1,5 +1,6 @@
 @using SoSuSaFsd.Domain
 @using SoSuSaFsd.Components.Common
+@using SoSuSaFsd.Components.Common.PostCardComponents
 
 @* CATEGORY MAIN CONTENT - Category info and posts feed *@
 
@@ -173,12 +174,12 @@ else
     [Parameter] public EventCallback<int> OnLike { get; set; }
     [Parameter] public EventCallback<int> OnComment { get; set; }
     [Parameter] public EventCallback<int> OnReport { get; set; }
-    [Parameter] public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<PostCardComments.CommentDraftEventArgs> OnUpdateDraft { get; set; }
     [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
-    [Parameter] public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
+    [Parameter] public EventCallback<PostCardMedia.CarouselEventArgs> OnCarouselChange { get; set; }
     [Parameter] public EventCallback<int> OnToggleReply { get; set; }
-    [Parameter] public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
-    [Parameter] public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
+    [Parameter] public EventCallback<PostCardComments.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<PostCardComments.SubmitReplyEventArgs> OnSubmitReply { get; set; }
     [Parameter] public EventCallback OnShowPostModal { get; set; }
     [Parameter] public EventCallback OnShowRequestModal { get; set; }
 

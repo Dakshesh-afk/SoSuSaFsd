@@ -1,0 +1,291 @@
+@using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+
+@* RequestAccessForm - Category access request form with document upload *@
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div id="settings-form-verification" class="settings-content hidden">
+            <h1 class="page-title">Request Category Access</h1>
+            <hr />
+            <div class="post-card" style="padding: 20px;">
+                <p style="margin-bottom: 20px; color: #666;">
+                    Request access to post in verified categories. Your request will be reviewed by administrators.
+                    <strong>Tip:</strong> Attach a supporting document to increase your chances of approval.
+                </p>
+                
+                @if (!string.IsNullOrEmpty(AccessMessage))
+                {
+                    <div class="@(IsAccessSuccess ? "success-msg" : "error-msg")">@AccessMessage</div>
+                }
+                
+                <form @onsubmit="HandleSubmit" @onsubmit:preventDefault>
+                    <div class="settings-form-group">
+                        <label>Select Category <span style="color: red;">*</span></label>
+                        <select value="@SelectedCategoryId" 
+                                @onchange="@HandleCategoryChange"
+                                class="settings-form-group" 
+                                style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+                            <option value="0">-- Select a verified category --</option>
+                            @foreach (var cat in VerifiedCategories)
+                            {
+                                var hasRequest = UserAccessRequests.Any(r => r.CategoryId == cat.Id && (r.Status == "Pending" || r.Status == "Approved"));
+                                <option value="@cat.Id" disabled="@hasRequest">
+                                    # @cat.CategoryName @(hasRequest ? "(Already requested)" : "")
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="settings-form-group">
+                        <label>Reason for Request <span style="color: red;">*</span></label>
+                        <textarea rows="5" 
+                                  value="@AccessReason"
+                                  @oninput="@HandleReasonChange"
+                                  placeholder="Explain why you need access (e.g., journalist credentials, verified student status, etc.)" 
+                                  style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div class="settings-form-group">
+                        <label>
+                            Supporting Document (Optional)
+                            <span style="font-size: 12px; color: #666; font-weight: normal; margin-left: 5px;">
+                                (PDF, JPG, PNG - Max 5MB)
+                            </span>
+                        </label>
+                        <div style="border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; background: #f9f9f9; cursor: pointer; transition: all 0.2s;"
+                             @onclick="TriggerFileInput">
+                            @if (string.IsNullOrEmpty(selectedFileName))
+                            {
+                                <div>
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 36px; color: #999; margin-bottom: 10px;"></i>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">
+                                        <strong>Click to upload</strong> or drag and drop<br/>
+                                        Student ID, Press Card, Verification Letter, etc.
+                                    </p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>
+                                    <i class="fas fa-file-alt" style="font-size: 36px; color: #4CAF50; margin-bottom: 10px;"></i>
+                                    <p style="margin: 0; color: #333; font-size: 14px;">
+                                        <strong>@selectedFileName</strong><br/>
+                                        <span style="color: #666; font-size: 12px;">@selectedFileSize</span>
+                                    </p>
+                                    <button type="button" 
+                                            @onclick="ClearFile" 
+                                            @onclick:stopPropagation="true"
+                                            class="login-btn secondary" 
+                                            style="margin-top: 10px; font-size: 12px; padding: 5px 15px;">
+                                        Remove File
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        <InputFile @ref="fileInput" 
+                                   OnChange="HandleFileSelected" 
+                                   accept=".pdf,.jpg,.jpeg,.png" 
+                                   style="display: none;" />
+                    </div>
+                    
+                    @{
+                        bool isSubmitDisabled = CurrentUser == null || SelectedCategoryId == 0 || string.IsNullOrWhiteSpace(AccessReason) || isUploading;
+                    }
+                    
+                    <button type="submit" 
+                            class="login-btn" 
+                            disabled="@isSubmitDisabled"
+                            style="display: flex; align-items: center; justify-center gap: 8px; width: 100%;">
+                        @if (isUploading)
+                        {
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Uploading...</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Submit Request</span>
+                        }
+                    </button>
+                </form>
+
+                @if (UserAccessRequests != null && UserAccessRequests.Any())
+                {
+                    <hr style="margin: 30px 0;" />
+                    <h3 style="margin-bottom: 15px;">Your Requests</h3>
+                    <div style="display: flex; flex-direction: column, gap: 10px;">
+                        @foreach (var request in UserAccessRequests.OrderByDescending(r => r.DateCreated))
+                        {
+                            <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                    <div>
+                                        <strong># @request.Category?.CategoryName</strong>
+                                        <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                            Submitted: @request.DateCreated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                        </div>
+                                        @if (request.Status == "Rejected" && request.DateUpdated != DateTime.MinValue)
+                                        {
+                                            <div style="font-size: 12px; color: #666; margin-top: 3px;">
+                                                Rejected: @request.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                            </div>
+                                        }
+                                        @if (request.Status == "Approved" && request.DateUpdated != DateTime.MinValue && request.DateUpdated != request.DateCreated)
+                                        {
+                                            <div style="font-size: 12px; color: #666; margin-top: 3px;">
+                                                Approved: @request.DateUpdated.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                            </div>
+                                        }
+                                    </div>
+                                    <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; background: @(request.Status == "Approved" ? "#d4edda" : request.Status == "Rejected" ? "#f8d7da" : "#fff3cd"); color: @(request.Status == "Approved" ? "#155724" : request.Status == "Rejected" ? "#721c24" : "#856404");">@request.Status</span>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(request.Reason))
+                                {
+                                    <div style="font-size: 14px; color: #555; margin-top: 8px;">
+                                        <strong>Reason:</strong> @request.Reason
+                                    </div>
+                                }
+                                
+                                @if (!string.IsNullOrEmpty(request.SupportingDocumentPath))
+                                {
+                                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-paperclip" style="color: #007bff;"></i>
+                                        <a href="@request.SupportingDocumentPath" 
+                                           target="_blank" 
+                                           style="color: #007bff; text-decoration: none; font-size: 13px;">
+                                            <strong>View attached document</strong>
+                                        </a>
+                                    </div>
+                                }
+                                
+                                @if (request.Status == "Rejected" && request.DateUpdated != DateTime.MinValue)
+                                {
+                                    var canResubmitDate = request.DateUpdated.AddDays(7);
+                                    var daysRemaining = (canResubmitDate - DateTime.Now).TotalDays;
+                                    
+                                    @if (daysRemaining > 0)
+                                    {
+                                        <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 12px; color: #856404;">
+                                            <strong>Can resubmit on:</strong> @canResubmitDate.ToString("MMM dd, yyyy 'at' h:mm tt")<br/>
+                                            <span style="font-size: 11px;">(@Math.Ceiling(daysRemaining) day(s) remaining)</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div style="margin-top: 10px; padding: 8px; background: #d4edda; border-left: 3px solid #28a745; border-radius: 4px; font-size: 12px; color: #155724;">
+                                            <strong>You can now resubmit this request</strong>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div id="settings-form-verification" class="settings-content hidden">
+            <h1 class="page-title">Request Category Access</h1>
+            <hr />
+            <div class="post-card" style="padding: 20px; text-align: center;">
+                <i class="fas fa-key" style="font-size: 48px; color: #ccc; margin-bottom: 15px;"></i>
+                <p style="color: #666;">Please login to request access to verified categories.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+    
+    [Parameter] public Users? CurrentUser { get; set; }
+    [Parameter] public List<Categories> VerifiedCategories { get; set; } = new();
+    [Parameter] public List<CategoryAccessRequests> UserAccessRequests { get; set; } = new();
+    [Parameter] public string AccessMessage { get; set; } = string.Empty;
+    [Parameter] public bool IsAccessSuccess { get; set; }
+    [Parameter] public int SelectedCategoryId { get; set; }
+    [Parameter] public string AccessReason { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnAccessRequest { get; set; }
+    [Parameter] public EventCallback<int> OnSelectedCategoryChanged { get; set; }
+    [Parameter] public EventCallback<string> OnAccessReasonChanged { get; set; }
+    [Parameter] public EventCallback<IBrowserFile> OnFileSelected { get; set; }
+
+    private InputFile? fileInput;
+    private string selectedFileName = string.Empty;
+    private string selectedFileSize = string.Empty;
+    private bool isUploading = false;
+
+    private async Task HandleCategoryChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int categoryId))
+        {
+            SelectedCategoryId = categoryId;
+            await OnSelectedCategoryChanged.InvokeAsync(categoryId);
+        }
+    }
+
+    private async Task HandleReasonChange(ChangeEventArgs e)
+    {
+        AccessReason = e.Value?.ToString() ?? string.Empty;
+        await OnAccessReasonChanged.InvokeAsync(AccessReason);
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            AccessMessage = "File size must be less than 5MB";
+            IsAccessSuccess = false;
+            return;
+        }
+        
+        selectedFileName = file.Name;
+        selectedFileSize = FormatFileSize(file.Size);
+        
+        await OnFileSelected.InvokeAsync(file);
+    }
+
+    private async Task TriggerFileInput()
+    {
+        if (fileInput?.Element != null)
+        {
+            await JS.InvokeVoidAsync("eval", $"document.querySelector('input[type=file][style*=none]').click()");
+        }
+    }
+
+    private void ClearFile()
+    {
+        selectedFileName = string.Empty;
+        selectedFileSize = string.Empty;
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F1} MB";
+    }
+
+    private async Task HandleSubmit()
+    {
+        isUploading = true;
+        StateHasChanged();
+        
+        try
+        {
+            await OnAccessRequest.InvokeAsync();
+        }
+        finally
+        {
+            isUploading = false;
+            selectedFileName = string.Empty;
+            selectedFileSize = string.Empty;
+            StateHasChanged();
+        }
+    }
+}

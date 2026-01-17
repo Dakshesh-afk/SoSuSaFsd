@@ -32,6 +32,7 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
         public string AccessRequestReason { get; set; } = "";
         public string AccessRequestMessage { get; set; } = "";
         public bool IsAccessRequestSuccess { get; set; } = false;
+        public string? VerificationDocumentPath { get; set; }
 
         // ========== COMMENTS & INTERACTIONS ==========
         public Dictionary<int, bool> ShowComments { get; set; } = new();

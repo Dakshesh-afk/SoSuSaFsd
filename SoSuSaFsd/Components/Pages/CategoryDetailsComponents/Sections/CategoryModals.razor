@@ -1,4 +1,5 @@
 @using SoSuSaFsd.Components.Common
+@using SoSuSaFsd.Components.Pages.HomeComponents
 @using Microsoft.AspNetCore.Components.Forms
 
 @* CATEGORY MODALS SECTION - All modal dialogs *@
@@ -68,7 +69,7 @@
             <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
             <div class="form-group">
                 <label>Reason:</label>
-                <select class="modal-textarea form-select" @bind="State.ReportReasonSelection">
+                <select class="form-select" @bind="State.ReportReasonSelection">
                     <option value="Spam">Spam</option>
                     <option value="Harassment">Harassment or Bullying</option>
                     <option value="Misinformation">Misinformation</option>
@@ -106,7 +107,8 @@
 @* AUTH OVERLAY *@
 <AuthOverlay 
     IsVisible="@State.ShowLoginOverlay"
-    ErrorMessage="@State.ErrorMessage" />
+    ErrorMessage="@State.ErrorMessage"
+    OnClose="@(() => State.ShowLoginOverlay = false)" />
 
 @code {
     [Parameter] public CategoryDetailsState State { get; set; } = default!;

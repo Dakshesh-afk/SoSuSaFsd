@@ -1,10 +1,10 @@
 @* AuthOverlay - Login and Registration overlay *@
 
-<div id="auth-overlay" class="auth-overlay" style="display: @(IsVisible ? "flex" : "none")">
-    <div class="auth-card">
+<div id="auth-overlay" class="auth-overlay" style="display: @(IsVisible ? "flex" : "none")" @onclick="HandleOverlayClick">
+    <div class="auth-card" @onclick:stopPropagation>
         <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
             <h3 style="margin:0;">Welcome</h3>
-            <span style="cursor:pointer; font-size:20px;" onclick="document.getElementById('auth-overlay').style.display = 'none'">&times;</span>
+            <span style="cursor:pointer; font-size:20px;" @onclick="CloseOverlay">&times;</span>
         </div>
         
         @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -12,38 +12,43 @@
             <div class="error-msg">@ErrorMessage</div>
         }
         
-        <div id="login-view">
-            <form action="api/Account/login" method="post">
-                <div class="auth-input-group">
-                    <input type="text" name="username" placeholder="Username" required />
+        @if (showLoginView)
+        {
+            <div id="login-view">
+                <form action="api/Account/login" method="post">
+                    <div class="auth-input-group">
+                        <input type="text" name="username" placeholder="Username" required />
+                    </div>
+                    <div class="auth-input-group">
+                        <input type="password" name="password" placeholder="Password" required />
+                    </div>
+                    <button type="submit" class="auth-btn">Log In</button>
+                </form>
+                <div class="auth-switch">
+                    Don't have an account? <a @onclick="ToggleAuthMode" @onclick:preventDefault style="cursor: pointer;">Register</a>
                 </div>
-                <div class="auth-input-group">
-                    <input type="password" name="password" placeholder="Password" required />
-                </div>
-                <button type="submit" class="auth-btn">Log In</button>
-            </form>
-            <div class="auth-switch">
-                Don't have an account? <a onclick="toggleAuthMode()">Register</a>
             </div>
-        </div>
-        
-        <div id="register-view" class="hidden">
-            <form action="api/Account/register" method="post">
-                <div class="auth-input-group">
-                    <input type="email" name="email" placeholder="Email Address" required />
+        }
+        else
+        {
+            <div id="register-view">
+                <form action="api/Account/register" method="post">
+                    <div class="auth-input-group">
+                        <input type="email" name="email" placeholder="Email Address" required />
+                    </div>
+                    <div class="auth-input-group">
+                        <input type="text" name="username" placeholder="Username" required />
+                    </div>
+                    <div class="auth-input-group">
+                        <input type="password" name="password" placeholder="Password" required />
+                    </div>
+                    <button type="submit" class="auth-btn">Sign Up</button>
+                </form>
+                <div class="auth-switch">
+                    Already have an account? <a @onclick="ToggleAuthMode" @onclick:preventDefault style="cursor: pointer;">Log In</a>
                 </div>
-                <div class="auth-input-group">
-                    <input type="text" name="username" placeholder="Username" required />
-                </div>
-                <div class="auth-input-group">
-                    <input type="password" name="password" placeholder="Password" required />
-                </div>
-                <button type="submit" class="auth-btn">Sign Up</button>
-            </form>
-            <div class="auth-switch">
-                Already have an account? <a onclick="toggleAuthMode()">Log In</a>
             </div>
-        </div>
+        }
     </div>
 </div>
 
@@ -59,4 +64,41 @@
     /// </summary>
     [Parameter]
     public string ErrorMessage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Callback invoked when the overlay is closed
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private bool showLoginView = true;
+
+    protected override void OnParametersSet()
+    {
+        // Reset to login view when overlay opens
+        if (IsVisible)
+        {
+            showLoginView = true;
+        }
+    }
+
+    private void ToggleAuthMode()
+    {
+        showLoginView = !showLoginView;
+        StateHasChanged();
+    }
+
+    private async Task CloseOverlay()
+    {
+        showLoginView = true; // Reset to login view when closing
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private async Task HandleOverlayClick()
+    {
+        await CloseOverlay();
+    }
 }

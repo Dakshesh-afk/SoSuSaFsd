@@ -1,0 +1,115 @@
+@using SoSuSaFsd.Domain
+
+@* PostCardComments - Comment section with nested replies *@
+
+@if (ShowComments != null && ShowComments.ContainsKey(Post.Id) && ShowComments[Post.Id])
+{
+    <div class="comment-section">
+        <div class="comment-list">
+            @if (PostComments != null && PostComments.ContainsKey(Post.Id) && PostComments[Post.Id] != null)
+            {
+                var allComments = PostComments[Post.Id];
+                var parentComments = allComments.Where(c => c.ParentCommentID == null).OrderBy(c => c.DateCreated);
+
+                @foreach (var comment in parentComments)
+                {
+                    var replies = allComments.Where(c => c.ParentCommentID == comment.Id).OrderBy(c => c.DateCreated).ToList();
+
+                    @* Parent Comment *@
+                    <div class="comment-item">
+                        <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
+                        <div class="comment-bubble-wrapper" style="flex: 1;">
+                            <div class="comment-bubble">
+                                <div>
+                                    <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
+                                    <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                </div>
+                                <div class="comment-text">@comment.Content</div>
+                            </div>
+                            <div class="comment-actions" style="margin-top: 2px; margin-left: 10px;">
+                                <button style="background:none; border:none; cursor:pointer; font-size:11px; color:#666; font-weight:600;"
+                                        @onclick="() => OnToggleReply.InvokeAsync(comment.Id)">
+                                    Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Nested Replies *@
+                    @if (replies.Any())
+                    {
+                        <div class="replies-list" style="margin-left: 45px; border-left: 2px solid #eee; padding-left: 10px; margin-bottom: 10px;">
+                            @foreach (var reply in replies)
+                            {
+                                <div class="comment-item" style="margin-bottom: 8px;">
+                                    <div class="comment-avatar" style="width: 24px; height: 24px; background-image: url('@(reply.User?.ProfileImage ?? "")');"></div>
+                                    <div class="comment-bubble" style="padding: 8px 12px;">
+                                        <div>
+                                            <span class="comment-user" style="font-size: 11px;">@(reply.User?.UserName ?? "User")</span>
+                                            <span class="comment-date" style="font-size: 10px;">@reply.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                        </div>
+                                        <div class="comment-text" style="font-size: 13px;">@reply.Content</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @* Reply Input Box *@
+                    @if (ActiveReplyBoxes != null && ActiveReplyBoxes.ContainsKey(comment.Id) && ActiveReplyBoxes[comment.Id])
+                    {
+                        <div class="reply-input-area" style="margin-left: 45px; margin-bottom: 15px; display: flex; gap: 5px;">
+                            <input type="text" class="comment-input" style="font-size: 13px; padding: 6px;" placeholder="Write a reply..."
+                                   value="@(ReplyDrafts != null && ReplyDrafts.ContainsKey(comment.Id) ? ReplyDrafts[comment.Id] : "")"
+                                   @onchange="@(e => OnUpdateReplyDraft.InvokeAsync(new ReplyDraftEventArgs { ParentCommentId = comment.Id, Content = e.Value?.ToString() }))" />
+                            <button class="comment-send-btn" style="padding: 0 10px; font-size: 12px;"
+                                    @onclick="() => OnSubmitReply.InvokeAsync(new SubmitReplyEventArgs { PostId = Post.Id, ParentCommentId = comment.Id })">
+                                Reply
+                            </button>
+                        </div>
+                    }
+                }
+            }
+        </div>
+
+        @* Main Comment Input *@
+        <div class="comment-input-area">
+            <input type="text" class="comment-input" placeholder="Write a comment..."
+                   value="@(CommentDrafts != null && CommentDrafts.ContainsKey(Post.Id) ? CommentDrafts[Post.Id] : "")"
+                   @onchange="@(e => OnUpdateDraft.InvokeAsync(new CommentDraftEventArgs { PostId = Post.Id, Content = e.Value?.ToString() }))" />
+            <button class="comment-send-btn" @onclick="() => OnSubmitComment.InvokeAsync(Post.Id)">Post</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Posts Post { get; set; } = null!;
+    [Parameter] public Dictionary<int, bool>? ShowComments { get; set; }
+    [Parameter] public Dictionary<int, List<Comments>>? PostComments { get; set; }
+    [Parameter] public Dictionary<int, string>? CommentDrafts { get; set; }
+    [Parameter] public Dictionary<int, bool>? ActiveReplyBoxes { get; set; }
+    [Parameter] public Dictionary<int, string>? ReplyDrafts { get; set; }
+    [Parameter] public EventCallback<CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
+    [Parameter] public EventCallback<int> OnToggleReply { get; set; }
+    [Parameter] public EventCallback<ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<SubmitReplyEventArgs> OnSubmitReply { get; set; }
+
+    public class CommentDraftEventArgs
+    {
+        public int PostId { get; set; }
+        public string? Content { get; set; }
+    }
+
+    public class ReplyDraftEventArgs
+    {
+        public int ParentCommentId { get; set; }
+        public string? Content { get; set; }
+    }
+
+    public class SubmitReplyEventArgs
+    {
+        public int PostId { get; set; }
+        public int ParentCommentId { get; set; }
+    }
+}

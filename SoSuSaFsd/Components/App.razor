@@ -59,25 +59,6 @@
         };
 
         // --- UI HELPERS ---
-        function toggleAuthMode() {
-            const loginView = document.getElementById('login-view');
-            const regView = document.getElementById('register-view');
-            if (loginView.classList.contains('hidden')) {
-                loginView.classList.remove('hidden');
-                regView.classList.add('hidden');
-            } else {
-                loginView.classList.add('hidden');
-                regView.classList.remove('hidden');
-            }
-        }
-
-        function showLoginOverlay() {
-            const overlay = document.getElementById('auth-overlay');
-            if(overlay) overlay.style.display = 'flex';
-            document.getElementById('login-view').classList.remove('hidden');
-            document.getElementById('register-view').classList.add('hidden');
-        }
-
         function showSection(sectionName) {
             document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.main-nav a').forEach(el => el.classList.remove('active-link'));

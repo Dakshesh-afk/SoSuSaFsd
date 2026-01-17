@@ -4,6 +4,7 @@
 @using SoSuSaFsd.Components.Pages.CategoryDetailsComponents
 @using SoSuSaFsd.Components.Pages.CategoryDetailsComponents.Sections
 @using SoSuSaFsd.Components.Common
+@using SoSuSaFsd.Components.Common.PostCardComponents
 
 <PageTitle>@State.Title</PageTitle>
 <link rel="stylesheet" href="/styles/category-details.css" />
@@ -60,23 +61,23 @@
     OnNavigateToCreate="@NavigateToCreate" />
 
 @code {
-    private void UpdateCommentDraftWrapper(PostCard.CommentDraftEventArgs args)
+    private void UpdateCommentDraftWrapper(PostCardComments.CommentDraftEventArgs args)
     {
         UpdateCommentDraft(args.PostId, args.Content);
     }
 
-    private void UpdateCarouselIndexWrapper(PostCard.CarouselEventArgs args)
+    private void UpdateCarouselIndexWrapper(PostCardMedia.CarouselEventArgs args)
     {
         State.CarouselIndices[args.PostId] = args.Index;
         StateHasChanged();
     }
 
-    private void UpdateReplyDraftWrapper(PostCard.ReplyDraftEventArgs args)
+    private void UpdateReplyDraftWrapper(PostCardComments.ReplyDraftEventArgs args)
     {
         UpdateReplyDraft(args.ParentCommentId, args.Content);
     }
 
-    private async Task SubmitReplyWrapper(PostCard.SubmitReplyEventArgs args)
+    private async Task SubmitReplyWrapper(PostCardComments.SubmitReplyEventArgs args)
     {
         await SubmitReply(args.PostId, args.ParentCommentId);
     }

@@ -7,21 +7,17 @@ namespace SoSuSaFsd.Services
 {
     public interface IPostService
     {
-        // Posts
         Task<List<Posts>> GetCategoryPostsAsync(int categoryId);
         Task<List<Posts>> GetUserFeedPostsAsync(List<int> followedCategoryIds);
         Task<List<Posts>> GetUserPostsAsync(string userId);
         Task CreatePostAsync(Posts post);
         
-        // Likes
         Task<bool> ToggleLikeAsync(int postId, string userId);
         Task<int> GetLikeCountAsync(int postId);
         
-        // Comments
         Task<List<Comments>> GetPostCommentsAsync(int postId);
         Task CreateCommentAsync(Comments comment);
         
-        // Reports
         Task<bool> HasUserReportedAsync(int postId, string userId);
         Task CreateReportAsync(Reports report);
         Task<bool> IsReportDismissedAsync(int postId);
@@ -43,7 +39,6 @@ namespace SoSuSaFsd.Services
             _errorHandler = errorHandler;
         }
 
-        // ========== POSTS ==========
         public async Task<List<Posts>> GetCategoryPostsAsync(int categoryId)
         {
             try
@@ -142,7 +137,6 @@ namespace SoSuSaFsd.Services
             }
         }
 
-        // ========== LIKES ==========
         public async Task<bool> ToggleLikeAsync(int postId, string userId)
         {
             try
@@ -193,7 +187,6 @@ namespace SoSuSaFsd.Services
             }
         }
 
-        // ========== COMMENTS ==========
         public async Task<List<Comments>> GetPostCommentsAsync(int postId)
         {
             try
@@ -237,7 +230,6 @@ namespace SoSuSaFsd.Services
             }
         }
 
-        // ========== REPORTS ==========
         public async Task<bool> HasUserReportedAsync(int postId, string userId)
         {
             try

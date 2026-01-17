@@ -85,26 +85,27 @@
             OnPasswordChange="@OnPasswordChange"
             OnAccessRequest="@OnAccessRequest"
             OnSelectedCategoryChanged="@((value) => State.SelectedCategoryId = value)"
-            OnAccessReasonChanged="@((value) => State.AccessRequestReason = value)" />
+            OnAccessReasonChanged="@((value) => State.AccessRequestReason = value)"
+            OnFileSelected="@OnFileSelected" />
     </div>
 </main>
 
 @code {
     [Parameter] public HomePageState State { get; set; } = default!;
-    [Parameter] public SettingsPanel.PasswordChangeModel PasswordModel { get; set; } = default!;
+    [Parameter] public ChangePasswordForm.PasswordChangeModel PasswordModel { get; set; } = default!;
     
     // Post interaction events
     [Parameter] public EventCallback<int> OnLike { get; set; }
     [Parameter] public EventCallback<int> OnComment { get; set; }
     [Parameter] public EventCallback<int> OnReport { get; set; }
-    [Parameter] public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<PostCardComments.CommentDraftEventArgs> OnUpdateDraft { get; set; }
     [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
-    [Parameter] public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
+    [Parameter] public EventCallback<PostCardMedia.CarouselEventArgs> OnCarouselChange { get; set; }
     
     // Reply events
     [Parameter] public EventCallback<int> OnToggleReply { get; set; }
-    [Parameter] public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
-    [Parameter] public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
+    [Parameter] public EventCallback<PostCardComments.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<PostCardComments.SubmitReplyEventArgs> OnSubmitReply { get; set; }
     
     // Following events
     [Parameter] public EventCallback<int> OnUnfollow { get; set; }
@@ -114,4 +115,5 @@
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnImageChange { get; set; }
     [Parameter] public EventCallback OnPasswordChange { get; set; }
     [Parameter] public EventCallback OnAccessRequest { get; set; }
+    [Parameter] public EventCallback<IBrowserFile> OnFileSelected { get; set; }
 }

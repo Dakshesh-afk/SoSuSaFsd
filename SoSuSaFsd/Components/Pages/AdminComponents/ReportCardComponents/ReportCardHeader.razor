@@ -1,0 +1,72 @@
+@using SoSuSaFsd.Domain
+
+@* ReportCardHeader - Status badge, title, and metadata *@
+
+@{
+    var isResolved = Group.Any(r => r.Status == "Resolved" || r.Status == "Dismissed");
+    var effectiveStatus = isResolved ? "Dismissed" : "Pending";
+    var resolvedDate = Group.Where(r => r.Status != "Pending").OrderByDescending(r => r.DateCreated).FirstOrDefault()?.DateCreated;
+    var latestDate = Group.Max(r => r.DateCreated);
+    var reportCount = Group.Count();
+    var newReportsCount = Group.Count(r => r.Status == "Pending");
+    var uniqueCategories = Group.Select(r => r.Reason.Contains(":") ? r.Reason.Split(':')[0].Trim() : r.Reason.Trim()).Distinct().ToList();
+    var title = string.Join(", ", uniqueCategories);
+    var rep = Group.First();
+}
+
+<div class="report-header">
+    <div class="flex items-start gap-3 w-full">
+        <span class="status-badge @GetStatusBadgeClass(effectiveStatus) mt-1 flex-shrink-0">@effectiveStatus</span>
+
+        <div class="flex-grow">
+            <div class="flex flex-wrap items-baseline gap-2 mb-1">
+                <span class="font-bold text-gray-900 text-lg leading-tight">@title</span>
+                @if (isResolved && newReportsCount > 0)
+                {
+                    <span class="text-xs font-medium text-gray-500 px-2 py-0.5">(@newReportsCount new reports)</span>
+                }
+                else if (reportCount > 1)
+                {
+                    <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">@reportCount reports</span>
+                }
+            </div>
+
+            <div class="flex gap-2">
+                @if (rep.PostID != null)
+                {
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">Post</span>
+                }
+                else if (rep.CommentID != null)
+                {
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-gray-600 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">Comment</span>
+                }
+                else if (rep.CategoryID != null)
+                {
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded">Category</span>
+                }
+                else if (rep.TargetUserID != null)
+                {
+                    <span class="text-[10px] uppercase font-bold tracking-wider text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded">User</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="text-right flex-shrink-0 ml-4">
+        @if (isResolved && resolvedDate.HasValue)
+        {
+            <span class="text-xs text-gray-500 block">Resolved:</span>
+            <span class="text-xs font-bold text-gray-700">@resolvedDate.Value.ToString("MMM dd")</span>
+        }
+        else
+        {
+            <span class="text-xs text-gray-400 block">Latest:</span>
+            <span class="text-xs font-bold text-gray-600">@latestDate.ToString("MMM dd")</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public IGrouping<dynamic, Reports> Group { get; set; } = null!;
+    [Parameter] public Func<string, string> GetStatusBadgeClass { get; set; } = null!;
+}

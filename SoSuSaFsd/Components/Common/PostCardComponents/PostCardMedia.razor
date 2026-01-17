@@ -1,0 +1,70 @@
+@using SoSuSaFsd.Domain
+
+@* PostCardMedia - Image/video carousel for post media *@
+
+@if (Post.Media != null && Post.Media.Any())
+{
+    var mediaList = Post.Media.ToList();
+    var totalMedia = mediaList.Count;
+    var currentIndex = GetCurrentCarouselIndex();
+    var activeMedia = mediaList[currentIndex];
+
+    <div class="carousel-container">
+        @if (totalMedia > 1)
+        {
+            <button class="carousel-btn prev" @onclick="PrevSlide">&#10094;</button>
+        }
+
+        @if (activeMedia.MediaType == "Video")
+        {
+            <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath">
+                Your browser does not support the video tag.
+            </video>
+        }
+        else
+        {
+            <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
+        }
+
+        @if (totalMedia > 1)
+        {
+            <button class="carousel-btn next" @onclick="NextSlide">&#10095;</button>
+            <div class="carousel-counter">@(currentIndex + 1) / @totalMedia</div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Posts Post { get; set; } = null!;
+    [Parameter] public Dictionary<int, int>? CarouselIndices { get; set; }
+    [Parameter] public EventCallback<CarouselEventArgs> OnCarouselChange { get; set; }
+
+    private int GetCurrentCarouselIndex()
+    {
+        if (CarouselIndices == null || !CarouselIndices.ContainsKey(Post.Id))
+            return 0;
+        return CarouselIndices[Post.Id];
+    }
+
+    private async Task NextSlide()
+    {
+        var totalMedia = Post.Media?.Count ?? 0;
+        var currentIndex = GetCurrentCarouselIndex();
+        var newIndex = (currentIndex + 1) % totalMedia;
+        await OnCarouselChange.InvokeAsync(new CarouselEventArgs { PostId = Post.Id, Index = newIndex });
+    }
+
+    private async Task PrevSlide()
+    {
+        var totalMedia = Post.Media?.Count ?? 0;
+        var currentIndex = GetCurrentCarouselIndex();
+        var newIndex = (currentIndex - 1 + totalMedia) % totalMedia;
+        await OnCarouselChange.InvokeAsync(new CarouselEventArgs { PostId = Post.Id, Index = newIndex });
+    }
+
+    public class CarouselEventArgs
+    {
+        public int PostId { get; set; }
+        public int Index { get; set; }
+    }
+}
