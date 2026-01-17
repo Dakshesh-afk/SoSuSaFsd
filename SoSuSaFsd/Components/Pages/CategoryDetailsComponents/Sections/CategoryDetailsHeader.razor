@@ -1,0 +1,22 @@
+@* CATEGORY DETAILS HEADER - Logo and navigation *@
+
+<header class="site-header">
+    <div class="header-container">
+        <div class="logo-area" onclick="location.href='/'">
+            <div class="logo-icon"><i class="fas fa-check"></i></div>
+            <span class="logo-text">SoSuSa</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="login-btn secondary" style="min-width: 40px; padding: 0 10px;" 
+                    title="Refresh Page" @onclick="OnRefresh">
+                <i class="fas fa-redo"></i>
+            </button>
+            <button class="login-btn" onclick="location.href='/'">Back Home</button>
+        </div>
+    </div>
+</header>
+
+@code {
+    [Parameter] public EventCallback OnRefresh { get; set; }
+}

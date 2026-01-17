@@ -1,0 +1,58 @@
+@using SoSuSaFsd.Components.Pages.AdminComponents
+
+@* ADMIN HEADER - Navigation and branding *@
+
+<header class="bg-white border-b-2 border-gray-200 sticky top-0 z-50 py-3 shadow-sm">
+    <div class="w-[95%] mx-auto flex items-center justify-between">
+        <div class="flex items-center cursor-pointer" @onclick="@(() => OnTabChange.InvokeAsync("dashboard"))">
+            <div class="logo-icon mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-2xl font-bold text-gray-900 tracking-tight leading-none">SoSuSa</span>
+                <span class="text-[10px] uppercase font-bold text-gray-500 tracking-widest leading-none mt-0.5">Dashboard</span>
+            </div>
+        </div>
+
+        <nav class="flex gap-8">
+            <button @onclick="@(() => OnTabChange.InvokeAsync("dashboard"))" class="nav-link @(State.ActiveTab == "dashboard" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Dashboard
+            </button>
+            <button @onclick="@(() => OnTabChange.InvokeAsync("reports"))" class="nav-link @(State.ActiveTab == "reports" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Moderation
+                @if (State.PendingNotificationCount > 0)
+                {
+                    <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full -mt-1 ml-1">@State.PendingNotificationCount</span>
+                }
+            </button>
+            <button @onclick="@(() => OnTabChange.InvokeAsync("verifications"))" class="nav-link @(State.ActiveTab == "verifications" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Access
+            </button>
+            <button @onclick="@(() => OnTabChange.InvokeAsync("categories"))" class="nav-link @(State.ActiveTab == "categories" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Categories
+            </button>
+            <button @onclick="@(() => OnTabChange.InvokeAsync("users"))" class="nav-link @(State.ActiveTab == "users" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Users
+            </button>
+        </nav>
+
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-gray-900 leading-tight">Administrator</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Super User</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm border-2 border-gray-200 shadow-sm">AU</div>
+            </div>
+            <button @onclick="OnExit" class="text-gray-400 hover:text-red-600 transition-colors bg-transparent border-0 cursor-pointer p-1 rounded-full hover:bg-gray-100" title="Exit to App">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+@code {
+    [Parameter] public AdminState State { get; set; } = default!;
+    [Parameter] public EventCallback<string> OnTabChange { get; set; }
+    [Parameter] public EventCallback OnExit { get; set; }
+}

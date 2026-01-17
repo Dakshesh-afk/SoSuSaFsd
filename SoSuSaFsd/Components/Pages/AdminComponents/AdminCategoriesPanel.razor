@@ -1,0 +1,81 @@
+@using SoSuSaFsd.Domain
+
+@* AdminCategoriesPanel - Category management with verification *@
+
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+        <h3 class="font-bold text-gray-900">Category Management</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
+                <tr>
+                    <th class="px-6 py-3">Category Name</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3">Verification</th>
+                    <th class="px-6 py-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cat in AllCategories)
+                {
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="font-bold text-gray-900"># @cat.CategoryName</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="status-badge">
+                                @if (cat.IsVerified)
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-green-50 text-green-700 border border-green-200 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></span>Verified
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-gray-50 text-gray-600 border border-gray-200 whitespace-nowrap">
+                                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5 flex-shrink-0"></span>Unverified
+                                    </span>
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <label class="toggle-switch">
+                                <input type="checkbox" 
+                                       checked="@cat.IsVerified" 
+                                       @onchange="@(() => OnToggleVerification.InvokeAsync(cat.Id))" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button @onclick="@(() => OnRequestDeleteCategory.InvokeAsync(cat.Id))" 
+                                    class="text-red-500 font-bold text-xs uppercase hover:text-red-700 transition-colors border-0 bg-none cursor-pointer">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// List of all categories
+    /// </summary>
+    [Parameter]
+    public List<Categories> AllCategories { get; set; } = new();
+
+    /// <summary>
+    /// Callback to toggle category verification
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnToggleVerification { get; set; }
+
+    /// <summary>
+    /// Callback to request category deletion
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnRequestDeleteCategory { get; set; }
+}

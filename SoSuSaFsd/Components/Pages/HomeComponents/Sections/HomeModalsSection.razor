@@ -1,0 +1,38 @@
+@using SoSuSaFsd.Components.Common
+
+@* HOME MODALS SECTION - All modal dialogs *@
+
+@* REPORT MODAL *@
+<HomeReportModal 
+    IsVisible="@State.ShowReportModal"
+    ReasonSelection="@State.ReportReasonSelection"
+    ReasonDetails="@State.ReportReasonDetails"
+    OnCancel="@(() => State.ShowReportModal = false)"
+    OnReasonChange="@((value) => State.ReportReasonSelection = value)"
+    OnDetailsChange="@((value) => State.ReportReasonDetails = value)"
+    OnSubmit="@OnSubmitReport" />
+
+@* NOTIFICATION MODAL *@
+<NotificationModal 
+    IsVisible="@State.ShowNotificationModal"
+    Message="@State.NotificationMessage"
+    Type="@State.NotificationType"
+    OnClose="@State.CloseNotification" />
+
+@* CATEGORY SEARCH MODAL *@
+<CategorySearchModal 
+    IsVisible="@State.ShowCreateConfirm"
+    SearchTerm="@State.SearchTerm"
+    OnCreate="@OnNavigateToCreate"
+    OnCancel="@(() => State.ShowCreateConfirm = false)" />
+
+@* AUTH OVERLAY *@
+<AuthOverlay 
+    IsVisible="@State.ShowLoginOverlay"
+    ErrorMessage="@State.ErrorMessage" />
+
+@code {
+    [Parameter] public HomePageState State { get; set; } = default!;
+    [Parameter] public EventCallback OnSubmitReport { get; set; }
+    [Parameter] public EventCallback OnNavigateToCreate { get; set; }
+}

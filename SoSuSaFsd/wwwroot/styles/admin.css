@@ -41,6 +41,15 @@ html {
     border-bottom: 2px solid #333;
 }
 
+/* === ADMIN PANEL SWITCHING === */
+.admin-panel {
+    display: none;
+}
+
+.admin-panel.active {
+    display: block;
+}
+
 /* === STATUS BADGES === */
 .status-badge {
     display: inline-flex;

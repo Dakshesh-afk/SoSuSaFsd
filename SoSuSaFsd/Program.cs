@@ -48,6 +48,10 @@ try
     builder.Services.AddScoped<IPostService, PostService>();
     builder.Services.AddScoped<ICategoryService, CategoryService>();
     builder.Services.AddScoped<IErrorHandlingService, ErrorHandlingService>();
+    builder.Services.AddScoped<SoSuSaFsd.Components.Pages.HomeComponents.IHomePageService, 
+        SoSuSaFsd.Components.Pages.HomeComponents.HomePageService>();
+    builder.Services.AddScoped<SoSuSaFsd.Components.Pages.CategoryDetailsComponents.ICategoryDetailsService,
+        SoSuSaFsd.Components.Pages.CategoryDetailsComponents.CategoryDetailsService>();
 
     // ========== SIGNALR ==========
     builder.Services.Configure<HubOptions>(options =>

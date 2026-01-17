@@ -1,0 +1,53 @@
+@using SoSuSaFsd.Domain
+
+@* LEFT SIDEBAR - Following categories and search *@
+<aside class="sidebar sidebar-left">
+    <div class="sidebar-section scrollable-list">
+        <h3>Following</h3>
+        <ul class="category-list">
+            @if (State.FollowedCategories != null && State.FollowedCategories.Any())
+            {
+                @foreach (var cat in State.FollowedCategories)
+                {
+                    <li>
+                        <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => OnCategoryClick.InvokeAsync(cat.Id))">
+                            <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
+                            @if (cat.IsVerified)
+                            {
+                                <i class="fas fa-check-circle verified-badge-small" title="Verified"></i>
+                            }
+                        </a>
+                    </li>
+                }
+            }
+            else
+            {
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="empty-list-item">You aren't following anything yet.</li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="empty-list-item">Login to see follows.</li>
+                    </NotAuthorized>
+                </AuthorizeView>
+            }
+        </ul>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="category-search-container">
+            <input type="text" placeholder="Find category..." 
+                   @bind="State.SearchTerm" @bind:event="oninput" />
+            <button type="button" class="create-cat-btn" 
+                    title="Create New Category" @onclick="OnCategorySearch">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </div>
+</aside>
+
+@code {
+    [Parameter] public CategoryDetailsState State { get; set; } = default!;
+    [Parameter] public EventCallback<int> OnCategoryClick { get; set; }
+    [Parameter] public EventCallback OnCategorySearch { get; set; }
+}

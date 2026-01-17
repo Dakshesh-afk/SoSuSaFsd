@@ -1,0 +1,125 @@
+@using SoSuSaFsd.Components.Common
+@using Microsoft.AspNetCore.Components.Forms
+
+@* CATEGORY MODALS SECTION - All modal dialogs *@
+
+@* POST CREATION MODAL *@
+@if (State.ShowPostModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="@(() => State.ClosePostModal())">×</span>
+            <h2>Create Post</h2>
+            <div class="modal-subtitle">Posting to <b>#@State.CurrentCategory?.CategoryName</b></div>
+            <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="State.NewPostContent"></textarea>
+            <div class="file-input-wrapper">
+                <label>
+                    Add Media (Images or Videos): @if (State.IsUploading)
+                    {
+                        <span class="upload-loading">Uploading... please wait.</span>
+                    }
+                </label>
+                <InputFile OnChange="OnFilesSelected" multiple accept=".jpg,.jpeg,.png,.gif,.mp4,.webm,.mov" />
+            </div>
+            <div class="preview-container">
+                @for (int i = 0; i < State.PendingUploads.Count; i++)
+                {
+                    var index = i;
+                    var file = State.PendingUploads[i];
+                    <div class="preview-item">
+                        <button class="remove-media-btn" @onclick="@(() => OnRemoveFile.InvokeAsync(index))">×</button>
+                        @if (file.MediaType == "Video")
+                        {
+                            <video class="preview-media" src="@file.SavedPath"></video>
+                        }
+                        else
+                        {
+                            <img class="preview-media" src="@file.SavedPath" alt="Preview" />
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal-actions">
+                <button class="login-btn secondary" @onclick="@(() => State.ClosePostModal())">Cancel</button>
+                <button class="login-btn" @onclick="OnCreatePost" disabled="@State.IsUploading">@(State.IsUploading ? "Uploading..." : "Post")</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* REQUEST ACCESS MODAL *@
+@if (State.ShowRequestModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="@(() => State.ShowRequestModal = false)">×</span>
+            <h2>Request Access</h2>
+            <div class="modal-subtitle">Requesting permission to post in verified category <b>#@State.CurrentCategory?.CategoryName</b></div>
+            <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="State.RequestReason"></textarea>
+            <div class="modal-actions">
+                <button class="login-btn secondary" @onclick="@(() => State.ShowRequestModal = false)">Cancel</button>
+                <button class="login-btn" @onclick="OnSubmitRequest">Submit Request</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* REPORT MODAL *@
+@if (State.ShowReportModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="@(() => State.ShowReportModal = false)">×</span>
+            <h2 class="modal-title-error">Report Content</h2>
+            <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
+            <div class="form-group">
+                <label>Reason:</label>
+                <select class="modal-textarea form-select" @bind="State.ReportReasonSelection">
+                    <option value="Spam">Spam</option>
+                    <option value="Harassment">Harassment or Bullying</option>
+                    <option value="Misinformation">Misinformation</option>
+                    <option value="Hate Speech">Hate Speech</option>
+                    <option value="Inappropriate">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Additional Details (Optional):</label>
+                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="State.ReportReasonDetails"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="login-btn secondary" @onclick="@(() => State.ShowReportModal = false)">Cancel</button>
+                <button class="login-btn btn-error" @onclick="OnSubmitReport">Submit Report</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* NOTIFICATION MODAL *@
+<NotificationModal 
+    IsVisible="@State.ShowNotificationModal"
+    Message="@State.NotificationMessage"
+    Type="@State.NotificationType"
+    OnClose="@State.CloseNotification" />
+
+@* CATEGORY SEARCH MODAL *@
+<CategorySearchModal 
+    IsVisible="@State.ShowCreateConfirm"
+    SearchTerm="@State.SearchTerm"
+    OnCreate="@OnNavigateToCreate"
+    OnCancel="@(() => State.ShowCreateConfirm = false)" />
+
+@* AUTH OVERLAY *@
+<AuthOverlay 
+    IsVisible="@State.ShowLoginOverlay"
+    ErrorMessage="@State.ErrorMessage" />
+
+@code {
+    [Parameter] public CategoryDetailsState State { get; set; } = default!;
+    [Parameter] public EventCallback<InputFileChangeEventArgs> OnFilesSelected { get; set; }
+    [Parameter] public EventCallback<int> OnRemoveFile { get; set; }
+    [Parameter] public EventCallback OnCreatePost { get; set; }
+    [Parameter] public EventCallback OnSubmitRequest { get; set; }
+    [Parameter] public EventCallback OnSubmitReport { get; set; }
+    [Parameter] public EventCallback OnNavigateToCreate { get; set; }
+}

@@ -1,0 +1,97 @@
+@using SoSuSaFsd.Domain
+
+@* ProfileHeader - User profile header with avatar, stats, and actions *@
+
+<div class="category-header-card">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div class="profile-avatar-large" 
+             style="background-image: url('@(ProfileImage ?? "")'); margin: 0 auto 15px; width: 120px; height: 120px; background-size: cover; background-position: center; border-radius: 50%;"></div>
+        <h1 class="page-title" style="margin-bottom: 5px;">@DisplayName</h1>
+        <p style="color: #666; font-size: 16px; margin: 0 0 15px 0;">@@@Username</p>
+    </div>
+
+    <div class="profile-stats" style="display: flex; justify-content: center; gap: 30px; margin-bottom: 12px;">
+        <div class="stat-item" style="text-align: center;">
+            <b style="font-size: 24px;">@PostCount</b>
+            <span style="display: block; color: #666; font-size: 13px;">Posts</span>
+        </div>
+        <div class="stat-item" style="text-align: center;">
+            <b style="font-size: 24px;">@FollowerCount</b>
+            <span style="display: block; color: #666; font-size: 13px;">Followers</span>
+        </div>
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:12px;">
+        <button class="login-btn" @onclick="OnReportUser" disabled="@IsReportDisabled">Report User</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ReportStatusMessage))
+    {
+        <div class="@(ReportStatusMessage.Contains("Error") ? "error-msg" : "success-msg")" style="margin-bottom:12px; text-align:center;">
+            @ReportStatusMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-error">
+            <strong>Error:</strong> @ErrorMessage
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Profile image URL
+    /// </summary>
+    [Parameter]
+    public string? ProfileImage { get; set; }
+
+    /// <summary>
+    /// Display name
+    /// </summary>
+    [Parameter]
+    public string DisplayName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Username
+    /// </summary>
+    [Parameter]
+    public string Username { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Number of posts by this user
+    /// </summary>
+    [Parameter]
+    public int PostCount { get; set; }
+
+    /// <summary>
+    /// Number of followers
+    /// </summary>
+    [Parameter]
+    public int FollowerCount { get; set; }
+
+    /// <summary>
+    /// Whether the report button should be disabled
+    /// </summary>
+    [Parameter]
+    public bool IsReportDisabled { get; set; }
+
+    /// <summary>
+    /// Report status message
+    /// </summary>
+    [Parameter]
+    public string ReportStatusMessage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Error message
+    /// </summary>
+    [Parameter]
+    public string ErrorMessage { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Callback when report user button is clicked
+    /// </summary>
+    [Parameter]
+    public EventCallback OnReportUser { get; set; }
+}

@@ -1,0 +1,117 @@
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Components.Common
+@using Microsoft.AspNetCore.Components.Forms
+
+@* HOME FEEDS SECTION - All feed views (Home, Profile, Following, Settings) *@
+
+<main class="feed-area">
+    @* HOME FEED *@
+    <div id="feed-home" class="section-view active">
+        <SharedPostFeed 
+            Title="Home"
+            ShowCreateButton="true"
+            CreateButtonText="Create Post"
+            OnCreatePost="@(() => {})"
+            Posts="@State.FeedPosts"
+            CurrentUser="@State.CurrentUser"
+            DebugMode="@State.DebugRenderPosts"
+            EmptyStateTitle="Your feed is empty."
+            EmptyStateMessage="Follow categories to see posts here!"
+            ShowComments="@State.ShowComments"
+            PostComments="@State.PostComments"
+            CommentDrafts="@State.CommentDrafts"
+            CarouselIndices="@State.CarouselIndices"
+            ActiveReplyBoxes="@State.ActiveReplyBoxes"
+            ReplyDrafts="@State.ReplyDrafts"
+            OnLike="@OnLike"
+            OnComment="@OnComment"
+            OnReport="@OnReport"
+            OnUpdateDraft="@OnUpdateDraft"
+            OnSubmitComment="@OnSubmitComment"
+            OnCarouselChange="@OnCarouselChange"
+            OnToggleReply="@OnToggleReply"
+            OnUpdateReplyDraft="@OnUpdateReplyDraft"
+            OnSubmitReply="@OnSubmitReply" />
+    </div>
+
+    @* PROFILE FEED *@
+    <div id="feed-profile" class="section-view">
+        <SharedPostFeed 
+            Title="My Posts"
+            Posts="@State.UserPosts"
+            CurrentUser="@State.CurrentUser"
+            EmptyStateTitle="No posts yet."
+            EmptyStateMessage="Share your thoughts with the community!"
+            ShowComments="@State.ShowComments"
+            PostComments="@State.PostComments"
+            CommentDrafts="@State.CommentDrafts"
+            CarouselIndices="@State.CarouselIndices"
+            ActiveReplyBoxes="@State.ActiveReplyBoxes"
+            ReplyDrafts="@State.ReplyDrafts"
+            OnLike="@OnLike"
+            OnComment="@OnComment"
+            OnReport="@OnReport"
+            OnUpdateDraft="@OnUpdateDraft"
+            OnSubmitComment="@OnSubmitComment"
+            OnCarouselChange="@OnCarouselChange"
+            OnToggleReply="@OnToggleReply"
+            OnUpdateReplyDraft="@OnUpdateReplyDraft"
+            OnSubmitReply="@OnSubmitReply" />
+    </div>
+
+    @* FOLLOWING FEED *@
+    <div id="feed-following" class="section-view">
+        <FollowingFeed 
+            FollowedCategories="@State.FollowedCategories"
+            OnUnfollow="@OnUnfollow" />
+    </div>
+
+    @* SETTINGS AREA *@
+    <div id="feed-settings" class="section-view">
+        <SettingsPanel 
+            CurrentUser="@State.CurrentUser"
+            StatusMessage="@State.UpdateStatusMessage"
+            PasswordModel="@PasswordModel"
+            PasswordMessage="@State.PasswordMessage"
+            IsPasswordSuccess="@State.IsPasswordSuccess"
+            VerifiedCategories="@State.VerifiedCategoriesForRequest"
+            SelectedCategoryId="@State.SelectedCategoryId"
+            AccessReason="@State.AccessRequestReason"
+            AccessMessage="@State.AccessRequestMessage"
+            IsAccessSuccess="@State.IsAccessRequestSuccess"
+            UserAccessRequests="@State.UserAccessRequests"
+            OnProfileUpdate="@OnProfileUpdate"
+            OnImageChange="@OnImageChange"
+            OnPasswordChange="@OnPasswordChange"
+            OnAccessRequest="@OnAccessRequest"
+            OnSelectedCategoryChanged="@((value) => State.SelectedCategoryId = value)"
+            OnAccessReasonChanged="@((value) => State.AccessRequestReason = value)" />
+    </div>
+</main>
+
+@code {
+    [Parameter] public HomePageState State { get; set; } = default!;
+    [Parameter] public SettingsPanel.PasswordChangeModel PasswordModel { get; set; } = default!;
+    
+    // Post interaction events
+    [Parameter] public EventCallback<int> OnLike { get; set; }
+    [Parameter] public EventCallback<int> OnComment { get; set; }
+    [Parameter] public EventCallback<int> OnReport { get; set; }
+    [Parameter] public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
+    [Parameter] public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
+    
+    // Reply events
+    [Parameter] public EventCallback<int> OnToggleReply { get; set; }
+    [Parameter] public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
+    
+    // Following events
+    [Parameter] public EventCallback<int> OnUnfollow { get; set; }
+    
+    // Settings events
+    [Parameter] public EventCallback OnProfileUpdate { get; set; }
+    [Parameter] public EventCallback<InputFileChangeEventArgs> OnImageChange { get; set; }
+    [Parameter] public EventCallback OnPasswordChange { get; set; }
+    [Parameter] public EventCallback OnAccessRequest { get; set; }
+}

@@ -1,11 +1,10 @@
 ﻿@page "/admin"
+@rendermode InteractiveServer
 @layout Layout.EmptyLayout
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.EntityFrameworkCore
-@using SoSuSaFsd.Domain
-@using SoSuSaFsd.Data
+@using SoSuSaFsd.Components.Pages.AdminComponents
 @using SoSuSaFsd.Services
-@using Microsoft.AspNetCore.Components.Web
+@using SoSuSaFsd.Domain
 
 @attribute [Authorize(Roles = "Admin")]
 
@@ -33,17 +32,25 @@
         </div>
 
         <nav class="flex gap-8">
-            <a @onclick='@(() => activeTab = "dashboard")' class="nav-link @(activeTab == "dashboard" ? "active" : "")">Dashboard</a>
-            <a @onclick='@(() => activeTab = "reports")' class="nav-link @(activeTab == "reports" ? "active" : "")">
+            <button type="button" @onclick='@(() => activeTab = "dashboard")' class="nav-link @(activeTab == "dashboard" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Dashboard
+            </button>
+            <button type="button" @onclick='@(() => activeTab = "reports")' class="nav-link @(activeTab == "reports" ? "active" : "") bg-transparent border-0 cursor-pointer">
                 Moderation
                 @if (PendingNotificationCount > 0)
                 {
                     <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full -mt-1 ml-1">@PendingNotificationCount</span>
                 }
-            </a>
-            <a @onclick='@(() => activeTab = "verifications")' class="nav-link @(activeTab == "verifications" ? "active" : "")">Access</a>
-            <a @onclick='@(() => activeTab = "categories")' class="nav-link @(activeTab == "categories" ? "active" : "")">Categories</a>
-            <a @onclick='@(() => activeTab = "users")' class="nav-link @(activeTab == "users" ? "active" : "")">Users</a>
+            </button>
+            <button type="button" @onclick='@(() => activeTab = "verifications")' class="nav-link @(activeTab == "verifications" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Access
+            </button>
+            <button type="button" @onclick='@(() => activeTab = "categories")' class="nav-link @(activeTab == "categories" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Categories
+            </button>
+            <button type="button" @onclick='@(() => activeTab = "users")' class="nav-link @(activeTab == "users" ? "active" : "") bg-transparent border-0 cursor-pointer">
+                Users
+            </button>
         </nav>
 
         <div class="flex items-center gap-6">
@@ -54,7 +61,7 @@
                 </div>
                 <div class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm border-2 border-gray-200 shadow-sm">AU</div>
             </div>
-            <button @onclick="ExitAdmin" class="text-gray-400 hover:text-red-600 transition-colors bg-transparent border-0 cursor-pointer p-1 rounded-full hover:bg-gray-100" title="Exit to App">
+            <button type="button" @onclick="ExitAdmin" class="text-gray-400 hover:text-red-600 transition-colors bg-transparent border-0 cursor-pointer p-1 rounded-full hover:bg-gray-100" title="Exit to App">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
             </button>
         </div>
@@ -82,307 +89,73 @@
         }
     </div>
 
-    @* --- DASHBOARD TAB --- *@
-    @if (activeTab == "dashboard")
-    {
+    <div class="admin-panel @(activeTab == "dashboard" ? "active" : "")" id="panel-dashboard">
         <div class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                @RenderStatCard("Total Users", AllUsers.Count, "bg-blue-600")
-                @RenderStatCard("Pending Reports", PendingNotificationCount, "bg-amber-500")
-                @RenderStatCard("Category Requests", AccessRequests.Count(v => v.Status == "Pending"), "bg-green-600")
-                @RenderStatCard("Categories", AllCategories.Count, "bg-purple-600")
-            </div>
-        </div>
-    }
-
-    @* --- REPORTS TAB --- *@
-    @if (activeTab == "reports")
-    {
-        <div class="space-y-4">
-            @{
-                var groupedQuery = AllReports
-                .GroupBy(r => new { r.PostID, r.CommentID, r.CategoryID, r.TargetUserID });
-
-                if (reportFilter.Contains("pending"))
-                {
-                    groupedQuery = groupedQuery.Where(g => !g.Any(r => r.Status == "Resolved" || r.Status == "Dismissed"));
-                }
-
-                IEnumerable<IGrouping<dynamic, Reports>> sortedGroups;
-
-                if (reportFilter.Contains("most"))
-                {
-                    sortedGroups = groupedQuery.OrderByDescending(g => g.Count());
-                }
-                else
-                {
-                    sortedGroups = groupedQuery.OrderByDescending(g => g.Max(r => r.DateCreated));
-                }
-            }
-
-            @foreach (var group in sortedGroups)
-            {
-                <div class="report-card">@RenderReportCard(group)</div>
-            }
-
-            @if (!sortedGroups.Any())
-            {
-                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-8 text-center text-gray-500">
-                    <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
-                    <p class="text-lg font-semibold text-gray-700">No reports found.</p>
-                    <p>Try changing the filter options.</p>
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-1">Total Users</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@AllUsers.Count</h3>
+                    </div>
+                    <div class="p-2 rounded-md bg-blue-600 bg-opacity-90 text-white w-9 h-9 flex items-center justify-center shadow-sm">#</div>
                 </div>
-            }
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-1">Pending Reports</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@PendingNotificationCount</h3>
+                    </div>
+                    <div class="p-2 rounded-md bg-amber-500 bg-opacity-90 text-white w-9 h-9 flex items-center justify-center shadow-sm">#</div>
+                </div>
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-1">Category Requests</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@AccessRequests.Count(v => v.Status == "Pending")</h3>
+                    </div>
+                    <div class="p-2 rounded-md bg-green-600 bg-opacity-90 text-white w-9 h-9 flex items-center justify-center shadow-sm">#</div>
+                </div>
+                <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
+                    <div>
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-1">Categories</p>
+                        <h3 class="text-2xl font-bold text-gray-900">@AllCategories.Count</h3>
+                    </div>
+                    <div class="p-2 rounded-md bg-purple-600 bg-opacity-90 text-white w-9 h-9 flex items-center justify-center shadow-sm">#</div>
+                </div>
+            </div>
         </div>
-    }
+    </div>
 
-    @* --- USERS TAB --- *@
-    @if (activeTab == "users")
-    {
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <table class="w-full text-left text-sm text-gray-600">
-                <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-3">User</th>
-                        <th class="px-6 py-3">Role</th>
-                        <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3">Actions</th> @* ADDED ACTION HEADER *@
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in AllUsers)
-                    {
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-gray-900">@user.DisplayName</div>
-                                <div class="text-xs text-gray-400">@user.UserName</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-0.5 border rounded uppercase text-[11px] font-bold">
-                                    @(!string.IsNullOrEmpty(user.Role) ? user.Role : "User")
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase @(user.IsActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700")">
-                                    @(user.IsActive ? "Active" : "Banned")
-                                </span>
-                            </td>
-                            @* ADDED ACTION BUTTON *@
-                            <td class="px-6 py-4">
-                                @if (user.UserName != "SoSuSaAdmin")
-                                {
-                                    <button @onclick="() => ToggleUserBan(user.Id)"
-                                            class="border transition-colors cursor-pointer px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wide @(user.IsActive ? "border-red-200 text-red-600 hover:bg-red-50" : "border-green-200 text-green-600 hover:bg-green-50")">
-                                        @(user.IsActive ? "Ban User" : "Unban User")
-                                    </button>
-                                }
-                                else
-                                {
-                                    <span class="text-gray-300 text-[10px] uppercase font-bold">Protected</span>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+    <div class="admin-panel @(activeTab == "reports" ? "active" : "")" id="panel-reports">
+        <AdminReportsPanel 
+            AllReports="@AllReports"
+            ReportFilter="@reportFilter"
+            OnOpenContentModal="@OpenContentModal"
+            OnDismissReportGroup="@DismissReportGroup"
+            OnUndoDismiss="@UndoDismiss"
+            OnRequestDelete="@RequestDelete" />
+    </div>
 
-    @* --- CATEGORIES TAB --- *@
-    @if (activeTab == "categories")
-    {
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-900">Category Management</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-3">Category Name</th>
-                            <th class="px-6 py-3">Status</th>
-                            <th class="px-6 py-3">Verification</th>
-                            <th class="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var cat in AllCategories)
-                        {
-                            <tr class="border-b hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <span class="font-bold text-gray-900"># @cat.CategoryName</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="status-badge">
-                                        @if (cat.IsVerified)
-                                        {
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-green-50 text-green-700 border border-green-200 whitespace-nowrap">
-                                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 flex-shrink-0"></span>Verified
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase bg-gray-50 text-gray-600 border border-gray-200 whitespace-nowrap">
-                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mr-1.5 flex-shrink-0"></span>Unverified
-                                            </span>
-                                        }
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked="@cat.IsVerified" @onchange="@(async (e) => await ToggleVerification(cat.Id))" />
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <button @onclick="() => RequestDeleteCategory(cat.Id)" class="text-red-500 font-bold text-xs uppercase hover:text-red-700 transition-colors border-0 bg-none cursor-pointer">Delete</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+    <div class="admin-panel @(activeTab == "users" ? "active" : "")" id="panel-users">
+        <AdminUsersPanel 
+            AllUsers="@AllUsers"
+            OnToggleUserBan="@ToggleUserBan" />
+    </div>
 
-    @* --- VERIFICATIONS TAB --- *@
-    @if (activeTab == "verifications")
-    {
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <div class="p-4 border-b bg-gray-50">
-                <h3 class="font-bold text-gray-900">Category Access Requests</h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
-                        <tr>
-                            <th class="px-6 py-3">User</th>
-                            <th class="px-6 py-3">Category</th>
-                            <th class="px-6 py-3">Reason</th>
-                            <th class="px-6 py-3">Status</th>
-                            <th class="px-6 py-3">Date</th>
-                            <th class="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var request in AccessRequests)
-                        {
-                            <tr class="border-b hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4">
-                                    <div class="font-bold text-gray-900">@(request.User?.DisplayName ?? request.User?.UserName ?? "Unknown")</div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="font-bold text-gray-900"># @(request.Category?.CategoryName ?? "Unknown")</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-gray-600">@(string.IsNullOrEmpty(request.Reason) ? "No reason provided" : request.Reason)</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase @(request.Status == "Approved" ? "bg-green-50 text-green-700" : request.Status == "Rejected" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700")">
-                                        @request.Status
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-600 text-xs">
-                                    @request.DateCreated.ToString("MMM dd, yyyy")
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if (request.Status == "Pending")
-                                    {
-                                        <div class="flex gap-2">
-                                            <button @onclick="@(async () => await ApproveRequest(request.Id))" class="text-green-500 font-bold text-xs uppercase hover:text-green-700 transition-colors border-0 bg-none cursor-pointer">Approve</button>
-                                            <button @onclick="@(async () => await RejectRequest(request.Id))" class="text-red-500 font-bold text-xs uppercase hover:text-red-700 transition-colors border-0 bg-none cursor-pointer">Reject</button>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-gray-400 text-xs">Processed</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    }
+    <div class="admin-panel @(activeTab == "categories" ? "active" : "")" id="panel-categories">
+        <AdminCategoriesPanel 
+            AllCategories="@AllCategories"
+            OnToggleVerification="@ToggleVerification"
+            OnRequestDeleteCategory="@RequestDeleteCategory" />
+    </div>
+
+    <div class="admin-panel @(activeTab == "verifications" ? "active" : "")" id="panel-verifications">
+        <AdminAccessRequestsPanel 
+            AccessRequests="@AccessRequests"
+            OnApproveRequest="@ApproveRequest"
+            OnRejectRequest="@RejectRequest" />
+    </div>
 </main>
 
-@* --- CONTENT MODAL --- *@
-@if (showContentModal && selectedReport?.Post != null)
-{
-    <div class="modal">
-        <div class="modal-content">
-            <span class="modal-close" @onclick="() => showContentModal = false">&times;</span>
-            <h2 class="text-xl font-bold mb-4 pb-2 border-b">Reported Content</h2>
-
-            <div class="flex items-center mb-4">
-                <div class="w-10 h-10 rounded-full bg-gray-200 mr-3 bg-cover bg-center" style="background-image: url('@(selectedReport.Post.User?.ProfileImage ?? "")');"></div>
-                <div>
-                    <p class="font-bold text-gray-900">@(selectedReport.Post.User?.UserName ?? "Unknown User")</p>
-                    <p class="text-xs text-gray-500">Posted on @selectedReport.Post.DateCreated.ToString("MMM dd, yyyy HH:mm")</p>
-                </div>
-            </div>
-            <p class="text-gray-800 mb-4">@selectedReport.Post.Content</p>
-
-            @if (selectedReport.Post.Media != null && selectedReport.Post.Media.Any())
-            {
-                var mediaList = selectedReport.Post.Media.ToList();
-                var totalMedia = mediaList.Count;
-                var currentIndex = GetCurrentIndex(selectedReport.Post.Id);
-                var activeMedia = mediaList[currentIndex];
-
-                <div class="carousel-container">
-                    @if (totalMedia > 1)
-                    {
-                        <button class="carousel-btn prev" @onclick="() => PrevSlide(selectedReport.Post.Id, totalMedia)">&#10094;</button>
-                    }
-                    @if (activeMedia.MediaType == "Video")
-                    {
-                        <video controls class="carousel-media" src="@activeMedia.MediaPath" @key="activeMedia.MediaPath"></video>
-                    }
-                    else
-                    {
-                        <img class="carousel-media" src="@activeMedia.MediaPath" alt="Post Media" @key="activeMedia.MediaPath" />
-                    }
-                    @if (totalMedia > 1)
-                    {
-                        <button class="carousel-btn next" @onclick="() => NextSlide(selectedReport.Post.Id, totalMedia)">&#10095;</button>
-                    }
-                </div>
-            }
-        </div>
-    </div>
-}
-
-@* --- DELETE CONFIRMATION MODAL --- *@
-@if (showDeleteConfirmation)
-{
-    <div class="modal">
-        <div class="modal-content modal-mini">
-            <div class="mb-4 text-red-500 bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                <i class="fas fa-exclamation-triangle text-3xl"></i>
-            </div>
-
-            <h3 class="text-lg font-bold text-gray-900 mb-2">
-                @(pendingDeleteCategoryId != 0 ? "Delete Category?" : "Delete Content?")
-            </h3>
-
-            <p class="text-gray-500 text-sm mb-6">
-                @(pendingDeleteCategoryId != 0
-                            ? "Are you sure? This will remove the category and might affect posts within it."
-                            : "Are you sure you want to delete this content? This action cannot be undone.")
-            </p>
-
-            <div class="flex justify-center gap-3">
-                <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50" @onclick="CancelDelete">Cancel</button>
-                <button class="px-4 py-2 bg-red-600 rounded-lg text-white font-medium hover:bg-red-700" @onclick="ConfirmDelete">Delete</button>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
-    // ========== STATE ==========
     private string activeTab = "dashboard";
     private string reportFilter = "recent_all";
     private bool showContentModal = false;
@@ -392,7 +165,6 @@
     private Reports? selectedReport;
     private Dictionary<int, int> _carouselIndices = new();
 
-    // ========== DATA ==========
     private List<Users> AllUsers = new();
     private List<Categories> AllCategories = new();
     private List<CategoryAccessRequests> AccessRequests = new();
@@ -403,10 +175,11 @@
             .Where(g => !g.Any(r => r.Status == "Resolved" || r.Status == "Dismissed"))
             .Sum(g => g.Count(r => r.Status == "Pending")) ?? 0;
 
-    // ========== LIFECYCLE ==========
-    protected override async Task OnInitializedAsync() => await LoadData();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
 
-    // ========== DATA LOADING ==========
     private async Task LoadData()
     {
         AllUsers = await AdminService.GetAllUsersAsync();
@@ -415,7 +188,6 @@
         AllReports = await AdminService.GetAllReportsAsync();
     }
 
-    // ========== REPORTS ==========
     private async Task DismissReportGroup(int reportId)
     {
         await AdminService.DismissReportGroupAsync(reportId);
@@ -428,7 +200,6 @@
         await LoadData();
     }
 
-    // ========== DELETE ==========
     private void RequestDelete(int reportId)
     {
         pendingDeleteReportId = reportId;
@@ -463,7 +234,6 @@
         await LoadData();
     }
 
-    // ========== CATEGORIES ==========
     private async Task ToggleVerification(int categoryId)
     {
         try
@@ -474,7 +244,6 @@
         catch (Exception ex) { Console.WriteLine($"Error: {ex.Message}"); }
     }
 
-    // ========== ACCESS REQUESTS ==========
     private async Task ApproveRequest(int requestId)
     {
         try
@@ -495,7 +264,6 @@
         catch { }
     }
 
-    // ========== USER MANAGEMENT (NEW) ==========
     private async Task ToggleUserBan(string userId)
     {
         try
@@ -506,7 +274,6 @@
         catch { }
     }
 
-    // ========== HELPERS ==========
     private void ExitAdmin() => NavigationManager.NavigateTo("/", forceLoad: true);
 
     private void OpenContentModal(int reportId)
@@ -540,143 +307,4 @@
             "Dismissed" => "badge-dismissed",
             _ => "badge-pending"
         };
-
-    // ========== RENDER HELPERS ==========
-    private RenderFragment RenderStatCard(string title, int value, string bgClass) => __builder =>
-    {
-        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
-            <div>
-                <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-1">@title</p>
-                <h3 class="text-2xl font-bold text-gray-900">@value</h3>
-            </div>
-            <div class="p-2 rounded-md @bgClass bg-opacity-90 text-white w-9 h-9 flex items-center justify-center shadow-sm">#</div>
-        </div>
-    };
-
-    private RenderFragment RenderReportCard(IGrouping<dynamic, Reports> group) => __builder =>
-    {
-        var isResolved = group.Any(r => r.Status == "Resolved" || r.Status == "Dismissed");
-        var effectiveStatus = isResolved ? "Dismissed" : "Pending";
-        var resolvedDate = group.Where(r => r.Status != "Pending").OrderByDescending(r => r.DateCreated).FirstOrDefault()?.DateCreated;
-        var latestDate = group.Max(r => r.DateCreated);
-        var reportCount = group.Count();
-        var newReportsCount = group.Count(r => r.Status == "Pending");
-        var uniqueCategories = group.Select(r => r.Reason.Contains(":") ? r.Reason.Split(':')[0].Trim() : r.Reason.Trim()).Distinct().ToList();
-        var title = string.Join(", ", uniqueCategories);
-        var rep = group.First();
-
-        <div class="report-header">
-            <div class="flex items-start gap-3 w-full">
-                <span class="status-badge @GetStatusBadgeClass(effectiveStatus) mt-1 flex-shrink-0">@effectiveStatus</span>
-
-                <div class="flex-grow">
-                    <div class="flex flex-wrap items-baseline gap-2 mb-1">
-                        <span class="font-bold text-gray-900 text-lg leading-tight">@title</span>
-                        @if (isResolved && newReportsCount > 0)
-                        {
-                            <span class="text-xs font-medium text-gray-500 px-2 py-0.5">(@newReportsCount new reports)</span>
-                        }
-                        else if (reportCount > 1)
-                        {
-                            <span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">@reportCount reports</span>
-                        }
-                    </div>
-
-                    <div class="flex gap-2">
-                        @if (rep.PostID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">Post</span>
-                        }
-                        else if (rep.CommentID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-gray-600 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">Comment</span>
-                        }
-                        else if (rep.CategoryID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-purple-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded">Category</span>
-                        }
-                        else if (rep.TargetUserID != null)
-                        {
-                            <span class="text-[10px] uppercase font-bold tracking-wider text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded">User</span>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-right flex-shrink-0 ml-4">
-                @if (isResolved && resolvedDate.HasValue)
-                {
-                    <span class="text-xs text-gray-500 block">Resolved:</span>
-                    <span class="text-xs font-bold text-gray-700">@resolvedDate.Value.ToString("MMM dd")</span>
-                }
-                else
-                {
-                    <span class="text-xs text-gray-400 block">Latest:</span>
-                    <span class="text-xs font-bold text-gray-600">@latestDate.ToString("MMM dd")</span>
-                }
-            </div>
-        </div>
-
-        <div class="report-body">
-            <div class="flex flex-col gap-2">
-                @foreach (var item in group.Take(2))
-                {
-                    <div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
-                        <div class="flex items-start gap-2 overflow-hidden">
-                            <div class="font-bold text-gray-700 whitespace-nowrap">@(item.Reporter?.UserName ?? "Unknown"):</div>
-                            <div class="text-gray-600 italic truncate">
-                                "@(item.Reason.Contains(":") ? item.Reason.Substring(item.Reason.IndexOf(":") + 1).Trim() : item.Reason)"
-                            </div>
-                        </div>
-                        <span class="text-[10px] text-gray-400 whitespace-nowrap">@item.DateCreated.ToString("MMM dd")</span>
-                    </div>
-                }
-
-                @if (reportCount > 2)
-                {
-                    <details class="group">
-                        <summary class="cursor-pointer text-xs font-bold text-blue-500 hover:text-blue-700 select-none list-none mb-2">
-                            <span class="group-open:hidden"><i class="fas fa-chevron-down mr-1"></i> View @(reportCount - 2) more reports...</span>
-                            <span class="hidden group-open:inline"><i class="fas fa-chevron-up mr-1"></i> Hide extra reports</span>
-                        </summary>
-                        <div class="flex flex-col gap-2 mt-2">
-                            @foreach (var item in group.Skip(2))
-                            {
-                                <div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
-                                    <div class="flex items-start gap-2 overflow-hidden">
-                                        <div class="font-bold text-gray-700 whitespace-nowrap">@(item.Reporter?.UserName ?? "Unknown"):</div>
-                                        <div class="text-gray-600 italic truncate">
-                                        </div>
-                                    </div>
-                                    <span class="text-[10px] text-gray-400 whitespace-nowrap">@item.DateCreated.ToString("MMM dd")</span>
-                                </div>
-                            }
-                        </div>
-                    </details>
-                }
-            </div>
-        </div>
-
-        <div class="report-actions">
-            @if (rep.PostID != null)
-            {
-                <button class="btn-view-content" @onclick="() => OpenContentModal(rep.ReportID)">
-                    <i class="fas fa-eye mr-2"></i> View Content
-                </button>
-            }
-
-            @if (!isResolved)
-            {
-                <button class="btn-action btn-dismiss" @onclick="@(async () => await DismissReportGroup(rep.ReportID))">Dismiss All</button>
-                <button class="btn-action btn-delete" @onclick="@(() => RequestDelete(rep.ReportID))">Delete Content</button>
-            }
-            else
-            {
-                <span class="text-gray-400 text-xs font-medium mr-2">Problem Resolved</span>
-                <button class="btn-action btn-undo" @onclick="@(async () => await UndoDismiss(rep.ReportID))">
-                    <i class="fas fa-undo mr-1"></i> Undo Dismiss
-                </button>
-            }
-        </div>
-    };
-}
+}}

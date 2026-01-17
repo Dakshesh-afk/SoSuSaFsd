@@ -1,0 +1,121 @@
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Components.Common
+
+@* SHARED POST FEED - Reusable post list component *@
+
+@if (!string.IsNullOrEmpty(Title))
+{
+    <div class="feed-header">
+        <div class="feed-header-top">
+            <h1 class="page-title">@Title</h1>
+            @if (ShowCreateButton)
+            {
+                <button class="create-post-btn" @onclick="OnCreatePost">@CreateButtonText</button>
+            }
+        </div>
+    </div>
+}
+
+@if (ShowDivider)
+{
+    <hr />
+}
+
+@if (Posts != null && Posts.Any())
+{
+    @if (DebugMode)
+    {
+        <div style="background:#fffbe6; padding:12px; border-radius:8px; margin-bottom:12px;">
+            <h4 style="margin-top:0;">Debug: Posts (@Posts.Count items)</h4>
+            @foreach (var post in Posts)
+            {
+                <div class="debug-post" style="padding:10px; border:1px dashed #ccc; margin-bottom:10px; background:#fff;">
+                    <div style="font-size:14px; color:#666; margin-bottom:6px;">
+                        <strong>Category:</strong> @(post.Category?.CategoryName ?? "(none)") (Id: @post.CategoryId)
+                    </div>
+                    <div style="font-weight:700;">
+                        @(post.User?.UserName ?? "Unknown") 
+                        <span style="font-weight:400; color:#999;">• @post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</span>
+                    </div>
+                    <div style="margin-top:6px;">@post.Content</div>
+                    <div style="margin-top:8px; font-size:13px; color:#666;">
+                        Media: @(post.Media?.Count ?? 0) | Likes: @(post.Likes?.Count ?? 0)
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        @foreach (var post in Posts)
+        {
+            <PostCard 
+                Post="post" 
+                CurrentUser="CurrentUser" 
+                OnLike="OnLike" 
+                OnComment="OnComment"
+                OnReport="OnReport" 
+                ShowComments="ShowComments" 
+                PostComments="PostComments"
+                CommentDrafts="CommentDrafts" 
+                OnUpdateDraft="OnUpdateDraft"
+                OnSubmitComment="OnSubmitComment" 
+                CarouselIndices="CarouselIndices" 
+                OnCarouselChange="OnCarouselChange"
+                ActiveReplyBoxes="ActiveReplyBoxes" 
+                ReplyDrafts="ReplyDrafts" 
+                OnToggleReply="OnToggleReply"
+                OnUpdateReplyDraft="OnUpdateReplyDraft" 
+                OnSubmitReply="OnSubmitReply" />
+        }
+    }
+}
+else
+{
+    <div style="text-align: center; color: #666; margin-top: 40px; padding: 20px;">
+        @if (!string.IsNullOrEmpty(EmptyStateTitle))
+        {
+            <h3>@EmptyStateTitle</h3>
+        }
+        <p>@EmptyStateMessage</p>
+    </div>
+}
+
+@code {
+    // === DISPLAY OPTIONS ===
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public bool ShowDivider { get; set; } = true;
+    [Parameter] public bool ShowCreateButton { get; set; } = false;
+    [Parameter] public string CreateButtonText { get; set; } = "Create Post";
+    [Parameter] public EventCallback OnCreatePost { get; set; }
+
+    // === EMPTY STATE ===
+    [Parameter] public string EmptyStateTitle { get; set; } = "No posts yet.";
+    [Parameter] public string EmptyStateMessage { get; set; } = "Check back later for updates.";
+
+    // === DATA ===
+    [Parameter] public List<Posts> Posts { get; set; } = new();
+    [Parameter] public Users? CurrentUser { get; set; }
+
+    // === DEBUG ===
+    [Parameter] public bool DebugMode { get; set; } = false;
+
+    // === STATE DICTIONARIES ===
+    [Parameter] public Dictionary<int, bool> ShowComments { get; set; } = new();
+    [Parameter] public Dictionary<int, List<Comments>> PostComments { get; set; } = new();
+    [Parameter] public Dictionary<int, string> CommentDrafts { get; set; } = new();
+    [Parameter] public Dictionary<int, int> CarouselIndices { get; set; } = new();
+    [Parameter] public Dictionary<int, bool> ActiveReplyBoxes { get; set; } = new();
+    [Parameter] public Dictionary<int, string> ReplyDrafts { get; set; } = new();
+
+    // === CALLBACKS ===
+    [Parameter] public EventCallback<int> OnLike { get; set; }
+    [Parameter] public EventCallback<int> OnComment { get; set; }
+    [Parameter] public EventCallback<int> OnReport { get; set; }
+    [Parameter] public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
+    [Parameter] public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
+    [Parameter] public EventCallback<int> OnToggleReply { get; set; }
+    [Parameter] public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
+}

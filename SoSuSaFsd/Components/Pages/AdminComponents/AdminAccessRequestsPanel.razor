@@ -1,0 +1,86 @@
+@using SoSuSaFsd.Domain
+
+@* AdminAccessRequestsPanel - Category access request management *@
+
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div class="p-4 border-b bg-gray-50">
+        <h3 class="font-bold text-gray-900">Category Access Requests</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
+                <tr>
+                    <th class="px-6 py-3">User</th>
+                    <th class="px-6 py-3">Category</th>
+                    <th class="px-6 py-3">Reason</th>
+                    <th class="px-6 py-3">Status</th>
+                    <th class="px-6 py-3">Date</th>
+                    <th class="px-6 py-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var request in AccessRequests)
+                {
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-gray-900">@(request.User?.DisplayName ?? request.User?.UserName ?? "Unknown")</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-bold text-gray-900"># @(request.Category?.CategoryName ?? "Unknown")</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-gray-600">@(string.IsNullOrEmpty(request.Reason) ? "No reason provided" : request.Reason)</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase @(request.Status == "Approved" ? "bg-green-50 text-green-700" : request.Status == "Rejected" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700")">
+                                @request.Status
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-gray-600 text-xs">
+                            @request.DateCreated.ToString("MMM dd, yyyy")
+                        </td>
+                        <td class="px-6 py-4">
+                            @if (request.Status == "Pending")
+                            {
+                                <div class="flex gap-2">
+                                    <button @onclick="@(() => OnApproveRequest.InvokeAsync(request.Id))" 
+                                            class="text-green-500 font-bold text-xs uppercase hover:text-green-700 transition-colors border-0 bg-none cursor-pointer">
+                                        Approve
+                                    </button>
+                                    <button @onclick="@(() => OnRejectRequest.InvokeAsync(request.Id))" 
+                                            class="text-red-500 font-bold text-xs uppercase hover:text-red-700 transition-colors border-0 bg-none cursor-pointer">
+                                        Reject
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400 text-xs">Processed</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// List of category access requests
+    /// </summary>
+    [Parameter]
+    public List<CategoryAccessRequests> AccessRequests { get; set; } = new();
+
+    /// <summary>
+    /// Callback to approve access request
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnApproveRequest { get; set; }
+
+    /// <summary>
+    /// Callback to reject access request
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnRejectRequest { get; set; }
+}

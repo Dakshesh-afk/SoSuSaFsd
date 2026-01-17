@@ -1,0 +1,90 @@
+@using SoSuSaFsd.Domain
+
+@* SHARED RIGHT SIDEBAR - Verified and Recent Categories *@
+<aside class="sidebar sidebar-right">
+    <div class="sidebar-section">
+        <h3>Verified Categories</h3>
+        <ul class="category-list">
+            @if (VerifiedCategories != null && VerifiedCategories.Any())
+            {
+                @foreach (var cat in VerifiedCategories)
+                {
+                    <li>
+                        <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => OnCategoryClick.InvokeAsync(cat.Id))">
+                            <span class="link-text-wrapper">
+                                <span class="hashtag">#</span> @cat.CategoryName
+                            </span>
+                            <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                        </a>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h3>Recently Created</h3>
+        <ul class="category-list">
+            @if (RecentCategories != null && RecentCategories.Any())
+            {
+                @foreach (var cat in RecentCategories)
+                {
+                    <li>
+                        <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => OnCategoryClick.InvokeAsync(cat.Id))">
+                            <span class="link-text-wrapper">
+                                <span class="hashtag">#</span> @cat.CategoryName
+                            </span>
+                            @if (cat.IsVerified)
+                            {
+                                <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                            }
+                        </a>
+                    </li>
+                }
+            }
+            else
+            {
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="empty-list-item">@EmptyAuthorizedMessage</li>
+                    </Authorized>
+                    <NotAuthorized>
+                        <li class="empty-list-item">@EmptyUnauthorizedMessage</li>
+                    </NotAuthorized>
+                </AuthorizeView>
+            }
+        </ul>
+    </div>
+</aside>
+
+@code {
+    /// <summary>
+    /// List of verified categories to display
+    /// </summary>
+    [Parameter]
+    public List<Categories> VerifiedCategories { get; set; } = new();
+
+    /// <summary>
+    /// List of recently created categories
+    /// </summary>
+    [Parameter]
+    public List<Categories> RecentCategories { get; set; } = new();
+
+    /// <summary>
+    /// Callback when a category is clicked
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnCategoryClick { get; set; }
+
+    /// <summary>
+    /// Message to show when no categories and user is authorized
+    /// </summary>
+    [Parameter]
+    public string EmptyAuthorizedMessage { get; set; } = "No categories created yet.";
+
+    /// <summary>
+    /// Message to show when no categories and user is not authorized
+    /// </summary>
+    [Parameter]
+    public string EmptyUnauthorizedMessage { get; set; } = "Login to see your categories.";
+}

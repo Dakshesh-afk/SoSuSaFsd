@@ -1,0 +1,64 @@
+@using SoSuSaFsd.Domain
+
+@* AdminUsersPanel - User management table *@
+
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <table class="w-full text-left text-sm text-gray-600">
+        <thead class="bg-gray-50 text-gray-900 font-bold uppercase text-xs border-b border-gray-200">
+            <tr>
+                <th class="px-6 py-3">User</th>
+                <th class="px-6 py-3">Role</th>
+                <th class="px-6 py-3">Status</th>
+                <th class="px-6 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in AllUsers)
+            {
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-gray-900">@user.DisplayName</div>
+                        <div class="text-xs text-gray-400">@user.UserName</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-0.5 border rounded uppercase text-[11px] font-bold">
+                            @(!string.IsNullOrEmpty(user.Role) ? user.Role : "User")
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-bold uppercase @(user.IsActive ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700")">
+                            @(user.IsActive ? "Active" : "Banned")
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        @if (user.UserName != "SoSuSaAdmin")
+                        {
+                            <button @onclick="@(() => OnToggleUserBan.InvokeAsync(user.Id))"
+                                    class="border transition-colors cursor-pointer px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wide @(user.IsActive ? "border-red-200 text-red-600 hover:bg-red-50" : "border-green-200 text-green-600 hover:bg-green-50")">
+                                @(user.IsActive ? "Ban User" : "Unban User")
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="text-gray-300 text-[10px] uppercase font-bold">Protected</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    /// <summary>
+    /// List of all users
+    /// </summary>
+    [Parameter]
+    public List<Users> AllUsers { get; set; } = new();
+
+    /// <summary>
+    /// Callback to toggle user ban status
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnToggleUserBan { get; set; }
+}

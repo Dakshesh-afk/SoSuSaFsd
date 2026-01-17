@@ -1,0 +1,53 @@
+@* AdminNavigationTabs - Tab navigation for admin sections *@
+
+<nav class="flex gap-8">
+    <a @onclick='@(() => OnTabChange.InvokeAsync("dashboard"))' 
+       class="nav-link @(ActiveTab == "dashboard" ? "active" : "")" 
+       style="cursor: pointer;">
+        Dashboard
+    </a>
+    <a @onclick='@(() => OnTabChange.InvokeAsync("reports"))' 
+       class="nav-link @(ActiveTab == "reports" ? "active" : "")" 
+       style="cursor: pointer;">
+        Moderation
+        @if (PendingNotificationCount > 0)
+        {
+            <span class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full -mt-1 ml-1">@PendingNotificationCount</span>
+        }
+    </a>
+    <a @onclick='@(() => OnTabChange.InvokeAsync("verifications"))' 
+       class="nav-link @(ActiveTab == "verifications" ? "active" : "")" 
+       style="cursor: pointer;">
+        Access
+    </a>
+    <a @onclick='@(() => OnTabChange.InvokeAsync("categories"))' 
+       class="nav-link @(ActiveTab == "categories" ? "active" : "")" 
+       style="cursor: pointer;">
+        Categories
+    </a>
+    <a @onclick='@(() => OnTabChange.InvokeAsync("users"))' 
+       class="nav-link @(ActiveTab == "users" ? "active" : "")" 
+       style="cursor: pointer;">
+        Users
+    </a>
+</nav>
+
+@code {
+    /// <summary>
+    /// Current active tab
+    /// </summary>
+    [Parameter]
+    public string ActiveTab { get; set; } = "dashboard";
+
+    /// <summary>
+    /// Number of pending notifications (for badge)
+    /// </summary>
+    [Parameter]
+    public int PendingNotificationCount { get; set; }
+
+    /// <summary>
+    /// Callback when tab is changed
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnTabChange { get; set; }
+}

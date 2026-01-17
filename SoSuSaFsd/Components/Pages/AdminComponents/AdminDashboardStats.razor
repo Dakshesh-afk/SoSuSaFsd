@@ -1,0 +1,28 @@
+@* AdminDashboardStats - Dashboard statistics cards *@
+
+<div class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        @RenderStatCard("Total Users", TotalUsers, "bg-blue-600")
+        @RenderStatCard("Pending Reports", PendingReports, "bg-amber-500")
+        @RenderStatCard("Category Requests", PendingAccessRequests, "bg-green-600")
+        @RenderStatCard("Categories", TotalCategories, "bg-purple-600")
+    </div>
+</div>
+
+@code {
+    [Parameter] public int TotalUsers { get; set; }
+    [Parameter] public int PendingReports { get; set; }
+    [Parameter] public int PendingAccessRequests { get; set; }
+    [Parameter] public int TotalCategories { get; set; }
+
+    private RenderFragment RenderStatCard(string title, int value, string bgClass) => __builder =>
+    {
+        <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm flex items-start justify-between">
+            <div>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-1">@title</p>
+                <h3 class="text-2xl font-bold text-gray-900">@value</h3>
+            </div>
+            <div class="p-2 rounded-md @bgClass bg-opacity-90 text-white w-9 h-9 flex items-center justify-center shadow-sm">#</div>
+        </div>
+    };
+}

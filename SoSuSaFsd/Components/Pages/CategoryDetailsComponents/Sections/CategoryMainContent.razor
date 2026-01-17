@@ -1,0 +1,220 @@
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Components.Common
+
+@* CATEGORY MAIN CONTENT - Category info and posts feed *@
+
+@if (State.CurrentCategory == null)
+{
+    <div class="loading-state">
+        @if (State.IsLoading)
+        {
+            <span>Loading...</span>
+        }
+        else
+        {
+            <span>Category not found.</span>
+        }
+    </div>
+}
+else
+{
+    @* CATEGORY HEADER CARD *@
+    <div class="category-header-card">
+        <h1 class="page-title">
+            #@State.CurrentCategory.CategoryName
+            @if (State.CurrentCategory.IsVerified)
+            {
+                <i class="fas fa-check-circle verified-badge" title="Verified Category"></i>
+            }
+        </h1>
+        <p class="cat-desc">@(string.IsNullOrEmpty(State.CurrentCategory.CategoryDescription) ? "No description provided." : State.CurrentCategory.CategoryDescription)</p>
+
+        @if (!string.IsNullOrEmpty(State.ErrorMessage))
+        {
+            <div class="alert alert-error">
+                <strong>Error:</strong> @State.ErrorMessage
+            </div>
+        }
+
+        <div class="action-buttons">
+            <button class="follow-btn @(State.IsFollowing ? "following" : "not-following")" @onclick="OnToggleFollow">
+                @(State.IsFollowing ? "Unfollow" : "Follow")
+            </button>
+            @if (CanUserPost)
+            {
+                <button class="login-btn" @onclick="OnShowPostModal">Create Post</button>
+            }
+            else if (State.HasPendingRequest)
+            {
+                <button class="login-btn" disabled>Request Pending</button>
+            }
+            else if (State.CurrentCategory?.IsVerified == true)
+            {
+                <button class="login-btn" @onclick="OnShowRequestModal">Request Access</button>
+            }
+            else
+            {
+                <button class="login-btn" @onclick="OnShowPostModal">Create Post</button>
+            }
+        </div>
+
+        @if (State.CurrentCategory?.IsVerified == true && !CanUserPost && !State.HasPendingRequest)
+        {
+            <div class="alert alert-warning">
+                <strong>?? Verified Category:</strong> This category is restricted. You must request access to post here.
+            </div>
+        }
+        else if (State.HasPendingRequest)
+        {
+            <div class="alert alert-info">
+                <strong>? Pending:</strong> Your request to post in this verified category is awaiting admin approval.
+            </div>
+        }
+    </div>
+
+    <hr />
+
+    @* POSTS FEED *@
+    @if (State.CategoryPosts != null && State.CategoryPosts.Any())
+    {
+        <div style="margin-bottom: 20px;">
+            <input type="text" placeholder="Search posts in this category..." 
+                   @bind="State.PostSearchTerm" @bind:event="oninput" 
+                   style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box;" />
+        </div>
+
+        @if (FocusPostId.HasValue && string.IsNullOrWhiteSpace(State.PostSearchTerm))
+        {
+            <div style="margin-bottom: 15px;">
+                <button class="login-btn secondary" @onclick="OnClearSearch">
+                    ? View all posts in #@State.CurrentCategory?.CategoryName
+                </button>
+            </div>
+        }
+
+        @foreach (var post in GetFilteredPosts())
+        {
+            <div class="post-card">
+                <div class="post-header">
+                    <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
+                    <div>
+                        <b>@(post.User?.UserName ?? "User")</b>
+                        <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
+                    </div>
+                </div>
+                <div class="post-content">@post.Content</div>
+                @if (post.Media != null && post.Media.Any())
+                {
+                    var currentIndex = State.CarouselIndices.ContainsKey(post.Id) ? State.CarouselIndices[post.Id] : 0;
+                    <CarouselComponent 
+                        MediaList="@post.Media.ToList()"
+                        CurrentIndex="@currentIndex"
+                        OnPrevious="@(() => OnCarouselPrevious(post.Id, post.Media.Count))"
+                        OnNext="@(() => OnCarouselNext(post.Id, post.Media.Count))" />
+                }
+                <div class="post-actions">
+                    <button class="action-btn" @onclick="@(() => OnLike.InvokeAsync(post.Id))">
+                        @if (post.Likes.Any(l => l.UserID == State.CurrentUserId))
+                        {
+                            <i class="fas fa-heart" style="color: #e0245e; margin-right: 5px;"></i>
+                        }
+                        else
+                        {
+                            <i class="far fa-heart" style="margin-right: 5px;"></i>
+                        }
+                        <span>@(post.Likes.Count > 0 ? post.Likes.Count.ToString() : "Like")</span>
+                    </button>
+                    <button class="action-btn" @onclick="@(() => OnComment.InvokeAsync(post.Id))">
+                        <i class="far fa-comment"></i> Comment
+                    </button>
+                    <button class="action-btn" @onclick="@(() => OnReport.InvokeAsync(post.Id))" title="Report Post">
+                        <i class="far fa-flag"></i> Report
+                    </button>
+                </div>
+                @if (State.ShowComments.ContainsKey(post.Id) && State.ShowComments[post.Id])
+                {
+                    <CommentSection 
+                        PostId="@post.Id"
+                        Comments="@(State.PostComments.ContainsKey(post.Id) ? State.PostComments[post.Id] : new List<Comments>())"
+                        CommentDraft="@(State.CommentDrafts.ContainsKey(post.Id) ? State.CommentDrafts[post.Id] : "")"
+                        ActiveReplyBoxes="@State.ActiveReplyBoxes"
+                        ReplyDrafts="@State.ReplyDrafts"
+                        OnUpdateDraft="@OnUpdateDraft"
+                        OnSubmitComment="@OnSubmitComment"
+                        OnToggleReply="@OnToggleReply"
+                        OnUpdateReplyDraft="@OnUpdateReplyDraft"
+                        OnSubmitReply="@OnSubmitReply" />
+                }
+            </div>
+        }
+
+        @if (!GetFilteredPosts().Any())
+        {
+            <div class="empty-state center">
+                No posts found matching "<b>@State.PostSearchTerm</b>"
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state center">
+            No posts yet. Be the first to post in <b>#@State.CurrentCategory.CategoryName</b>!
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public CategoryDetailsState State { get; set; } = default!;
+    [Parameter] public int? FocusPostId { get; set; }
+    [Parameter] public bool CanUserPost { get; set; }
+    
+    [Parameter] public EventCallback OnToggleFollow { get; set; }
+    [Parameter] public EventCallback OnClearSearch { get; set; }
+    [Parameter] public EventCallback<int> OnLike { get; set; }
+    [Parameter] public EventCallback<int> OnComment { get; set; }
+    [Parameter] public EventCallback<int> OnReport { get; set; }
+    [Parameter] public EventCallback<PostCard.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
+    [Parameter] public EventCallback<PostCard.CarouselEventArgs> OnCarouselChange { get; set; }
+    [Parameter] public EventCallback<int> OnToggleReply { get; set; }
+    [Parameter] public EventCallback<PostCard.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<PostCard.SubmitReplyEventArgs> OnSubmitReply { get; set; }
+    [Parameter] public EventCallback OnShowPostModal { get; set; }
+    [Parameter] public EventCallback OnShowRequestModal { get; set; }
+
+    private List<Posts> GetFilteredPosts()
+    {
+        var resultList = (IEnumerable<Posts>)State.CategoryPosts;
+
+        if (!string.IsNullOrWhiteSpace(State.PostSearchTerm))
+        {
+            resultList = resultList.Where(p =>
+                p.Content.Contains(State.PostSearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (p.User?.UserName ?? "").Contains(State.PostSearchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+        else if (FocusPostId.HasValue)
+        {
+            resultList = resultList.Where(p => p.Id == FocusPostId.Value);
+        }
+
+        return resultList.ToList();
+    }
+
+    private void OnCarouselPrevious(int postId, int totalCount)
+    {
+        if (!State.CarouselIndices.ContainsKey(postId))
+            State.CarouselIndices[postId] = 0;
+
+        State.CarouselIndices[postId] = (State.CarouselIndices[postId] - 1 + totalCount) % totalCount;
+        StateHasChanged();
+    }
+
+    private void OnCarouselNext(int postId, int totalCount)
+    {
+        if (!State.CarouselIndices.ContainsKey(postId))
+            State.CarouselIndices[postId] = 0;
+
+        State.CarouselIndices[postId] = (State.CarouselIndices[postId] + 1) % totalCount;
+        StateHasChanged();
+    }
+}

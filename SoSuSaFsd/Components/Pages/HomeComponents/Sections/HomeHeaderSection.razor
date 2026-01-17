@@ -1,0 +1,33 @@
+@using SoSuSaFsd.Domain
+@using SoSuSaFsd.Components.Common
+
+@* HOME HEADER SECTION - Top navigation and search *@
+
+<HomeHeader 
+    SearchTerm="@State.HeaderSearchTerm"
+    CurrentUser="@State.CurrentUser"
+    OnSearchTermChanged="@((value) => State.HeaderSearchTerm = value)"
+    OnSearch="@OnSearch"
+    OnRefresh="@OnRefresh"
+    OnLogout="@OnLogout"
+    OnNavigateToAdmin="@OnNavigateToAdmin" />
+
+<SearchResultsDropdown 
+    HasSearchedPosts="@State.HasSearchedPosts"
+    HasSearchedUsers="@State.HasSearchedUsers"
+    PostResults="@State.PostSearchResults"
+    UserResults="@State.UserSearchResults"
+    SearchTerm="@State.HeaderSearchTerm"
+    CurrentSection="@State.CurrentActiveSection"
+    OnPostClick="@OnPostClick"
+    OnUserClick="@OnUserClick" />
+
+@code {
+    [Parameter] public HomePageState State { get; set; } = default!;
+    [Parameter] public EventCallback OnSearch { get; set; }
+    [Parameter] public EventCallback OnRefresh { get; set; }
+    [Parameter] public EventCallback OnLogout { get; set; }
+    [Parameter] public EventCallback OnNavigateToAdmin { get; set; }
+    [Parameter] public EventCallback<(int, int)> OnPostClick { get; set; }
+    [Parameter] public EventCallback<string?> OnUserClick { get; set; }
+}
