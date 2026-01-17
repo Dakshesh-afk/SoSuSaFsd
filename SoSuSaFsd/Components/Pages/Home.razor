@@ -14,6 +14,8 @@
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IWebHostEnvironment Environment
+@inject SoSuSaFsd.Services.IPostService PostService
+@inject SoSuSaFsd.Services.ICategoryService CategoryService
 
 <PageTitle>SoSuSa - Home</PageTitle>
 
@@ -67,7 +69,7 @@
                 <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick='@(() => OnSearchPostClicked(post.CategoryId, post.Id))'>
                     <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(post.User?.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 600; font-size: 13px; color: #222;">@(post.User?.DisplayName ?? post.User?.UserName ?? "Unknown")</div>
+                        <div style="font-weight: 600, font-size: 13px; color: #222;">@(post.User?.DisplayName ?? post.User?.UserName ?? "Unknown")</div>
                         <div style="font-size: 12px; color: #666;">@(post.Content.Length > 60 ? post.Content.Substring(0, 60) + "..." : post.Content)</div>
                         <div style="font-size: 11px, color: #999; margin-top: 4px;">#@(post.Category?.CategoryName ?? "Unknown") • @post.DateCreated.ToString("MMM dd")</div>
                     </div>
@@ -92,8 +94,8 @@ else if (HasSearchedUsers && UserSearchResults != null && UserSearchResults.Any(
                 <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick='@(() => OnSearchUserClicked(user.UserName))'>
                     <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(user.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 600; font-size: 13px; color: #222;">@(user.DisplayName ?? user.UserName ?? "Unknown")</div>
-                        <div style="font-size: 12px; color: #666;">@user.UserName</div>
+                        <div style="font-weight: 600; font-size: 13px, color: #222;">@(user.DisplayName ?? user.UserName ?? "Unknown")</div>
+                        <div style="font-size: 12px, color: #666;">@user.UserName</div>
                     </div>
                 </div>
             }
@@ -742,19 +744,6 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-
-            VerifiedCategories = await context.Categories
-                .Where(c => c.IsVerified == true)
-                .OrderByDescending(c => c.DateCreated)
-                .Take(5)
-                .ToListAsync();
-
-            VerifiedCategoriesForRequest = await context.Categories
-                .Where(c => c.IsVerified == true)
-                .OrderBy(c => c.CategoryName)
-                .ToListAsync();
-
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var userPrincipal = authState.User;
 
@@ -781,52 +770,27 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
                 if (!string.IsNullOrEmpty(userId))
                 {
-                    RecentCategories = await context.Categories
-                        .Where(c => c.CreatedBy == userId)
-                        .OrderByDescending(c => c.DateCreated)
-                        .Take(5)
-                        .ToListAsync();
+                    // Use CategoryService instead of direct DbContext
+                    VerifiedCategories = await CategoryService.GetVerifiedCategoriesAsync(5);
+                    VerifiedCategoriesForRequest = await CategoryService.GetVerifiedCategoriesAsync(100); // Get all for dropdown
+                    RecentCategories = await CategoryService.GetRecentCategoriesAsync(userId, 5);
+                    FollowedCategories = await CategoryService.GetFollowedCategoriesAsync(userId);
 
-                    // Get followed category IDs directly (more robust than relying on navigation property)
-                    var followedCategoryIds = await context.CategoryFollows
-                        .Where(cf => cf.UserId == userId)
-                        .Select(cf => cf.CategoryId)
-                        .ToListAsync();
-
-                    // Load followed categories for the sidebar
+                    // Use PostService instead of direct DbContext
+                    var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
                     if (followedCategoryIds.Any())
                     {
-                        FollowedCategories = await context.Categories
-                            .Where(c => followedCategoryIds.Contains(c.Id))
-                            .ToListAsync();
+                        FeedPosts = await PostService.GetUserFeedPostsAsync(followedCategoryIds);
                     }
                     else
                     {
-                        FollowedCategories = new List<Categories>();
+                        FeedPosts = new List<Posts>();
                     }
+                    
+                    UserPosts = await PostService.GetUserPostsAsync(userId);
 
-                    // Load feed posts from followed categories
-                    if (followedCategoryIds.Any())
-                    {
-                        FeedPosts = await context.Posts
-                            .Where(p => followedCategoryIds.Contains(p.CategoryId))
-                            .Include(p => p.User)
-                            .Include(p => p.Category)
-                            .Include(p => p.Media)
-                            .Include(p => p.Likes)
-                            .OrderByDescending(p => p.DateCreated)
-                            .ToListAsync();
-                    }
-
-                    UserPosts = await context.Posts
-                        .Where(p => p.UserId == userId)
-                        .Include(p => p.User)
-                        .Include(p => p.Category)
-                        .Include(p => p.Media)
-                        .Include(p => p.Likes)
-                        .OrderByDescending(p => p.DateCreated)
-                        .ToListAsync();
-
+                    // Access requests still need direct access (no service method yet)
+                    using var context = DbFactory.CreateDbContext();
                     UserAccessRequests = await context.CategoryAccessRequests
                         .Where(r => r.UserId == userId)
                         .Include(r => r.Category)
@@ -844,35 +808,14 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
         {
             if (string.IsNullOrEmpty(currentUser?.Id)) return;
 
-            using var context = DbFactory.CreateDbContext();
-
-            var followedCategoryIds = await context.CategoryFollows
-                .Where(cf => cf.UserId == currentUser.Id)
-                .Select(cf => cf.CategoryId)
-                .ToListAsync();
-
-            // Update FollowedCategories for sidebar
+            // Use CategoryService
+            FollowedCategories = await CategoryService.GetFollowedCategoriesAsync(currentUser.Id);
+            
+            // Use PostService
+            var followedCategoryIds = FollowedCategories.Select(c => c.Id).ToList();
             if (followedCategoryIds.Any())
             {
-                FollowedCategories = await context.Categories
-                    .Where(c => followedCategoryIds.Contains(c.Id))
-                    .ToListAsync();
-            }
-            else
-            {
-                FollowedCategories = new List<Categories>();
-            }
-
-            if (followedCategoryIds.Any())
-            {
-                FeedPosts = await context.Posts
-                    .Where(p => followedCategoryIds.Contains(p.CategoryId))
-                    .Include(p => p.User)
-                    .Include(p => p.Category)
-                    .Include(p => p.Media)
-                    .Include(p => p.Likes)
-                    .OrderByDescending(p => p.DateCreated)
-                    .ToListAsync();
+                FeedPosts = await PostService.GetUserFeedPostsAsync(followedCategoryIds);
             }
             else
             {
@@ -921,6 +864,7 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
         try
         {
+            // Check if user already reported (still need DbContext for this check)
             using var context = DbFactory.CreateDbContext();
             var existingReport = await context.Reports.FirstOrDefaultAsync(r =>
                 r.PostID == reportPostId && r.ReporterID == currentUser.Id);
@@ -951,8 +895,9 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                 DateCreated = DateTime.Now
             };
 
-            context.Reports.Add(newReport);
-            await context.SaveChangesAsync();
+            // Use PostService
+            await PostService.CreateReportAsync(newReport);
+            
             showReportModal = false;
 
             if (isAlreadyDismissed)
@@ -971,25 +916,26 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
         if (currentUser == null) { ShowLoginOverlay = true; return; }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUser.Id);
+            // Use PostService
+            await PostService.ToggleLikeAsync(postId, currentUser.Id);
+
+            // Update local state
             var feedPost = FeedPosts.FirstOrDefault(p => p.Id == postId);
             var userPost = UserPosts.FirstOrDefault(p => p.Id == postId);
 
-            if (existingLike != null)
+            if (feedPost != null)
             {
-                context.PostLikes.Remove(existingLike);
-                if (feedPost != null) { var l = feedPost.Likes.FirstOrDefault(x => x.UserID == currentUser.Id); if (l != null) feedPost.Likes.Remove(l); }
-                if (userPost != null && !object.ReferenceEquals(userPost, feedPost)) { var l = userPost.Likes.FirstOrDefault(x => x.UserID == currentUser.Id); if (l != null) userPost.Likes.Remove(l); }
+                // Reload likes for this post
+                using var context = DbFactory.CreateDbContext();
+                feedPost.Likes = await context.PostLikes.Where(l => l.PostID == postId).ToListAsync();
             }
-            else
+
+            if (userPost != null && !object.ReferenceEquals(userPost, feedPost))
             {
-                var newLike = new PostLikes { PostID = postId, UserID = currentUser.Id, LikedAt = DateTime.Now };
-                context.PostLikes.Add(newLike);
-                if (feedPost != null) feedPost.Likes.Add(newLike);
-                if (userPost != null && !object.ReferenceEquals(userPost, feedPost)) userPost.Likes.Add(newLike);
+                using var context = DbFactory.CreateDbContext();
+                userPost.Likes = await context.PostLikes.Where(l => l.PostID == postId).ToListAsync();
             }
-            await context.SaveChangesAsync();
+
             StateHasChanged();
         }
         catch (Exception ex) { Console.WriteLine($"Error toggling like: {ex.Message}"); }
@@ -1006,9 +952,8 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
             {
                 try
                 {
-                    using var context = DbFactory.CreateDbContext();
-                    var comments = await context.Comments.Where(c => c.PostID == postId).Include(c => c.User).OrderBy(c => c.DateCreated).ToListAsync();
-                    _postComments[postId] = comments;
+                    // Use PostService
+                    _postComments[postId] = await PostService.GetPostCommentsAsync(postId);
                 }
                 catch (Exception ex) { Console.WriteLine("Error loading comments: " + ex.Message); }
             }
@@ -1049,8 +994,6 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
-
             var newComment = new Comments
             {
                 PostID = args.PostId,
@@ -1062,8 +1005,8 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                 CreatedBy = currentUser.Id
             };
 
-            context.Comments.Add(newComment);
-            await context.SaveChangesAsync();
+            // Use PostService
+            await PostService.CreateCommentAsync(newComment);
 
             // Cleanup UI
             _replyDrafts[args.ParentCommentId] = "";
@@ -1181,11 +1124,8 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
         // Trim search term
         var term = searchTerm.Trim();
 
-        using var context = DbFactory.CreateDbContext();
-
-        // UPDATED LOGIC: Try to find an exact match first
-        var cat = await context.Categories
-            .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == term.ToLower());
+        // Use CategoryService
+        var cat = await CategoryService.GetCategoryByNameAsync(term);
 
         if (cat != null)
         {
@@ -1301,14 +1241,9 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
         if (string.IsNullOrEmpty(currentUser?.Id)) return;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var follow = await context.CategoryFollows.FirstOrDefaultAsync(c => c.CategoryId == categoryId && c.UserId == currentUser.Id);
-            if (follow != null)
-            {
-                context.CategoryFollows.Remove(follow);
-                await context.SaveChangesAsync();
-                await RefreshFeed();
-            }
+            // Use CategoryService
+            await CategoryService.ToggleFollowAsync(currentUser.Id, categoryId);
+            await RefreshFeed();
         }
         catch (Exception ex) { Console.WriteLine(ex.Message); }
     }
@@ -1330,7 +1265,6 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
             var newComment = new Comments
             {
                 PostID = postId,
@@ -1340,8 +1274,9 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                 DateUpdated = DateTime.Now,
                 CreatedBy = currentUser.Id
             };
-            context.Comments.Add(newComment);
-            await context.SaveChangesAsync();
+
+            // Use PostService
+            await PostService.CreateCommentAsync(newComment);
 
             _commentDrafts[postId] = "";
             newComment.User = currentUser;
@@ -1386,6 +1321,7 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
 
         try
         {
+            // Check for existing request (still need DbContext for this specific check)
             using var context = DbFactory.CreateDbContext();
             var existingRequest = await context.CategoryAccessRequests
                 .FirstOrDefaultAsync(r => r.UserId == currentUser.Id && r.CategoryId == selectedCategoryId);
@@ -1405,14 +1341,13 @@ else if (HasSearchedUsers && (UserSearchResults == null || !UserSearchResults.An
                 DateCreated = DateTime.Now
             };
 
-            context.CategoryAccessRequests.Add(newRequest);
-            await context.SaveChangesAsync();
+            // Use CategoryService
+            await CategoryService.CreateAccessRequestAsync(newRequest);
 
             accessRequestMessage = "Request submitted successfully!";
             isAccessRequestSuccess = true;
             StateHasChanged();
 
-            // Optionally, refresh the user data to reflect new request
             await LoadUserAndCategories();
         }
         catch (Exception ex)

@@ -1,0 +1,116 @@
+@using SoSuSaFsd.Domain
+
+@* SearchResultsDropdown - Displays search results for posts or users *@
+
+@if (HasSearchedPosts && PostResults != null && PostResults.Any() && CurrentSection == "home")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999;">
+        <div style="padding: 10px 0;">
+            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #666; font-size: 12px;">Search Results (@PostResults.Count)</div>
+            @foreach (var post in PostResults)
+            {
+                <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick="@(() => HandlePostClick(post.CategoryId, post.Id))">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(post.User?.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 13px; color: #222;">@(post.User?.DisplayName ?? post.User?.UserName ?? "Unknown")</div>
+                        <div style="font-size: 12px; color: #666;">@(post.Content.Length > 60 ? post.Content.Substring(0, 60) + "..." : post.Content)</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 4px;">#@(post.Category?.CategoryName ?? "Unknown") • @post.DateCreated.ToString("MMM dd")</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (HasSearchedPosts && (PostResults == null || !PostResults.Any()) && CurrentSection == "home")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999; text-align: center; color: #999;">
+        <p>No posts found matching "@SearchTerm"</p>
+    </div>
+}
+else if (HasSearchedUsers && UserResults != null && UserResults.Any() && CurrentSection == "profile")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; max-height: 400px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999;">
+        <div style="padding: 10px 0;">
+            <div style="padding: 10px 15px; border-bottom: 1px solid #eee; font-weight: bold; color: #666; font-size: 12px;">Search Results (@UserResults.Count)</div>
+            @foreach (var user in UserResults)
+            {
+                <div style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; hover:background: #f9f9f9; display: flex; gap: 10px; align-items: flex-start;" @onclick="@(() => HandleUserClick(user.UserName))">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background-image: url('@(user.ProfileImage ?? "")'); background-size: cover; background-position: center; flex-shrink: 0;"></div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 13px; color: #222;">@(user.DisplayName ?? user.UserName ?? "Unknown")</div>
+                        <div style="font-size: 12px; color: #666;">@user.UserName</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (HasSearchedUsers && (UserResults == null || !UserResults.Any()) && CurrentSection == "profile")
+{
+    <div style="position: fixed; top: 72px; right: 20px; background: white; border: 1px solid #ddd; border-radius: 8px; width: 400px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999; text-align: center; color: #999;">
+        <p>No users found matching "@SearchTerm"</p>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Search term entered by user
+    /// </summary>
+    [Parameter]
+    public string SearchTerm { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Current active section (home, profile, settings)
+    /// </summary>
+    [Parameter]
+    public string CurrentSection { get; set; } = "home";
+
+    /// <summary>
+    /// Whether a post search has been performed
+    /// </summary>
+    [Parameter]
+    public bool HasSearchedPosts { get; set; }
+
+    /// <summary>
+    /// Whether a user search has been performed
+    /// </summary>
+    [Parameter]
+    public bool HasSearchedUsers { get; set; }
+
+    /// <summary>
+    /// List of post search results
+    /// </summary>
+    [Parameter]
+    public List<Posts> PostResults { get; set; } = new();
+
+    /// <summary>
+    /// List of user search results
+    /// </summary>
+    [Parameter]
+    public List<Users> UserResults { get; set; } = new();
+
+    /// <summary>
+    /// Callback when a post result is clicked
+    /// </summary>
+    [Parameter]
+    public EventCallback<(int CategoryId, int PostId)> OnPostClick { get; set; }
+
+    /// <summary>
+    /// Callback when a user result is clicked
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnUserClick { get; set; }
+
+    private async Task HandlePostClick(int categoryId, int postId)
+    {
+        await OnPostClick.InvokeAsync((categoryId, postId));
+    }
+
+    private async Task HandleUserClick(string? username)
+    {
+        if (!string.IsNullOrEmpty(username))
+        {
+            await OnUserClick.InvokeAsync(username);
+        }
+    }
+}

@@ -10,6 +10,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IServiceScopeFactory ScopeFactory
 @inject IJSRuntime JSRuntime
+@inject SoSuSaFsd.Services.IPostService PostService
 
 <PageTitle>@PageTitle</PageTitle>
 <link rel="stylesheet" href="/styles/category-details.css" />
@@ -153,8 +154,7 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
-
+            // Get current authenticated user
             var authState = await AuthStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             if (user.Identity?.IsAuthenticated == true)
@@ -168,23 +168,20 @@
                 }
             }
 
+            // User lookup still needs direct access (no UserService yet)
             if (!string.IsNullOrEmpty(Username))
             {
+                using var context = DbFactory.CreateDbContext();
                 ProfileUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
 
                 if (ProfileUser != null)
                 {
                     PageTitle = $"{ProfileUser.DisplayName ?? ProfileUser.UserName} - Profile";
 
-                    UserPosts = await context.Posts
-                        .Where(p => p.UserId == ProfileUser.Id)
-                        .Include(p => p.User)
-                        .Include(p => p.Category)
-                        .Include(p => p.Media)
-                        .Include(p => p.Likes)
-                        .OrderByDescending(p => p.DateCreated)
-                        .ToListAsync();
+                    // Use PostService
+                    UserPosts = await PostService.GetUserPostsAsync(ProfileUser.Id);
 
+                    // Follower count calculation still needs direct access
                     FollowerCount = await context.CategoryFollows
                         .Where(cf => context.Categories
                             .Where(c => c.CreatedBy == ProfileUser.Id)
@@ -271,39 +268,19 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var existingLike = await context.PostLikes
-                .FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == CurrentUser.Id);
+            // Use PostService
+            await PostService.ToggleLikeAsync(postId, CurrentUser.Id);
+
+            // Update local state
             var post = UserPosts.FirstOrDefault(p => p.Id == postId);
 
-            if (existingLike != null)
+            if (post != null)
             {
-                context.PostLikes.Remove(existingLike);
-                if (post != null)
-                {
-                    var localLike = post.Likes.FirstOrDefault(l => l.UserID == CurrentUser.Id);
-                    if (localLike != null)
-                    {
-                        post.Likes.Remove(localLike);
-                    }
-                }
-            }
-            else
-            {
-                var newLike = new PostLikes
-                {
-                    PostID = postId,
-                    UserID = CurrentUser.Id,
-                    LikedAt = DateTime.Now
-                };
-                context.PostLikes.Add(newLike);
-                if (post != null)
-                {
-                    post.Likes.Add(newLike);
-                }
+                // Reload likes for this post
+                using var context = DbFactory.CreateDbContext();
+                post.Likes = await context.PostLikes.Where(l => l.PostID == postId).ToListAsync();
             }
 
-            await context.SaveChangesAsync();
             StateHasChanged();
         }
         catch (Exception ex)

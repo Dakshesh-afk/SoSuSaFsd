@@ -1,0 +1,135 @@
+@using SoSuSaFsd.Domain
+
+@* LeftSidebar - Sidebar with Following list, Profile card, and Settings menu *@
+
+<aside class="sidebar sidebar-left">
+    @* HOME SIDEBAR VIEW *@
+    <div id="sidebar-home" class="section-view active">
+        <div class="sidebar-section scrollable-list">
+            <h3>Following</h3>
+            <ul class="category-list">
+                @if (FollowedCategories != null && FollowedCategories.Any())
+                {
+                    @foreach (var cat in FollowedCategories)
+                    {
+                        <li>
+                            <a class="category-link" href="#" @onclick:preventDefault @onclick="@(() => HandleCategoryClick(cat.Id))">
+                                <span class="link-text-wrapper"><span class="hashtag">#</span> @cat.CategoryName</span>
+                                @if (cat.IsVerified)
+                                {
+                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                                }
+                            </a>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <p style="color:#666; font-size:14px; margin-top:5px; padding-left:10px;">You are not following any categories.</p>
+                }
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="category-search-container">
+                <input type="text" 
+                       placeholder="Search/Create categories" 
+                       value="@CategorySearchTerm"
+                       @oninput="@HandleCategorySearchInput" />
+                <button type="button" 
+                        class="create-cat-btn" 
+                        title="Search or Create Category" 
+                        @onclick="@OnCategorySearch">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* PROFILE SIDEBAR VIEW *@
+    <div id="sidebar-profile" class="section-view">
+        <div class="profile-card">
+            <div class="profile-avatar-large" 
+                 style="background-image: url('@(CurrentUser?.ProfileImage ?? "")'); background-size: cover; background-position: center; border-radius: 50%;"></div>
+            <h2 class="profile-name">@(CurrentUser?.UserName ?? "Guest")</h2>
+            <p class="profile-handle">@@@(CurrentUser?.UserName?.ToLower() ?? "guest")</p>
+            <p class="profile-bio">@(CurrentUser?.Bio ?? "No bio available")</p>
+            <div class="profile-stats">
+                <div class="stat-item" onclick="showSection('profile')">
+                    <b>@UserPostsCount</b><span>Posts</span>
+                </div>
+                <div class="stat-item" onclick="showSection('following')">
+                    <b>@FollowedCategories.Count</b><span>Following</span>
+                </div>
+            </div>
+            <button class="edit-profile-btn" onclick="showSection('settings')">Edit Profile</button>
+        </div>
+    </div>
+
+    @* SETTINGS SIDEBAR VIEW *@
+    <div id="sidebar-settings" class="section-view">
+        <div class="sidebar-section">
+            <h3>Account</h3>
+            <ul class="category-list">
+                <li><a onclick="showSettingsForm('profile')" id="set-link-profile" class="category-link active-setting">Edit Profile</a></li>
+                <li><a onclick="showSettingsForm('password')" id="set-link-password" class="category-link">Change Password</a></li>
+                <li><a onclick="showSettingsForm('verification')" id="set-link-verification" class="category-link">Request Verification</a></li>
+            </ul>
+        </div>
+    </div>
+</aside>
+
+@code {
+    /// <summary>
+    /// Current logged-in user
+    /// </summary>
+    [Parameter]
+    public Users? CurrentUser { get; set; }
+
+    /// <summary>
+    /// List of categories the user follows
+    /// </summary>
+    [Parameter]
+    public List<Categories> FollowedCategories { get; set; } = new();
+
+    /// <summary>
+    /// Number of posts the user has created
+    /// </summary>
+    [Parameter]
+    public int UserPostsCount { get; set; }
+
+    /// <summary>
+    /// Category search term
+    /// </summary>
+    [Parameter]
+    public string CategorySearchTerm { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Callback when category search term changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnCategorySearchTermChanged { get; set; }
+
+    /// <summary>
+    /// Callback when category search is triggered
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCategorySearch { get; set; }
+
+    /// <summary>
+    /// Callback when a category is clicked
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnCategoryClick { get; set; }
+
+    private async Task HandleCategorySearchInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        await OnCategorySearchTermChanged.InvokeAsync(value);
+    }
+
+    private async Task HandleCategoryClick(int categoryId)
+    {
+        await OnCategoryClick.InvokeAsync(categoryId);
+    }
+}

@@ -1,0 +1,48 @@
+@using SoSuSaFsd.Domain
+
+@* FollowingFeed - Grid of followed categories *@
+
+<h1 class="page-title">Following</h1>
+<hr />
+
+@if (FollowedCategories != null && FollowedCategories.Any())
+{
+    <div class="following-grid">
+        @foreach (var cat in FollowedCategories)
+        {
+            <div class="following-card">
+                <h3>
+                    #@cat.CategoryName
+                    @if (cat.IsVerified)
+                    {
+                        <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                    }
+                </h3>
+                <button class="login-btn secondary" @onclick="() => HandleUnfollow(cat.Id)">Unfollow</button>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p style="text-align:center; color:#666; margin-top:30px;">You are not following any categories.</p>
+}
+
+@code {
+    /// <summary>
+    /// List of categories the user is following
+    /// </summary>
+    [Parameter]
+    public List<Categories> FollowedCategories { get; set; } = new();
+
+    /// <summary>
+    /// Callback when user unfollows a category
+    /// </summary>
+    [Parameter]
+    public EventCallback<int> OnUnfollow { get; set; }
+
+    private async Task HandleUnfollow(int categoryId)
+    {
+        await OnUnfollow.InvokeAsync(categoryId);
+    }
+}

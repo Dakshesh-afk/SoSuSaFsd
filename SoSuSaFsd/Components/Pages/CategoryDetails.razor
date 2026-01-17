@@ -1,4 +1,4 @@
-﻿@page "/category/{Id:int}"
+@page "/category/{Id:int}"
 @rendermode InteractiveServer
 @using SoSuSaFsd.Data
 @using SoSuSaFsd.Domain
@@ -11,6 +11,8 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IServiceScopeFactory ScopeFactory
 @inject IWebHostEnvironment Environment
+@inject SoSuSaFsd.Services.IPostService PostService
+@inject SoSuSaFsd.Services.ICategoryService CategoryService
 
 <PageTitle>@Title</PageTitle>
 <link rel="stylesheet" href="/styles/category-details.css" />
@@ -137,13 +139,13 @@
                 @if (CurrentCategory?.IsVerified == true && !CanUserPost() && !hasPendingRequest)
                 {
                     <div class="alert alert-warning">
-                        <strong>⚠️ Verified Category:</strong> This category is restricted. You must request access to post here.
+                        <strong>?? Verified Category:</strong> This category is restricted. You must request access to post here.
                     </div>
                 }
                 else if (hasPendingRequest)
                 {
                     <div class="alert alert-info">
-                        <strong>ℹ️ Pending:</strong> Your request to post in this verified category is awaiting admin approval.
+                        <strong>?? Pending:</strong> Your request to post in this verified category is awaiting admin approval.
                     </div>
                 }
             </div>
@@ -179,7 +181,7 @@
                 {
                     <div style="margin-bottom: 15px;">
                         <button class="login-btn secondary" @onclick="ClearSearchAndNavigate">
-                            ← View all posts in #@CurrentCategory?.CategoryName
+                            ? View all posts in #@CurrentCategory?.CategoryName
                         </button>
                     </div>
                 }
@@ -193,7 +195,7 @@
                                 <div class="post-avatar" style="background-image: url('@(post.User?.ProfileImage ?? "")');"></div>
                                 <div>
                                     <b>@(post.User?.UserName ?? "User")</b>
-                                    <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy • HH:mm")</div>
+                                    <div class="post-date">@post.DateCreated.ToString("MMM dd, yyyy � HH:mm")</div>
                                 </div>
                             </div>
                             <div class="post-content">@post.Content</div>
@@ -367,7 +369,7 @@
 {
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="ClosePostModal">×</span>
+            <span class="modal-close" @onclick="ClosePostModal">�</span>
             <h2>Create Post</h2>
             <div class="modal-subtitle">Posting to <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="What's on your mind?" @bind="newPostContent"></textarea>
@@ -386,7 +388,7 @@
                     var index = i;
                     var file = pendingUploads[i];
                     <div class="preview-item">
-                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">×</button>
+                        <button class="remove-media-btn" @onclick="() => RemoveFile(index)">�</button>
                         @if (file.MediaType == "Video")
                         {
                             <video class="preview-media" src="@file.SavedPath"></video>
@@ -411,7 +413,7 @@
 {
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="() => showRequestModal = false">×</span>
+            <span class="modal-close" @onclick="() => showRequestModal = false">�</span>
             <h2>Request Access</h2>
             <div class="modal-subtitle">Requesting permission to post in verified category <b>#@CurrentCategory?.CategoryName</b></div>
             <textarea class="modal-textarea" placeholder="Why should you be verified for this category?" @bind="requestReason"></textarea>
@@ -428,7 +430,7 @@
 {
     <div class="modal">
         <div class="modal-content">
-            <span class="modal-close" @onclick="() => showReportModal = false">×</span>
+            <span class="modal-close" @onclick="() => showReportModal = false">�</span>
             <h2 class="modal-title-error">Report Content</h2>
             <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
             <div class="form-group">
@@ -459,7 +461,7 @@
 {
     <div class="modal">
         <div class="modal-content modal-notification">
-            <span class="modal-close" @onclick="CloseNotification">×</span>
+            <span class="modal-close" @onclick="CloseNotification">�</span>
             <div class="notification-icon">
                 @if (notificationType == "success")
                 {
@@ -486,7 +488,7 @@
 @* Create Category Confirmation Modal *@
 <div class="modal" style="display: @(showCreateConfirm ? "flex" : "none")">
     <div class="modal-content">
-        <span class="modal-close" @onclick="() => showCreateConfirm = false">×</span>
+        <span class="modal-close" @onclick="() => showCreateConfirm = false">�</span>
         <h2>Category Not Found</h2>
         <p>Would you like to create <b>#@searchTerm</b>?</p>
         <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -501,7 +503,7 @@
     <div class="auth-card">
         <div class="auth-card-header">
             <h3>Welcome</h3>
-            <span style="cursor:pointer; font-size:20px;" @onclick="() => ShowLoginOverlay = false">×</span>
+            <span style="cursor:pointer; font-size:20px;" @onclick="() => ShowLoginOverlay = false">�</span>
         </div>
         <div id="login-view">
             <form action="api/Account/login" method="post">
@@ -661,25 +663,17 @@
 
     private async Task LoadCategoryData(SoSuSaFsdContext context)
     {
-        VerifiedCategories = await context.Categories
-            .Where(c => c.IsVerified == true)
-            .OrderByDescending(c => c.DateCreated)
-            .Take(5)
-            .ToListAsync();
-
-        CurrentCategory = await context.Categories.FirstOrDefaultAsync(c => c.Id == Id);
+        // Use CategoryService
+        VerifiedCategories = await CategoryService.GetVerifiedCategoriesAsync(5);
+        
+        CurrentCategory = await CategoryService.GetCategoryByIdAsync(Id);
         if (CurrentCategory != null)
         {
             Title = "#" + CurrentCategory.CategoryName;
         }
 
-        CategoryPosts = await context.Posts
-            .Where(p => p.CategoryId == Id)
-            .Include(p => p.User)
-            .Include(p => p.Media)
-            .Include(p => p.Likes)
-            .OrderByDescending(p => p.DateCreated)
-            .ToListAsync();
+        // Use PostService
+        CategoryPosts = await PostService.GetCategoryPostsAsync(Id);
     }
 
     private async Task LoadUserSpecificData(SoSuSaFsdContext context)
@@ -689,31 +683,13 @@
             return;
         }
 
-        var existingFollow = await context.CategoryFollows
-            .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == CurrentCategory.Id);
-        isFollowing = (existingFollow != null);
+        // Use CategoryService
+        isFollowing = await CategoryService.IsUserFollowingAsync(currentUserId, CurrentCategory.Id);
+        hasApprovedAccess = await CategoryService.HasApprovedAccessAsync(currentUserId, CurrentCategory.Id);
+        hasPendingRequest = await CategoryService.HasPendingAccessRequestAsync(currentUserId, CurrentCategory.Id);
 
-        var accessRequest = await context.CategoryAccessRequests
-            .OrderByDescending(r => r.DateCreated)
-            .FirstOrDefaultAsync(r => r.UserId == currentUserId && r.CategoryId == CurrentCategory.Id);
-
-        if (accessRequest != null)
-        {
-            hasApprovedAccess = accessRequest.Status == "Approved";
-            hasPendingRequest = accessRequest.Status == "Pending";
-        }
-
-        RecentCategories = await context.Categories
-            .Where(c => c.CreatedBy == currentUserId)
-            .OrderByDescending(c => c.DateCreated)
-            .Take(5)
-            .ToListAsync();
-
-        FollowedCategories = await context.CategoryFollows
-            .Where(cf => cf.UserId == currentUserId)
-            .Include(cf => cf.Category)
-            .Select(cf => cf.Category!)
-            .ToListAsync();
+        RecentCategories = await CategoryService.GetRecentCategoriesAsync(currentUserId, 5);
+        FollowedCategories = await CategoryService.GetFollowedCategoriesAsync(currentUserId);
     }
 
     // ========== ADDED METHOD TO FIX RZ1010 ==========
@@ -784,13 +760,8 @@
         {
             try
             {
-                using var context = DbFactory.CreateDbContext();
-                var comments = await context.Comments
-                    .Where(c => c.PostID == postId)
-                    .Include(c => c.User)
-                    .OrderBy(c => c.DateCreated)
-                    .ToListAsync();
-                _postComments[postId] = comments;
+                // Use PostService
+                _postComments[postId] = await PostService.GetPostCommentsAsync(postId);
             }
             catch (Exception ex)
             {
@@ -824,7 +795,6 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
             var newComment = new Comments
             {
                 PostID = postId,
@@ -836,8 +806,8 @@
                 UpdatedBy = currentUser.Id
             };
 
-            context.Comments.Add(newComment);
-            await context.SaveChangesAsync();
+            // Use PostService
+            await PostService.CreateCommentAsync(newComment);
 
             _commentDrafts[postId] = "";
             newComment.User = currentUser;
@@ -896,21 +866,20 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
             var newComment = new Comments
             {
                 PostID = postId,
                 UserID = currentUser.Id,
                 Content = content,
-                ParentCommentID = parentCommentId, // Link to parent
+                ParentCommentID = parentCommentId,
                 DateCreated = DateTime.Now,
                 DateUpdated = DateTime.Now,
                 CreatedBy = currentUser.Id,
                 UpdatedBy = currentUser.Id
             };
 
-            context.Comments.Add(newComment);
-            await context.SaveChangesAsync();
+            // Use PostService
+            await PostService.CreateCommentAsync(newComment);
 
             // Cleanup UI
             _replyDrafts[parentCommentId] = "";
@@ -943,39 +912,18 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var existingLike = await context.PostLikes
-                .FirstOrDefaultAsync(l => l.PostID == postId && l.UserID == currentUserId);
+            // Use PostService
+            await PostService.ToggleLikeAsync(postId, currentUserId);
+            
             var post = CategoryPosts.FirstOrDefault(p => p.Id == postId);
 
-            if (existingLike != null)
+            if (post != null)
             {
-                context.PostLikes.Remove(existingLike);
-                if (post != null)
-                {
-                    var localLike = post.Likes.FirstOrDefault(l => l.UserID == currentUserId);
-                    if (localLike != null)
-                    {
-                        post.Likes.Remove(localLike);
-                    }
-                }
-            }
-            else
-            {
-                var newLike = new PostLikes
-                {
-                    PostID = postId,
-                    UserID = currentUserId,
-                    LikedAt = DateTime.Now
-                };
-                context.PostLikes.Add(newLike);
-                if (post != null)
-                {
-                    post.Likes.Add(newLike);
-                }
+                // Reload likes for this post
+                using var context = DbFactory.CreateDbContext();
+                post.Likes = await context.PostLikes.Where(l => l.PostID == postId).ToListAsync();
             }
 
-            await context.SaveChangesAsync();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -1014,6 +962,7 @@
 
         try
         {
+            // Double-check access in database
             using var context = DbFactory.CreateDbContext();
             bool dbHasAccess = await context.CategoryAccessRequests
                 .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Approved");
@@ -1046,18 +995,13 @@
                 });
             }
 
-            context.Posts.Add(newPost);
-            await context.SaveChangesAsync();
+            // Use PostService
+            await PostService.CreatePostAsync(newPost);
 
             ClosePostModal();
 
-            CategoryPosts = await context.Posts
-                .Where(p => p.CategoryId == Id)
-                .Include(p => p.User)
-                .Include(p => p.Media)
-                .Include(p => p.Likes)
-                .OrderByDescending(p => p.DateCreated)
-                .ToListAsync();
+            // Reload posts using PostService
+            CategoryPosts = await PostService.GetCategoryPostsAsync(Id);
         }
         catch (Exception ex)
         {
@@ -1159,37 +1103,12 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
+            // Use CategoryService
+            await CategoryService.ToggleFollowAsync(currentUserId, Id);
+            isFollowing = !isFollowing;
 
-            if (isFollowing)
-            {
-                var record = await context.CategoryFollows
-                    .FirstOrDefaultAsync(cf => cf.UserId == currentUserId && cf.CategoryId == Id);
-                if (record != null)
-                {
-                    context.CategoryFollows.Remove(record);
-                }
-                isFollowing = false;
-            }
-            else
-            {
-                context.CategoryFollows.Add(new CategoryFollows
-                {
-                    UserId = currentUserId,
-                    CategoryId = Id,
-                    DateCreated = DateTime.Now,
-                    DateUpdated = DateTime.Now
-                });
-                isFollowing = true;
-            }
-
-            await context.SaveChangesAsync();
-
-            FollowedCategories = await context.CategoryFollows
-                .Where(cf => cf.UserId == currentUserId)
-                .Include(cf => cf.Category)
-                .Select(cf => cf.Category!)
-                .ToListAsync();
+            // Reload followed categories
+            FollowedCategories = await CategoryService.GetFollowedCategoriesAsync(currentUserId);
         }
         catch (Exception ex)
         {
@@ -1207,11 +1126,9 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var exists = await context.CategoryAccessRequests
-                .AnyAsync(r => r.UserId == currentUserId && r.CategoryId == Id && r.Status == "Pending");
-
-            if (exists)
+            // Check for existing request using CategoryService
+            var hasPending = await CategoryService.HasPendingAccessRequestAsync(currentUserId, Id);
+            if (hasPending)
             {
                 errorMessage = "You already have a pending request.";
                 showRequestModal = false;
@@ -1229,8 +1146,8 @@
                 DateUpdated = DateTime.Now
             };
 
-            context.CategoryAccessRequests.Add(request);
-            await context.SaveChangesAsync();
+            // Use CategoryService
+            await CategoryService.CreateAccessRequestAsync(request);
 
             showRequestModal = false;
             requestReason = "";
@@ -1267,6 +1184,7 @@
 
         try
         {
+            // Check if user already reported (still need DbContext for complex check)
             using var context = DbFactory.CreateDbContext();
             var existingReport = await context.Reports
                 .FirstOrDefaultAsync(r => r.PostID == reportPostId && r.ReporterID == currentUserId);
@@ -1303,8 +1221,8 @@
                 DateCreated = DateTime.Now
             };
 
-            context.Reports.Add(newReport);
-            await context.SaveChangesAsync();
+            // Use PostService
+            await PostService.CreateReportAsync(newReport);
 
             showReportModal = false;
 
@@ -1345,9 +1263,8 @@
             return;
         }
 
-        using var context = DbFactory.CreateDbContext();
-        var cat = await context.Categories
-            .FirstOrDefaultAsync(c => c.CategoryName.ToLower() == searchTerm.ToLower());
+        // Use CategoryService
+        var cat = await CategoryService.GetCategoryByNameAsync(searchTerm.Trim());
 
         if (cat != null)
         {
@@ -1385,7 +1302,7 @@
                 builder.OpenElement(2, "button");
                 builder.AddAttribute(3, "class", "carousel-btn prev");
                 builder.AddAttribute(4, "onclick", EventCallback.Factory.Create(this, () => PrevSlide(post.Id, totalMedia)));
-                builder.AddContent(5, "❮");
+                builder.AddContent(5, "?");
                 builder.CloseElement();
             }
 
@@ -1413,7 +1330,7 @@
                 builder.OpenElement(16, "button");
                 builder.AddAttribute(17, "class", "carousel-btn next");
                 builder.AddAttribute(18, "onclick", EventCallback.Factory.Create(this, () => NextSlide(post.Id, totalMedia)));
-                builder.AddContent(19, "❯");
+                builder.AddContent(19, "?");
                 builder.CloseElement();
 
                 builder.OpenElement(20, "div");
@@ -1464,8 +1381,8 @@
     // ============ HELPER CLASSES ============
     private class PendingFile
     {
-        public string SavedPath { get; set; } = "";
-        public string MediaType { get; set; } = "";
-        public string PhysicalPath { get; set; } = "";
+        public string SavedPath { get; set; } = null!;
+        public string PhysicalPath { get; set; } = null!;
+        public string MediaType { get; set; } = null!;
     }
 }

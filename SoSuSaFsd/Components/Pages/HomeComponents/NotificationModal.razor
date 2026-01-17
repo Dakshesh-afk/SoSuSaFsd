@@ -1,0 +1,62 @@
+@* NotificationModal - Reusable notification display component *@
+@if (IsVisible)
+{
+    <div class="modal" style="display:flex;">
+        <div class="modal-content" style="text-align: center; max-width: 400px;">
+            <span class="modal-close" @onclick="HandleClose">&times;</span>
+
+            <div style="margin-bottom: 15px;">
+                @if (Type == "success")
+                {
+                    <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745;"></i>
+                    <h2 style="margin: 10px 0; color: #28a745;">Success</h2>
+                }
+                else if (Type == "info")
+                {
+                    <i class="fas fa-info-circle" style="font-size: 48px; color: #17a2b8;"></i>
+                    <h2 style="margin: 10px 0; color: #17a2b8;">Report Received</h2>
+                }
+                else
+                {
+                    <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #dc3545;"></i>
+                    <h2 style="margin: 10px 0; color: #dc3545;">Error</h2>
+                }
+            </div>
+
+            <p style="font-size: 16px; margin-bottom: 25px;">@Message</p>
+
+            <button class="login-btn" @onclick="HandleClose" style="width: 100px;">OK</button>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Controls whether the modal is visible
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// The message to display
+    /// </summary>
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The type of notification: "success", "error", or "info"
+    /// </summary>
+    [Parameter]
+    public string Type { get; set; } = "success";
+
+    /// <summary>
+    /// Callback invoked when the modal is closed
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

@@ -1,0 +1,95 @@
+@* HomeReportModal - Report content modal *@
+@if (IsVisible)
+{
+    <div class="modal" style="display:flex;">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="HandleCancel">&times;</span>
+            <h2 style="margin-top: 0; color: #dc3545;">Report Content</h2>
+            <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                Help us keep the community safe. Why are you reporting this post?
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Reason:</label>
+                <select class="modal-textarea" style="height: 40px;" @bind="ReasonSelection">
+                    <option value="Spam">Spam</option>
+                    <option value="Harassment">Harassment or Bullying</option>
+                    <option value="Misinformation">Misinformation</option>
+                    <option value="Hate Speech">Hate Speech</option>
+                    <option value="Inappropriate">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Additional Details (Optional):</label>
+                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="ReasonDetails"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top:15px;">
+                <button class="login-btn secondary" @onclick="HandleCancel">Cancel</button>
+                <button class="login-btn" style="background-color: #dc3545;" @onclick="HandleSubmit">Submit Report</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Controls whether the modal is visible
+    /// </summary>
+    [Parameter]
+    public bool IsVisible { get; set; }
+
+    /// <summary>
+    /// The ID of the post being reported
+    /// </summary>
+    [Parameter]
+    public int PostId { get; set; }
+
+    /// <summary>
+    /// The selected report reason
+    /// </summary>
+    [Parameter]
+    public string ReasonSelection { get; set; } = "Spam";
+
+    /// <summary>
+    /// Additional details about the report
+    /// </summary>
+    [Parameter]
+    public string ReasonDetails { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Callback invoked when user submits the report
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSubmit { get; set; }
+
+    /// <summary>
+    /// Callback invoked when user cancels
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Callback for updating the reason selection
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnReasonChange { get; set; }
+
+    /// <summary>
+    /// Callback for updating the reason details
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnDetailsChange { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await OnSubmit.InvokeAsync();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

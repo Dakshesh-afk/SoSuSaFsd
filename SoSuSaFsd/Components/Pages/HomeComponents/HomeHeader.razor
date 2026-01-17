@@ -1,0 +1,127 @@
+@using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components.Authorization
+
+@* HomeHeader - Top navigation bar with logo, nav links, search, and auth buttons *@
+
+<header class="site-header">
+    <div class="header-container">
+        <div class="logo-area" onclick="showSection('home')">
+            <div class="logo-icon"><i class="fas fa-check"></i></div>
+            <span class="logo-text">SoSuSa</span>
+        </div>
+        
+        <nav class="main-nav">
+            <a onclick="showSection('home')" id="nav-home" class="active-link">Home</a>
+            <a onclick="showSection('profile')" id="nav-profile">Profile</a>
+            <a onclick="showSection('settings')" id="nav-settings">Settings</a>
+        </nav>
+        
+        <div class="header-right">
+            <div class="header-search-wrapper" id="header-search-wrapper" style="display: flex;">
+                <input type="text" 
+                       id="header-search-input" 
+                       class="search-bar" 
+                       placeholder="@SearchPlaceholder" 
+                       value="@SearchTerm"
+                       @oninput="@HandleSearchInput"
+                       @onkeyup="@HandleSearchKeyUp">
+                <button type="button" 
+                        class="header-search-btn" 
+                        title="Search" 
+                        @onclick="@HandleSearchClick">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+
+            @* Refresh Button *@
+            <button class="login-btn secondary" 
+                    style="min-width: 40px; padding: 0 10px; margin-left: 10px;" 
+                    title="Refresh Page" 
+                    @onclick="@OnRefresh">
+                <i class="fas fa-redo"></i>
+            </button>
+
+            <AuthorizeView>
+                <Authorized>
+                    <AuthorizeView Roles="Admin" Context="innerContext">
+                        <button class="admin-btn" 
+                                style="margin-right: 10px;" 
+                                @onclick="@OnNavigateToAdmin">
+                            Admin Panel
+                        </button>
+                    </AuthorizeView>
+                    <button class="login-btn" @onclick="@OnLogout">Logout</button>
+                </Authorized>
+                <NotAuthorized>
+                    <button class="login-btn" onclick="showLoginOverlay()">Login</button>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</header>
+
+@code {
+    /// <summary>
+    /// Current search term
+    /// </summary>
+    [Parameter]
+    public string SearchTerm { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Placeholder text for search input
+    /// </summary>
+    [Parameter]
+    public string SearchPlaceholder { get; set; } = "Search posts...";
+
+    /// <summary>
+    /// Current logged-in user
+    /// </summary>
+    [Parameter]
+    public Users? CurrentUser { get; set; }
+
+    /// <summary>
+    /// Callback when search term changes
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnSearchTermChanged { get; set; }
+
+    /// <summary>
+    /// Callback when search is triggered
+    /// </summary>
+    [Parameter]
+    public EventCallback OnSearch { get; set; }
+
+    /// <summary>
+    /// Callback for refresh button
+    /// </summary>
+    [Parameter]
+    public EventCallback OnRefresh { get; set; }
+
+    /// <summary>
+    /// Callback for logout button
+    /// </summary>
+    [Parameter]
+    public EventCallback OnLogout { get; set; }
+
+    /// <summary>
+    /// Callback for admin panel navigation
+    /// </summary>
+    [Parameter]
+    public EventCallback OnNavigateToAdmin { get; set; }
+
+    private async Task HandleSearchInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? string.Empty;
+        await OnSearchTermChanged.InvokeAsync(value);
+    }
+
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        await OnSearch.InvokeAsync();
+    }
+
+    private async Task HandleSearchClick()
+    {
+        await OnSearch.InvokeAsync();
+    }
+}
