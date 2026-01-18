@@ -36,11 +36,15 @@
 
     <div class="sidebar-footer">
         <div class="category-search-container">
-            <input type="text" placeholder="Find category..." 
-                   @bind="State.SearchTerm" @bind:event="oninput" />
-            <button type="button" class="create-cat-btn" 
-                    title="Create New Category" @onclick="OnCategorySearch">
-                <i class="fas fa-plus"></i>
+            <input type="text" 
+                   placeholder="Search/Create categories" 
+                   @bind="State.SearchTerm" 
+                   @bind:event="oninput" />
+            <button type="button" 
+                    class="create-cat-btn" 
+                    title="Search or Create Category" 
+                    @onclick="OnCategorySearch">
+                <i class="fas fa-search"></i>
             </button>
         </div>
     </div>
