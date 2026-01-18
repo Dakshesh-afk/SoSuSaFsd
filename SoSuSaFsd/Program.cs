@@ -89,7 +89,7 @@ try
 
     // ========== BLAZOR ==========
     builder.Services.AddRazorComponents()
-        .AddInteractiveServerComponents();
+        .AddInteractiveServerComponents(options => options.DetailedErrors = true); // <--- CHANGE THIS LINE
 
     var app = builder.Build();
 

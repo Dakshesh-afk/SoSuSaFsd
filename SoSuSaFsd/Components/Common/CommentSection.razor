@@ -1,40 +1,283 @@
 @using SoSuSaFsd.Domain
-@using Microsoft.AspNetCore.Components
+@using SoSuSaFsd.Components.Common.PostCardComponents
 
 <div class="comment-section">
+
+    @* --- SCROLLABLE COMMENT LIST --- *@
     <div class="comment-list">
         @if (Comments != null && Comments.Any())
         {
-            @foreach (var comment in Comments)
+            @* Loop through Parent Comments *@
+            @foreach (var comment in Comments.Where(c => c.ParentCommentID == null || c.ParentCommentID == 0))
             {
                 <div class="comment-item">
-                    <div class="comment-avatar" style="background-image: url('@(comment.User?.ProfileImage ?? "")');"></div>
-                    <div class="comment-bubble">
-                        <div>
+                    @* Avatar *@
+                    <div class="comment-avatar"
+                         style="background-image: url('@(comment.User?.ProfileImage ?? "")');">
+                    </div>
+
+                    @* Right Side Wrapper *@
+                    <div class="comment-content-wrapper">
+
+                        @* 1. The Bubble (User + Content) *@
+                        <div class="comment-bubble">
                             <span class="comment-user">@(comment.User?.UserName ?? "User")</span>
-                            <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                            <div class="comment-text">@comment.Content</div>
                         </div>
-                        <div class="comment-text">@comment.Content</div>
+
+                        @* 2. The Meta Row (Date + Text Reply Button) *@
+                        <div class="comment-meta-row">
+                            <span class="comment-date">@comment.DateCreated.ToString("MMM dd, HH:mm")</span>
+                            <button class="reply-text-btn"
+                                    @onclick="() => OnToggleReply.InvokeAsync(comment.Id)">
+                                Reply
+                            </button>
+                        </div>
+
+                        @* 3. Reply Input Box (Hidden by default) *@
+                        @if (ActiveReplyBoxes.ContainsKey(comment.Id) && ActiveReplyBoxes[comment.Id])
+                        {
+                            <div class="comment-input-area reply-input-wrapper" style="margin-bottom: 10px;">
+                                <input type="text"
+                                       class="comment-input"
+                                       placeholder="Write a reply..."
+                                       value="@(ReplyDrafts.ContainsKey(comment.Id) ? ReplyDrafts[comment.Id] : "")"
+                                       @oninput="@(e => OnUpdateReplyDraft.InvokeAsync(new PostCardComments.ReplyDraftEventArgs { ParentCommentId = comment.Id, Content = e.Value?.ToString() ?? "" }))"
+                                       @onkeydown="@(e => e.Key == "Enter" ? OnSubmitReply.InvokeAsync(new PostCardComments.SubmitReplyEventArgs { PostId = PostId, ParentCommentId = comment.Id }) : null)" />
+
+                                <button class="comment-send-btn"
+                                        @onclick="() => OnSubmitReply.InvokeAsync(new PostCardComments.SubmitReplyEventArgs { PostId = PostId, ParentCommentId = comment.Id })">
+                                    Reply
+                                </button>
+                            </div>
+                        }
+
+                        @* 4. Nested Replies *@
+                        @{
+                            var replies = Comments.Where(c => c.ParentCommentID == comment.Id).ToList();
+                        }
+                        @if (replies.Any())
+                        {
+                            <div class="nested-replies-container">
+                                @foreach (var reply in replies)
+                                {
+                                    <div class="comment-item">
+                                        <div class="comment-avatar"
+                                             style="width: 24px; height: 24px; background-image: url('@(reply.User?.ProfileImage ?? "")');">
+                                        </div>
+
+                                        <div class="comment-content-wrapper">
+                                            <div class="comment-bubble">
+                                                <span class="comment-user">@(reply.User?.UserName ?? "User")</span>
+                                                <div class="comment-text">@reply.Content</div>
+                                            </div>
+                                            @* Date row for replies (Optional: Remove if you want it cleaner) *@
+                                            <div class="comment-meta-row">
+                                                <span class="comment-date">@reply.DateCreated.ToString("MMM dd, HH:mm")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
                 </div>
             }
         }
     </div>
 
+    @* --- FIXED BOTTOM INPUT --- *@
     <div class="comment-input-area">
-        <input 
-            type="text" 
-            class="comment-input" 
-            placeholder="Write a comment..."
-            value="@(Draft ?? "")"
-            @onchange="@(e => OnDraftChange.InvokeAsync(e.Value?.ToString() ?? ""))" />
-        <button class="comment-send-btn" @onclick="() => OnSubmit.InvokeAsync()">Post</button>
+        <input type="text"
+               class="comment-input"
+               placeholder="Write a comment..."
+               value="@CommentDraft"
+               @oninput="@(e => OnUpdateDraft.InvokeAsync(new PostCardComments.CommentDraftEventArgs { PostId = PostId, Content = e.Value?.ToString() ?? "" }))"
+               @onkeydown="@(e => e.Key == "Enter" ? OnSubmitComment.InvokeAsync(PostId) : null)" />
+
+        <button class="comment-send-btn" @onclick="() => OnSubmitComment.InvokeAsync(PostId)">
+            Post
+        </button>
     </div>
+
 </div>
 
 @code {
-    [Parameter] public List<Comments>? Comments { get; set; }
-    [Parameter] public string? Draft { get; set; }
-    [Parameter] public EventCallback<string> OnDraftChange { get; set; }
-    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public int PostId { get; set; }
+    [Parameter] public List<Comments> Comments { get; set; } = new();
+
+    // Main Comment Input
+    [Parameter] public string CommentDraft { get; set; } = string.Empty;
+    [Parameter] public EventCallback<PostCardComments.CommentDraftEventArgs> OnUpdateDraft { get; set; }
+    [Parameter] public EventCallback<int> OnSubmitComment { get; set; }
+
+    // Reply Logic
+    [Parameter] public Dictionary<int, bool> ActiveReplyBoxes { get; set; } = new();
+    [Parameter] public Dictionary<int, string> ReplyDrafts { get; set; } = new();
+    [Parameter] public EventCallback<int> OnToggleReply { get; set; }
+    [Parameter] public EventCallback<PostCardComments.ReplyDraftEventArgs> OnUpdateReplyDraft { get; set; }
+    [Parameter] public EventCallback<PostCardComments.SubmitReplyEventArgs> OnSubmitReply { get; set; }
 }
+
+<style>
+    /* --- COMMENTS --- */
+    .comment-section {
+        background-color: #f9f9f9;
+        border-top: 1px solid #eee;
+        padding: 15px;
+    }
+
+    .comment-list {
+        margin-bottom: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .comment-item {
+        display: flex;
+        margin-bottom: 12px;
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #ddd;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+
+    .comment-bubble {
+        background-color: #fff;
+        border-radius: 12px;
+        padding: 8px 12px;
+        border: 1px solid #eee;
+        flex-grow: 1;
+    }
+
+    .comment-user {
+        font-weight: bold;
+        font-size: 13px;
+        margin-right: 5px;
+        color: #000;
+    }
+
+    .comment-date {
+        font-size: 11px;
+        color: #888;
+    }
+
+    .comment-text {
+        font-size: 14px;
+        color: #333;
+        margin-top: 2px;
+        line-height: 1.4;
+    }
+
+    .comment-input-area {
+        display: flex;
+        gap: 10px;
+    }
+
+    .comment-input {
+        flex-grow: 1;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        outline: none;
+    }
+
+    .comment-send-btn {
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        padding: 6px 15px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+        .comment-send-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+
+
+
+    /* --- POST CARDS --- */
+    .post-card {
+        background-color: #fff;
+        padding: 0;
+        margin-bottom: 20px;
+        border: 1px solid #e1e1e1;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+    }
+
+    .post-avatar {
+        width: 48px;
+        height: 48px;
+        background-color: #ddd;
+        border-radius: 50%;
+        margin-right: 15px;
+        object-fit: cover;
+    }
+
+    .post-meta div {
+        font-size: 15px;
+        color: #222;
+    }
+
+    .post-category-tag {
+        color: #666;
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+        .post-category-tag a {
+            color: #333;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+    .post-content {
+        font-size: 16px;
+        color: #111;
+        line-height: 1.6;
+        padding: 5px 15px 20px 15px;
+    }
+
+    .post-actions {
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+    }
+
+    .action-btn {
+        flex-grow: 1;
+        background: none;
+        border: none;
+        font-size: 14px;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 0;
+        transition: background-color 0.2s;
+    }
+
+        .action-btn:hover {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+</style>
