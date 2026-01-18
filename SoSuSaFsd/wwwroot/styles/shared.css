@@ -1,16 +1,43 @@
 /* --- GLOBAL STYLES --- */
+html {
+    height: 100%;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #ffffff;
     margin: 0;
     color: #333;
+}
+
+/* Default: Lock scrolling for main app pages */
+html:not(.admin-page) {
     overflow: hidden;
+}
+
+body:not(.admin-page) {
+    overflow: hidden;
+    height: 100vh;
+    position: fixed;
+    width: 100%;
+}
+
+/* Admin page exception: Allow scrolling */
+html.admin-page,
+body.admin-page {
+    overflow-y: auto;
+    position: static;
+    height: auto;
 }
 
 a {
     text-decoration: none;
     color: #333;
     cursor: pointer;
+}
+
+button {
+    text-decoration: none;
 }
 
 ul {

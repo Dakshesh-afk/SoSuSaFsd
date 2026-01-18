@@ -262,6 +262,7 @@ namespace SoSuSaFsd.Data
             var generalCategory = categories.FirstOrDefault(c => c.CategoryName == "General");
 
             // Get specific users by username
+            var adminUser = users.FirstOrDefault(u => u.UserName == "SoSuSaAdmin");
             var mothership = users.FirstOrDefault(u => u.UserName == "Mothership");
             var temasekteacher = users.FirstOrDefault(u => u.UserName == "temasekteacher");
             var gamer = users.FirstOrDefault(u => u.UserName == "gamer_123");
@@ -275,101 +276,101 @@ namespace SoSuSaFsd.Data
                 {
                     Content = "BREAKING: New MRT line announced! The Thomson-East Coast Line extension will connect to more neighborhoods. What do you think about the new route?",
                     PostStatus = "Published",
-                    UserId = mothership?.Id ?? users[1].Id,
-                    CategoryId = sgNewsCategory?.Id ?? 1,
+                    UserId = mothership?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = sgNewsCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddHours(-6),
                     DateUpdated = DateTime.Now.AddHours(-6),
-                    CreatedBy = mothership?.Id ?? users[1].Id
+                    CreatedBy = mothership?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Temasek Poly's Open House this weekend! Come check out the IIT, ENG, and BUS schools. There'll be booths, demos, and free snacks",
                     PostStatus = "Published",
-                    UserId = temasekteacher?.Id ?? users[2].Id,
-                    CategoryId = temasekCategory?.Id ?? 2,
+                    UserId = temasekteacher?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = temasekCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-1),
                     DateUpdated = DateTime.Now.AddDays(-1),
-                    CreatedBy = temasekteacher?.Id ?? users[2].Id
+                    CreatedBy = temasekteacher?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Just hit Diamond rank in Valorant! Took me 3 months but finally made it. Any Immortal players got tips for climbing higher?",
                     PostStatus = "Published",
-                    UserId = gamer?.Id ?? users[3].Id,
-                    CategoryId = gamingCategory?.Id ?? 3,
+                    UserId = gamer?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = gamingCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddHours(-12),
                     DateUpdated = DateTime.Now.AddHours(-12),
-                    CreatedBy = gamer?.Id ?? users[3].Id
+                    CreatedBy = gamer?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "When your code works but you don't know why (Meanwhile: When your code doesn't work and you don't know why)",
                     PostStatus = "Published",
-                    UserId = troller?.Id ?? users[4].Id,
-                    CategoryId = memesCategory?.Id ?? 6,
+                    UserId = troller?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = memesCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddHours(-8),
                     DateUpdated = DateTime.Now.AddHours(-8),
-                    CreatedBy = troller?.Id ?? users[4].Id
+                    CreatedBy = troller?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Just finished building a Blazor app with .NET 8 for my FYP! Clean architecture, real-time updates with SignalR. Anyone else working on cool projects?",
                     PostStatus = "Published",
-                    UserId = louis?.Id ?? users[1].Id,
-                    CategoryId = programmingCategory?.Id ?? 5,
+                    UserId = louis?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = programmingCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-2),
                     DateUpdated = DateTime.Now.AddDays(-2),
-                    CreatedBy = louis?.Id ?? users[1].Id
+                    CreatedBy = louis?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Hot take: AI won't replace developers, but developers who use AI will replace those who don't. Thoughts?",
                     PostStatus = "Published",
-                    UserId = dakshesh?.Id ?? users[2].Id,
-                    CategoryId = techCategory?.Id ?? 4,
+                    UserId = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = techCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-3),
                     DateUpdated = DateTime.Now.AddDays(-3),
-                    CreatedBy = dakshesh?.Id ?? users[2].Id
+                    CreatedBy = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Reminder: Assignment deadline next week! Don't forget to check the submission guidelines on Brightspace",
                     PostStatus = "Published",
-                    UserId = temasekteacher?.Id ?? users[2].Id,
-                    CategoryId = temasekCategory?.Id ?? 2,
+                    UserId = temasekteacher?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = temasekCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-4),
                     DateUpdated = DateTime.Now.AddDays(-4),
-                    CreatedBy = temasekteacher?.Id ?? users[2].Id
+                    CreatedBy = temasekteacher?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "New COD update is FIRE! The new maps are insane! Who wants to squad up later?",
                     PostStatus = "Published",
-                    UserId = gamer?.Id ?? users[3].Id,
-                    CategoryId = gamingCategory?.Id ?? 3,
+                    UserId = gamer?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = gamingCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-5),
                     DateUpdated = DateTime.Now.AddDays(-5),
-                    CreatedBy = gamer?.Id ?? users[3].Id
+                    CreatedBy = gamer?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Study tip: Pomodoro technique actually works! 25 min focus + 5 min break. Been using it for a week and my productivity is through the roof",
                     PostStatus = "Published",
-                    UserId = temasekteacher?.Id ?? users[2].Id,
-                    CategoryId = educationCategory?.Id ?? 7,
+                    UserId = temasekteacher?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = educationCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-6),
                     DateUpdated = DateTime.Now.AddDays(-6),
-                    CreatedBy = temasekteacher?.Id ?? users[2].Id
+                    CreatedBy = temasekteacher?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Posts
                 {
                     Content = "Anyone else excited for the long weekend? Finally can catch up on sleep",
                     PostStatus = "Published",
-                    UserId = troller?.Id ?? users[4].Id,
-                    CategoryId = generalCategory?.Id ?? 10,
+                    UserId = troller?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = generalCategory?.Id ?? categories.First().Id,
                     DateCreated = DateTime.Now.AddDays(-7),
                     DateUpdated = DateTime.Now.AddDays(-7),
-                    CreatedBy = troller?.Id ?? users[4].Id
+                    CreatedBy = troller?.Id ?? adminUser?.Id ?? users.First().Id
                 }
             };
 
@@ -471,79 +472,88 @@ namespace SoSuSaFsd.Data
                 return;
             }
 
+            // Get specific users by username
+            var louis = users.FirstOrDefault(u => u.UserName == "Louis");
+            var dakshesh = users.FirstOrDefault(u => u.UserName == "Dakshesh");
+            var gamer = users.FirstOrDefault(u => u.UserName == "gamer_123");
+            var troller = users.FirstOrDefault(u => u.UserName == "troller67");
+            var mothership = users.FirstOrDefault(u => u.UserName == "Mothership");
+            var temasekteacher = users.FirstOrDefault(u => u.UserName == "temasekteacher");
+            var adminUser = users.FirstOrDefault(u => u.UserName == "SoSuSaAdmin");
+
             var comments = new List<Comments>
             {
                 new Comments
                 {
                     Content = "Finally! The current MRT is so crowded during peak hours",
                     PostID = posts[0].Id,
-                    UserID = users[2].Id,
+                    UserID = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddHours(-5),
                     DateUpdated = DateTime.Now.AddHours(-5),
-                    CreatedBy = users[2].Id
+                    CreatedBy = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "Will be there! Looking forward to checking out the IT labs",
                     PostID = posts[1].Id,
-                    UserID = users[1].Id,
+                    UserID = louis?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddHours(-20),
                     DateUpdated = DateTime.Now.AddHours(-20),
-                    CreatedBy = users[1].Id
+                    CreatedBy = louis?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "Congrats bro! Diamond is already top 5% of players",
                     PostID = posts[2].Id,
-                    UserID = users[4].Id,
+                    UserID = troller?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddHours(-10),
                     DateUpdated = DateTime.Now.AddHours(-10),
-                    CreatedBy = users[4].Id
+                    CreatedBy = troller?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "This is too real",
                     PostID = posts[3].Id,
-                    UserID = users[1].Id,
+                    UserID = louis?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddHours(-7),
                     DateUpdated = DateTime.Now.AddHours(-7),
-                    CreatedBy = users[1].Id
+                    CreatedBy = louis?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "Nice! Would love to see the code. Is it on GitHub?",
                     PostID = posts[4].Id,
-                    UserID = users[2].Id,
+                    UserID = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddDays(-1).AddHours(-5),
                     DateUpdated = DateTime.Now.AddDays(-1).AddHours(-5),
-                    CreatedBy = users[2].Id
+                    CreatedBy = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "100% agree! AI is a tool, not a replacement",
                     PostID = posts[5].Id,
-                    UserID = users[1].Id,
+                    UserID = louis?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddDays(-2).AddHours(-8),
                     DateUpdated = DateTime.Now.AddDays(-2).AddHours(-8),
-                    CreatedBy = users[1].Id
+                    CreatedBy = louis?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "Thanks for the reminder! Almost forgot",
                     PostID = posts[6].Id,
-                    UserID = users[3].Id,
+                    UserID = gamer?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddDays(-3).AddHours(-12),
                     DateUpdated = DateTime.Now.AddDays(-3).AddHours(-12),
-                    CreatedBy = users[3].Id
+                    CreatedBy = gamer?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new Comments
                 {
                     Content = "Let's goooo! Add me: gamer_123#6969",
                     PostID = posts[7].Id,
-                    UserID = users[4].Id,
+                    UserID = troller?.Id ?? adminUser?.Id ?? users.First().Id,
                     DateCreated = DateTime.Now.AddDays(-4).AddHours(-6),
                     DateUpdated = DateTime.Now.AddDays(-4).AddHours(-6),
-                    CreatedBy = users[4].Id
+                    CreatedBy = troller?.Id ?? adminUser?.Id ?? users.First().Id
                 }
             };
 
@@ -556,11 +566,11 @@ namespace SoSuSaFsd.Data
             {
                 Content = "Yeah, hopefully this helps with the congestion!",
                 PostID = posts[0].Id,
-                UserID = users[5].Id,
+                UserID = mothership?.Id ?? adminUser?.Id ?? users.First().Id,
                 ParentCommentID = firstComment.Id,
                 DateCreated = DateTime.Now.AddHours(-4),
                 DateUpdated = DateTime.Now.AddHours(-4),
-                CreatedBy = users[5].Id
+                CreatedBy = mothership?.Id ?? adminUser?.Id ?? users.First().Id
             };
 
             await _context.Comments.AddAsync(replyComment);
@@ -671,6 +681,7 @@ namespace SoSuSaFsd.Data
             }
 
             // Get specific users
+            var adminUser = users.FirstOrDefault(u => u.UserName == "SoSuSaAdmin");
             var louis = users.FirstOrDefault(u => u.UserName == "Louis");
             var dakshesh = users.FirstOrDefault(u => u.UserName == "Dakshesh");
             var gamer = users.FirstOrDefault(u => u.UserName == "gamer_123");
@@ -681,7 +692,7 @@ namespace SoSuSaFsd.Data
                 new Reports
                 {
                     PostID = posts[3].Id, // The meme post from troller67
-                    ReporterID = louis?.Id ?? users[1].Id,
+                    ReporterID = louis?.Id ?? adminUser?.Id ?? users.First().Id,
                     Reason = "Spam: This appears to be low-effort spam content that doesn't contribute to the discussion.",
                     Status = "Pending",
                     DateCreated = DateTime.Now.AddDays(-2)
@@ -689,7 +700,7 @@ namespace SoSuSaFsd.Data
                 new Reports
                 {
                     PostID = posts[7].Id, // The COD gaming post
-                    ReporterID = dakshesh?.Id ?? users[2].Id,
+                    ReporterID = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id,
                     Reason = "Inappropriate: Contains inappropriate language and behavior.",
                     Status = "Pending",
                     DateCreated = DateTime.Now.AddDays(-3)
@@ -697,15 +708,15 @@ namespace SoSuSaFsd.Data
                 new Reports
                 {
                     PostID = posts[0].Id, // The MRT news post
-                    ReporterID = gamer?.Id ?? users[3].Id,
+                    ReporterID = gamer?.Id ?? adminUser?.Id ?? users.First().Id,
                     Reason = "Misinformation: The information about the MRT line seems inaccurate.",
-                    Status = "Reviewed",
+                    Status = "Resolved",
                     DateCreated = DateTime.Now.AddDays(-5)
                 },
                 new Reports
                 {
                     PostID = posts[2].Id, // The Valorant rank post
-                    ReporterID = troller?.Id ?? users[4].Id,
+                    ReporterID = troller?.Id ?? adminUser?.Id ?? users.First().Id,
                     Reason = "Harassment: User is bragging and making others feel bad about their rank.",
                     Status = "Dismissed",
                     DateCreated = DateTime.Now.AddDays(-7)
@@ -713,7 +724,7 @@ namespace SoSuSaFsd.Data
                 new Reports
                 {
                     PostID = posts[4].Id, // Louis's Blazor post
-                    ReporterID = gamer?.Id ?? users[3].Id,
+                    ReporterID = gamer?.Id ?? adminUser?.Id ?? users.First().Id,
                     Reason = "Spam: Self-promotion without meaningful content.",
                     Status = "Pending",
                     DateCreated = DateTime.Now.AddDays(-1)
@@ -722,7 +733,7 @@ namespace SoSuSaFsd.Data
 
             await _context.Reports.AddRangeAsync(reports);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Seeded {reports.Count} reports (Pending: {reports.Count(r => r.Status == "Pending")}, Reviewed: {reports.Count(r => r.Status == "Reviewed")}, Dismissed: {reports.Count(r => r.Status == "Dismissed")}).");
+            _logger.LogInformation($"Seeded {reports.Count} reports (Pending: {reports.Count(r => r.Status == "Pending")}, Resolved: {reports.Count(r => r.Status == "Resolved")}, Dismissed: {reports.Count(r => r.Status == "Dismissed")}).");
         }
 
         private async Task SeedCategoryAccessRequestsAsync()
@@ -743,7 +754,8 @@ namespace SoSuSaFsd.Data
             }
 
             // Get specific users
-            var gamer = users.FirstOrDefault(u => u.UserName == "gamer_123"); // Not verified
+            var adminUser = users.FirstOrDefault(u => u.UserName == "SoSuSaAdmin");
+            var gamer = users.FirstOrDefault(u => u.UserName == "gamer_123");
             var louis = users.FirstOrDefault(u => u.UserName == "Louis");
             var dakshesh = users.FirstOrDefault(u => u.UserName == "Dakshesh");
             var troller = users.FirstOrDefault(u => u.UserName == "troller67");
@@ -751,50 +763,56 @@ namespace SoSuSaFsd.Data
             // Get VIP Lounge category (restricted)
             var vipCategory = categories.FirstOrDefault(c => c.CategoryName == "VIP Lounge");
 
+            if (vipCategory == null)
+            {
+                _logger.LogWarning("VIP Lounge category not found. Skipping access request seeding.");
+                return;
+            }
+
             var accessRequests = new List<CategoryAccessRequests>
             {
                 new CategoryAccessRequests
                 {
-                    UserId = gamer?.Id ?? users[3].Id,
-                    CategoryId = vipCategory?.Id ?? categories.First(c => c.CategoryIsRestricted).Id,
+                    UserId = gamer?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = vipCategory.Id,
                     Reason = "I'm an active member of the gaming community and would love to participate in exclusive discussions. I've been a member for 3 months and contribute quality content regularly.",
                     Status = "Pending",
                     DateCreated = DateTime.Now.AddDays(-3),
                     DateUpdated = DateTime.Now.AddDays(-3),
-                    CreatedBy = gamer?.Id ?? users[3].Id
+                    CreatedBy = gamer?.Id ?? adminUser?.Id ?? users.First().Id
                 },
                 new CategoryAccessRequests
                 {
-                    UserId = louis?.Id ?? users[1].Id,
-                    CategoryId = vipCategory?.Id ?? categories.First(c => c.CategoryIsRestricted).Id,
+                    UserId = louis?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = vipCategory.Id,
                     Reason = "As a tech developer and active contributor to the Programming and Technology categories, I believe I can add value to VIP discussions. I'd like to network with other verified members.",
                     Status = "Approved",
                     DateCreated = DateTime.Now.AddDays(-10),
                     DateUpdated = DateTime.Now.AddDays(-7),
-                    CreatedBy = louis?.Id ?? users[1].Id,
-                    UpdatedBy = users[0].Id // Admin approved
+                    CreatedBy = louis?.Id ?? adminUser?.Id ?? users.First().Id,
+                    UpdatedBy = adminUser?.Id
                 },
                 new CategoryAccessRequests
                 {
-                    UserId = dakshesh?.Id ?? users[2].Id,
-                    CategoryId = vipCategory?.Id ?? categories.First(c => c.CategoryIsRestricted).Id,
+                    UserId = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = vipCategory.Id,
                     Reason = "I'm a full-stack developer interested in exclusive tech discussions. Looking to collaborate with other professionals.",
                     Status = "Approved",
                     DateCreated = DateTime.Now.AddDays(-12),
                     DateUpdated = DateTime.Now.AddDays(-8),
-                    CreatedBy = dakshesh?.Id ?? users[2].Id,
-                    UpdatedBy = users[0].Id // Admin approved
+                    CreatedBy = dakshesh?.Id ?? adminUser?.Id ?? users.First().Id,
+                    UpdatedBy = adminUser?.Id
                 },
                 new CategoryAccessRequests
                 {
-                    UserId = troller?.Id ?? users[4].Id,
-                    CategoryId = vipCategory?.Id ?? categories.First(c => c.CategoryIsRestricted).Id,
+                    UserId = troller?.Id ?? adminUser?.Id ?? users.First().Id,
+                    CategoryId = vipCategory.Id,
                     Reason = "pls give access i want to see whats inside lol",
                     Status = "Rejected",
                     DateCreated = DateTime.Now.AddDays(-15),
                     DateUpdated = DateTime.Now.AddDays(-13),
-                    CreatedBy = troller?.Id ?? users[4].Id,
-                    UpdatedBy = users[0].Id // Admin rejected
+                    CreatedBy = troller?.Id ?? adminUser?.Id ?? users.First().Id,
+                    UpdatedBy = adminUser?.Id
                 }
             };
 

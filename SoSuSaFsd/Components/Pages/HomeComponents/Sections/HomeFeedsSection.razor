@@ -9,9 +9,7 @@
     <div id="feed-home" class="section-view active">
         <SharedPostFeed 
             Title="Home"
-            ShowCreateButton="true"
-            CreateButtonText="Create Post"
-            OnCreatePost="@(() => {})"
+            ShowCreateButton="false"
             Posts="@State.FeedPosts"
             CurrentUser="@State.CurrentUser"
             DebugMode="@State.DebugRenderPosts"

@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /docs
 /CLEANUP_PLAN.md
 /.gitignore
+/reset-db.bat

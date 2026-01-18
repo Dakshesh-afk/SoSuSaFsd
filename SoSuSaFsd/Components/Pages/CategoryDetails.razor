@@ -84,12 +84,26 @@
 
     private void ShowPostModal()
     {
+        // Check if user is logged in before showing modal
+        if (string.IsNullOrEmpty(State.CurrentUserId))
+        {
+            State.ShowLoginOverlay = true;
+            return;
+        }
+        
         State.ShowPostModal = true;
         StateHasChanged();
     }
 
     private void ShowRequestModal()
     {
+        // Check if user is logged in before showing modal
+        if (string.IsNullOrEmpty(State.CurrentUserId))
+        {
+            State.ShowLoginOverlay = true;
+            return;
+        }
+        
         State.ShowRequestModal = true;
         StateHasChanged();
     }

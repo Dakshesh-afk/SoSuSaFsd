@@ -62,13 +62,13 @@ else
         @if (State.CurrentCategory?.IsVerified == true && !CanUserPost && !State.HasPendingRequest)
         {
             <div class="alert alert-warning">
-                <strong>?? Verified Category:</strong> This category is restricted. You must request access to post here.
+                <strong>Verified Category:</strong> This category is restricted. You must request access to post here.
             </div>
         }
         else if (State.HasPendingRequest)
         {
             <div class="alert alert-info">
-                <strong>? Pending:</strong> Your request to post in this verified category is awaiting admin approval.
+                <strong>Pending:</strong> Your request to post in this verified category is awaiting admin approval.
             </div>
         }
     </div>
@@ -88,7 +88,7 @@ else
         {
             <div style="margin-bottom: 15px;">
                 <button class="login-btn secondary" @onclick="OnClearSearch">
-                    ? View all posts in #@State.CurrentCategory?.CategoryName
+                    View all posts in #@State.CurrentCategory?.CategoryName
                 </button>
             </div>
         }

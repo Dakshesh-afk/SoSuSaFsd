@@ -1,4 +1,6 @@
 @using SoSuSaFsd.Domain
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JS
 
 @* AccessRequestModal - Shared modal for requesting category access *@
 
@@ -47,7 +49,7 @@
                             @if (daysRemaining > 0)
                             {
                                 <div style="padding: 10px; background: #fff3cd; border-left: 3px solid #ffc107; border-radius: 4px; font-size: 13px; color: #856404;">
-                                    <strong>&#9200; Cooldown Period</strong><br/>
+                                    <strong>Cooldown Period</strong><br/>
                                     You can resubmit on: <strong>@canResubmitDate.ToString("MMM dd, yyyy 'at' h:mm tt")</strong><br/>
                                     <span style="font-size: 12px;">(@Math.Ceiling(daysRemaining) day(s) remaining)</span>
                                 </div>
@@ -55,7 +57,7 @@
                             else
                             {
                                 <div style="padding: 10px; background: #d4edda; border-left: 3px solid #28a745; border-radius: 4px; font-size: 13px; color: #155724;">
-                                    <strong>&#10004; You can now resubmit your request</strong>
+                                    <strong>You can now resubmit your request</strong>
                                 </div>
                             }
                         }
@@ -69,13 +71,59 @@
                 }
 
                 <form @onsubmit="HandleSubmit" @onsubmit:preventDefault>
-                    <div class="settings-form-group">
-                        <label>Reason for Request</label>
+                    <div class="settings-form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">
+                            Reason for Request <span style="color: red;">*</span>
+                        </label>
                         <textarea rows="5" 
                                   @bind="RequestReason" 
-                                  placeholder="Explain why you need access to this category..."
+                                  placeholder="Explain why you need access (e.g., journalist credentials, verified student status, official representative, etc.)"
                                   style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; resize: vertical;"
                                   disabled="@IsSubmitting"></textarea>
+                    </div>
+
+                    <div class="settings-form-group" style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: bold;">
+                            Supporting Document (Optional)
+                            <span style="font-size: 12px; color: #666; font-weight: normal; margin-left: 5px;">
+                                (PDF, JPG, PNG - Max 5MB)
+                            </span>
+                        </label>
+                        <div style="border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center; background: #f9f9f9; cursor: pointer; transition: all 0.2s;"
+                             @onclick="TriggerFileInput">
+                            @if (string.IsNullOrEmpty(selectedFileName))
+                            {
+                                <div>
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 36px; color: #999; margin-bottom: 10px;"></i>
+                                    <p style="margin: 0; color: #666; font-size: 14px;">
+                                        <strong>Click to upload</strong> or drag and drop<br/>
+                                        Student ID, Press Card, Verification Letter, etc.
+                                    </p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>
+                                    <i class="fas fa-file-alt" style="font-size: 36px; color: #4CAF50; margin-bottom: 10px;"></i>
+                                    <p style="margin: 0; color: #333; font-size: 14px;">
+                                        <strong>@selectedFileName</strong><br/>
+                                        <span style="color: #666; font-size: 12px;">@selectedFileSize</span>
+                                    </p>
+                                    <button type="button" 
+                                            @onclick="ClearFile" 
+                                            @onclick:stopPropagation="true"
+                                            class="login-btn secondary" 
+                                            style="margin-top: 10px; font-size: 12px; padding: 5px 15px;">
+                                        Remove File
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                        <InputFile @ref="fileInput" 
+                                   OnChange="HandleFileSelected" 
+                                   accept=".pdf,.jpg,.jpeg,.png" 
+                                   style="display: none;" 
+                                   disabled="@IsSubmitting" />
                     </div>
 
                     <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
@@ -84,8 +132,18 @@
                         </button>
                         <button type="submit" 
                                 class="login-btn" 
-                                disabled="@(IsSubmitting || string.IsNullOrWhiteSpace(RequestReason) || !CanSubmit)">
-                            @(IsSubmitting ? "Submitting..." : (ExistingRequest?.Status == "Rejected" && CanResubmit ? "Resubmit Request" : "Submit Request"))
+                                disabled="@(IsSubmitting || string.IsNullOrWhiteSpace(RequestReason) || !CanSubmit)"
+                                style="display: flex; align-items: center; gap: 8px;">
+                            @if (IsSubmitting)
+                            {
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Submitting...</span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-paper-plane"></i>
+                                <span>@(ExistingRequest?.Status == "Rejected" && CanResubmit ? "Resubmit Request" : "Submit Request")</span>
+                            }
                         </button>
                     </div>
                 </form>
@@ -102,10 +160,14 @@
     [Parameter] public string StatusMessage { get; set; } = string.Empty;
     [Parameter] public bool IsSuccess { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<(int CategoryId, string Reason)> OnSubmit { get; set; }
+    [Parameter] public EventCallback<(int CategoryId, string Reason, IBrowserFile? File)> OnSubmit { get; set; }
 
     private string RequestReason { get; set; } = string.Empty;
     private bool IsSubmitting { get; set; }
+    private InputFile? fileInput;
+    private string selectedFileName = string.Empty;
+    private string selectedFileSize = string.Empty;
+    private IBrowserFile? selectedFile;
 
     private bool CanSubmit
     {
@@ -139,11 +201,55 @@
 
     protected override void OnParametersSet()
     {
-        // Reset reason when modal opens with new category
         if (ShowModal && string.IsNullOrEmpty(RequestReason))
         {
             RequestReason = string.Empty;
+            selectedFileName = string.Empty;
+            selectedFileSize = string.Empty;
+            selectedFile = null;
         }
+    }
+
+    private async Task TriggerFileInput()
+    {
+        if (!IsSubmitting && fileInput?.Element != null)
+        {
+            await JS.InvokeVoidAsync("eval", "document.querySelector('input[type=file][style*=none]').click()");
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            StatusMessage = "File size must be less than 5MB";
+            IsSuccess = false;
+            StateHasChanged();
+            return;
+        }
+        
+        selectedFile = file;
+        selectedFileName = file.Name;
+        selectedFileSize = FormatFileSize(file.Size);
+        StatusMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private void ClearFile()
+    {
+        selectedFile = null;
+        selectedFileName = string.Empty;
+        selectedFileSize = string.Empty;
+        StateHasChanged();
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F1} MB";
     }
 
     private async Task HandleSubmit()
@@ -156,8 +262,11 @@
 
         try
         {
-            await OnSubmit.InvokeAsync((CategoryId, RequestReason));
+            await OnSubmit.InvokeAsync((CategoryId, RequestReason, selectedFile));
             RequestReason = string.Empty;
+            selectedFile = null;
+            selectedFileName = string.Empty;
+            selectedFileSize = string.Empty;
         }
         finally
         {

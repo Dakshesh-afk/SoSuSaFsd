@@ -10,6 +10,8 @@ namespace SoSuSaFsd.Services
         Task<List<Categories>> GetAllCategoriesAsync();
         Task<List<CategoryAccessRequests>> GetAccessRequestsAsync();
         Task<List<Reports>> GetAllReportsAsync();
+        Task<Dictionary<string, List<Categories>>> GetUserVerifiedCategoriesMapAsync();
+        Task RemoveUserCategoryAccessAsync(string userId, int categoryId);
         Task DismissReportGroupAsync(int reportId);
         Task UndoDismissAsync(int reportId);
         Task DeleteReportedContentAsync(int reportId);
@@ -63,6 +65,92 @@ namespace SoSuSaFsd.Services
                 .Include(r => r.TargetUser)
                 .OrderByDescending(r => r.DateCreated)
                 .ToListAsync();
+        }
+
+        public async Task<Dictionary<string, List<Categories>>> GetUserVerifiedCategoriesMapAsync()
+        {
+            using var context = _contextFactory.CreateDbContext();
+            
+            // Get categories from approved access requests
+            var approvedRequests = await context.CategoryAccessRequests
+                .Where(r => r.Status == "Approved")
+                .Include(r => r.Category)
+                .ToListAsync();
+
+            var requestCategories = approvedRequests
+                .Where(r => r.Category != null)
+                .GroupBy(r => r.UserId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(r => r.Category!).ToList()
+                );
+
+            // Get verified categories created by users
+            var verifiedCategories = await context.Categories
+                .Where(c => c.IsVerified == true && !string.IsNullOrEmpty(c.CreatedBy))
+                .ToListAsync();
+
+            var createdCategories = verifiedCategories
+                .GroupBy(c => c.CreatedBy!)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList()
+                );
+
+            // Combine both: access requests + owned verified categories
+            var result = new Dictionary<string, List<Categories>>();
+
+            // Add from access requests
+            foreach (var kvp in requestCategories)
+            {
+                result[kvp.Key] = kvp.Value;
+            }
+
+            // Add from created categories (avoid duplicates)
+            foreach (var kvp in createdCategories)
+            {
+                if (result.ContainsKey(kvp.Key))
+                {
+                    // Add categories not already in the list
+                    foreach (var category in kvp.Value)
+                    {
+                        if (!result[kvp.Key].Any(c => c.Id == category.Id))
+                        {
+                            result[kvp.Key].Add(category);
+                        }
+                    }
+                }
+                else
+                {
+                    result[kvp.Key] = kvp.Value;
+                }
+            }
+
+            return result;
+        }
+
+        public async Task RemoveUserCategoryAccessAsync(string userId, int categoryId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            
+            // Check if user is the creator of this category
+            var category = await context.Categories.FindAsync(categoryId);
+            if (category != null && category.CreatedBy == userId)
+            {
+                // Cannot remove access for category creator
+                // Category creators always have access to their own categories
+                return;
+            }
+            
+            // Remove access request if exists
+            var request = await context.CategoryAccessRequests
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.CategoryId == categoryId && r.Status == "Approved");
+
+            if (request != null)
+            {
+                context.CategoryAccessRequests.Remove(request);
+                await context.SaveChangesAsync();
+            }
         }
 
         public async Task DismissReportGroupAsync(int reportId)

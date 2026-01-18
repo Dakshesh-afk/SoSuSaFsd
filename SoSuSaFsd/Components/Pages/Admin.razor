@@ -17,6 +17,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="styles/admin.css">
+    <script>
+        // Add admin-page class to html element for CSS targeting
+        document.documentElement.classList.add('admin-page');
+        document.body.classList.add('admin-page');
+    </script>
 </HeadContent>
 
 <header class="bg-white border-b-2 border-gray-200 sticky top-0 z-50 py-3 shadow-sm">
@@ -137,7 +142,9 @@
     <div class="admin-panel @(activeTab == "users" ? "active" : "")" id="panel-users">
         <AdminUsersPanel 
             AllUsers="@AllUsers"
-            OnToggleUserBan="@ToggleUserBan" />
+            UserVerifiedCategories="@UserVerifiedCategories"
+            OnToggleUserBan="@ToggleUserBan"
+            OnRemoveCategoryAccess="@RemoveCategoryAccess" />
     </div>
 
     <div class="admin-panel @(activeTab == "categories" ? "active" : "")" id="panel-categories">
@@ -261,6 +268,7 @@
     private List<Categories> AllCategories = new();
     private List<CategoryAccessRequests> AccessRequests = new();
     private List<Reports> AllReports = new();
+    private Dictionary<string, List<Categories>> UserVerifiedCategories = new();
 
     private int PendingNotificationCount =>
         AllReports?.GroupBy(r => new { r.PostID, r.CommentID, r.CategoryID, r.TargetUserID })
@@ -278,6 +286,7 @@
         AllCategories = await AdminService.GetAllCategoriesAsync();
         AccessRequests = await AdminService.GetAccessRequestsAsync();
         AllReports = await AdminService.GetAllReportsAsync();
+        UserVerifiedCategories = await AdminService.GetUserVerifiedCategoriesMapAsync();
     }
 
     private async Task DismissReportGroup(int reportId)
@@ -366,6 +375,16 @@
         catch { }
     }
 
+    private async Task RemoveCategoryAccess((string UserId, int CategoryId) data)
+    {
+        try
+        {
+            await AdminService.RemoveUserCategoryAccessAsync(data.UserId, data.CategoryId);
+            await LoadData();
+        }
+        catch { }
+    }
+
     private void ExitAdmin() => NavigationManager.NavigateTo("/", forceLoad: true);
 
     private void OpenContentModal(int reportId)
@@ -399,4 +418,4 @@
             "Dismissed" => "badge-dismissed",
             _ => "badge-pending"
         };
-}}
+}

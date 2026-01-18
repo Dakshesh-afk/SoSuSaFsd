@@ -115,13 +115,13 @@
     [Parameter] public EventCallback<InputFileChangeEventArgs> OnFilesSelected { get; set; }
     [Parameter] public EventCallback<int> OnRemoveFile { get; set; }
     [Parameter] public EventCallback OnCreatePost { get; set; }
-    [Parameter] public EventCallback OnSubmitRequest { get; set; }
+    [Parameter] public EventCallback<(string Reason, IBrowserFile? File)> OnSubmitRequest { get; set; }
     [Parameter] public EventCallback OnSubmitReport { get; set; }
     [Parameter] public EventCallback OnNavigateToCreate { get; set; }
 
-    private async Task HandleAccessRequestSubmit((int CategoryId, string Reason) args)
+    private async Task HandleAccessRequestSubmit((int CategoryId, string Reason, IBrowserFile? File) args)
     {
         State.RequestReason = args.Reason;
-        await OnSubmitRequest.InvokeAsync();
+        await OnSubmitRequest.InvokeAsync((args.Reason, args.File));
     }
 }

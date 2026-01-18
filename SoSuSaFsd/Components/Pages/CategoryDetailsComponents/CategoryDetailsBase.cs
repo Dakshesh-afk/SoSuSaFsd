@@ -456,15 +456,20 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
         }
 
         // ========== ACCESS REQUEST ==========
-        protected async Task HandleSubmitRequest()
+        protected async Task HandleSubmitRequest((string Reason, IBrowserFile? File) data)
         {
+            // REMOVED: Early auth check that was causing login overlay to show
+            // The modal should only be accessible to logged-in users anyway
+            
             if (string.IsNullOrEmpty(State.CurrentUserId))
             {
-                State.ShowLoginOverlay = true;
+                // This shouldn't happen if user is logged in, but just in case
+                State.ErrorMessage = "Session expired. Please refresh the page and try again.";
+                State.ShowRequestModal = false;
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(State.RequestReason))
+            if (string.IsNullOrWhiteSpace(data.Reason))
             {
                 State.ErrorMessage = "Please provide a reason for your request.";
                 return;
@@ -472,6 +477,24 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
 
             try
             {
+                string? documentPath = null;
+
+                // Handle file upload if provided
+                if (data.File != null)
+                {
+                    var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads", "access-requests");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    var extension = Path.GetExtension(data.File.Name).ToLower();
+                    var fileName = $"{Guid.NewGuid()}{extension}";
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+                    documentPath = $"/uploads/access-requests/{fileName}";
+
+                    await using var fileStream = new FileStream(filePath, FileMode.Create);
+                    await data.File.OpenReadStream(5 * 1024 * 1024).CopyToAsync(fileStream);
+                }
+
                 using var context = DbFactory.CreateDbContext();
                 
                 // Check for existing request
@@ -500,16 +523,21 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                         
                         if (daysRemaining > 0)
                         {
-                            State.ErrorMessage = $"Your previous request was rejected on {existingRequest.DateUpdated:MMM dd, yyyy 'at' h:mm tt}. You can resubmit on {canResubmitDate:MMM dd, yyyy 'at' h:mm tt} ({Math.Ceiling(daysRemaining)} day(s) remaining).";
+                            State.ErrorMessage = $"Your previous request was rejected. You can resubmit on {canResubmitDate:MMM dd, yyyy}.";
                             State.ShowRequestModal = false;
                             return;
                         }
                         
                         // Update existing rejected request
-                        existingRequest.Reason = State.RequestReason;
+                        existingRequest.Reason = data.Reason;
                         existingRequest.Status = "Pending";
                         existingRequest.DateUpdated = DateTime.Now;
                         existingRequest.UpdatedBy = null;
+                        
+                        if (documentPath != null)
+                        {
+                            existingRequest.SupportingDocumentPath = documentPath;
+                        }
                         
                         await context.SaveChangesAsync();
                         
@@ -517,33 +545,42 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                         State.RequestReason = "";
                         State.HasPendingRequest = true;
                         State.ShowNotification("Request resubmitted successfully!", "success");
+                        
+                        // Reload to show updated status
+                        await CategoryDetailsService.LoadCategoryDataAsync(State, Id, State.CurrentUserId);
                         StateHasChanged();
                         return;
                     }
                 }
 
                 // Create new request
-                var success = await CategoryDetailsService.SubmitAccessRequestAsync(
-                    State.CurrentUserId, Id, State.RequestReason);
+                var newRequest = new CategoryAccessRequests
+                {
+                    UserId = State.CurrentUserId,
+                    CategoryId = Id,
+                    Reason = data.Reason,
+                    Status = "Pending",
+                    DateCreated = DateTime.Now,
+                    DateUpdated = DateTime.Now,
+                    SupportingDocumentPath = documentPath
+                };
 
-                if (success)
-                {
-                    State.ShowRequestModal = false;
-                    State.RequestReason = "";
-                    State.HasPendingRequest = true;
-                    State.ShowNotification("Request submitted successfully!", "success");
-                    StateHasChanged();
-                }
-                else
-                {
-                    State.ErrorMessage = "You already have a pending request.";
-                    State.ShowRequestModal = false;
-                    State.HasPendingRequest = true;
-                }
+                context.CategoryAccessRequests.Add(newRequest);
+                await context.SaveChangesAsync();
+                
+                State.ShowRequestModal = false;
+                State.RequestReason = "";
+                State.HasPendingRequest = true;
+                State.ShowNotification("Request submitted successfully!", "success");
+                
+                // Reload to show updated status
+                await CategoryDetailsService.LoadCategoryDataAsync(State, Id, State.CurrentUserId);
+                StateHasChanged();
             }
             catch (Exception ex)
             {
                 State.ErrorMessage = "Error sending request: " + ex.Message;
+                State.ShowRequestModal = false;
             }
         }
 
