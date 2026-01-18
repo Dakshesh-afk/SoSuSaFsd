@@ -1,10 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SoSuSaFsd.Domain
 {
     public class Comments : BaseDomainModel
     {
-        public string? Content { get; set; }
+
+        [Required(ErrorMessage = "Comment content is required")]
+        [MinLength(1, ErrorMessage = "Comment cannot be empty")]
+        public string Content { get; set; }
         public int PostID { get; set; }
 
         //Navigation properties 

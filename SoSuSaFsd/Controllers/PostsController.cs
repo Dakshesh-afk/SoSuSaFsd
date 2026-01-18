@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SoSuSaFsd.Data;
 using SoSuSaFsd.Domain;
@@ -44,9 +45,20 @@ namespace SoSuSaFsd.Controllers
         // POST: api/Posts
         // Creates a NEW post
         [HttpPost]
+        [Authorize] // This ensures the person MUST be logged in
         public async Task<ActionResult<Posts>> CreatePost(Posts post)
         {
-            // We set the date, but we trust the 'content' and 'categoryId' you send in Postman
+            // 1. Get the ID of the person actually logged in
+            var loggedInUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            // 2. Mastery Check: Ensure the person isn't trying to post for someone else
+            if (post.UserId != loggedInUserId)
+            {
+                // Use BadRequest or return a custom object to avoid the 'Scheme' error
+                return BadRequest(new { message = "Security Violation: You cannot create a post for a different user account." });
+            }
+
+            post.Id = 0;
             post.DateCreated = DateTime.Now;
 
             _context.Posts.Add(post);
