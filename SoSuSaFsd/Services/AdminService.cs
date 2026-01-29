@@ -14,6 +14,7 @@ namespace SoSuSaFsd.Services
         Task RemoveUserCategoryAccessAsync(string userId, int categoryId);
         Task DismissReportGroupAsync(int reportId);
         Task UndoDismissAsync(int reportId);
+        Task ResolveReportGroupAsync(int reportId);
         Task DeleteReportedContentAsync(int reportId);
         Task DeleteCategoryAsync(int categoryId);
         Task<bool> ToggleCategoryVerificationAsync(int categoryId);
@@ -193,6 +194,27 @@ namespace SoSuSaFsd.Services
                 {
                     r.Status = "Pending";
                 }
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+        public async Task ResolveReportGroupAsync(int reportId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            var mainReport = await context.Reports.FindAsync(reportId);
+            if (mainReport == null) return;
+
+            var relatedReports = await context.Reports.Where(r =>
+                (mainReport.PostID != null && r.PostID == mainReport.PostID) ||
+                (mainReport.CommentID != null && r.CommentID == mainReport.CommentID) ||
+                (mainReport.CategoryID != null && r.CategoryID == mainReport.CategoryID) ||
+                (mainReport.TargetUserID != null && r.TargetUserID == mainReport.TargetUserID)
+            ).ToListAsync();
+
+            foreach (var r in relatedReports)
+            {
+                r.Status = "Resolved";
             }
 
             await context.SaveChangesAsync();

@@ -12,6 +12,7 @@ namespace SoSuSaFsd.Components.Pages.ProfileComponents
         Task<Users?> GetUserByUsernameAsync(string username);
         Task<int> GetFollowerCountAsync(string userId);
         Task<bool> SubmitUserReportAsync(string targetUserId, string reporterId, string reason);
+        Task<bool> SubmitPostReportAsync(int postId, string reporterId, string reason, string? details);
     }
 
     /// <summary>
@@ -133,6 +134,66 @@ namespace SoSuSaFsd.Components.Pages.ProfileComponents
             {
                 _logger.LogError(ex, "Error submitting user report: Reporter={ReporterId}, Target={TargetUserId}", 
                     reporterId, targetUserId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Submits a report against a post
+        /// </summary>
+        /// <param name="postId">Post being reported</param>
+        /// <param name="reporterId">User submitting the report</param>
+        /// <param name="reason">Reason for the report</param>
+        /// <param name="details">Additional details about the report</param>
+        /// <returns>True if report was submitted, false if duplicate</returns>
+        public async Task<bool> SubmitPostReportAsync(int postId, string reporterId, string reason, string? details)
+        {
+            try
+            {
+                using var context = _dbFactory.CreateDbContext();
+
+                // Check for existing report
+                var existingReport = await context.Reports
+                    .FirstOrDefaultAsync(r => 
+                        r.PostID == postId && 
+                        r.ReporterID == reporterId);
+
+                if (existingReport != null)
+                {
+                    _logger.LogInformation("User {ReporterId} already reported post {PostId}", 
+                        reporterId, postId);
+                    return false;
+                }
+
+                // Combine reason and details
+                string finalReason = reason;
+                if (!string.IsNullOrWhiteSpace(details))
+                {
+                    finalReason = $"{reason}: {details}";
+                }
+
+                // Create new report
+                var newReport = new Reports
+                {
+                    PostID = postId,
+                    ReporterID = reporterId,
+                    Reason = finalReason,
+                    Status = "Pending",
+                    DateCreated = DateTime.Now
+                };
+
+                context.Reports.Add(newReport);
+                await context.SaveChangesAsync();
+
+                _logger.LogInformation("Post report submitted: Reporter={ReporterId}, Post={PostId}, Reason={Reason}", 
+                    reporterId, postId, reason);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error submitting post report: Reporter={ReporterId}, Post={PostId}", 
+                    reporterId, postId);
                 throw;
             }
         }

@@ -14,6 +14,7 @@
         OnOpenContentModal="@OnOpenContentModal"
         OnDismissReportGroup="@OnDismissReportGroup"
         OnRequestDelete="@OnRequestDelete"
+        OnBanUser="@OnBanUser"
         OnUndoDismiss="@OnUndoDismiss" />
 </div>
 
@@ -23,6 +24,7 @@
     [Parameter] public EventCallback<int> OnDismissReportGroup { get; set; }
     [Parameter] public EventCallback<int> OnUndoDismiss { get; set; }
     [Parameter] public EventCallback<int> OnRequestDelete { get; set; }
+    [Parameter] public EventCallback<int> OnBanUser { get; set; }
 
     private string GetStatusBadgeClass(string status) =>
         status switch

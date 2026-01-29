@@ -316,8 +316,49 @@ namespace SoSuSaFsd.Components.Pages.ProfileComponents
         // ========== REPORTS ==========
         protected void OpenReportModal(int postId)
         {
-            Console.WriteLine($"Report post {postId}");
-            // Could be expanded to show a modal in the future
+            if (State.CurrentUser == null)
+            {
+                Navigation.NavigateTo("/");
+                return;
+            }
+
+            State.ReportPostId = postId;
+            State.ShowReportModal = true;
+        }
+
+        protected async Task SubmitReport((string Reason, string? Details) args)
+        {
+            if (State.ReportPostId == 0 || State.CurrentUser == null)
+            {
+                State.ShowNotification("Session error. Please refresh and try again.", "error");
+                return;
+            }
+
+            try
+            {
+                var submitted = await ProfileService.SubmitPostReportAsync(
+                    State.ReportPostId,
+                    State.CurrentUser.Id,
+                    args.Reason,
+                    args.Details);
+
+                State.ShowReportModal = false;
+                State.ReportPostId = 0;
+
+                if (submitted)
+                {
+                    State.ShowNotification("Report submitted successfully.", "success");
+                }
+                else
+                {
+                    State.ShowNotification("You have already reported this post.", "error");
+                }
+            }
+            catch (Exception ex)
+            {
+                State.ShowReportModal = false;
+                State.ShowNotification("Error sending report: " + ex.Message, "error");
+            }
         }
 
         // ========== HELPER METHODS ==========

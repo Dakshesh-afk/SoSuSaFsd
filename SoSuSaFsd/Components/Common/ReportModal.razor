@@ -1,0 +1,64 @@
+@* ReportModal - Shared modal for reporting posts across all pages *@
+
+@if (ShowModal)
+{
+    <div class="modal">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="OnClose">&times;</span>
+            <h2 class="modal-title-error">Report Content</h2>
+            <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
+            
+            <div class="form-group">
+                <label>Reason:</label>
+                <select class="form-select" @bind="ReportReasonSelection">
+                    <option value="Spam">Spam</option>
+                    <option value="Harassment">Harassment or Bullying</option>
+                    <option value="Misinformation">Misinformation</option>
+                    <option value="Hate Speech">Hate Speech</option>
+                    <option value="Inappropriate">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Additional Details (Optional):</label>
+                <textarea class="modal-textarea" 
+                          placeholder="Please provide more details..." 
+                          @bind="ReportReasonDetails"></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="login-btn secondary" @onclick="OnClose">Cancel</button>
+                <button class="login-btn btn-error" @onclick="HandleSubmit">Submit Report</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool ShowModal { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<(string Reason, string? Details)> OnSubmit { get; set; }
+
+    private string ReportReasonSelection { get; set; } = "Spam";
+    private string ReportReasonDetails { get; set; } = "";
+
+    protected override void OnParametersSet()
+    {
+        // Reset form when modal opens
+        if (ShowModal)
+        {
+            ReportReasonSelection = "Spam";
+            ReportReasonDetails = "";
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        await OnSubmit.InvokeAsync((ReportReasonSelection, ReportReasonDetails));
+        
+        // Reset form
+        ReportReasonSelection = "Spam";
+        ReportReasonDetails = "";
+    }
+}

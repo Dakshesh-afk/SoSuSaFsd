@@ -59,36 +59,11 @@
     OnClose="@(() => State.ShowRequestModal = false)"
     OnSubmit="@HandleAccessRequestSubmit" />
 
-@* REPORT MODAL *@
-@if (State.ShowReportModal)
-{
-    <div class="modal">
-        <div class="modal-content">
-            <span class="modal-close" @onclick="@(() => State.ShowReportModal = false)">×</span>
-            <h2 class="modal-title-error">Report Content</h2>
-            <div class="modal-subtitle">Help us keep the community safe. Why are you reporting this post?</div>
-            <div class="form-group">
-                <label>Reason:</label>
-                <select class="form-select" @bind="State.ReportReasonSelection">
-                    <option value="Spam">Spam</option>
-                    <option value="Harassment">Harassment or Bullying</option>
-                    <option value="Misinformation">Misinformation</option>
-                    <option value="Hate Speech">Hate Speech</option>
-                    <option value="Inappropriate">Inappropriate Content</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Additional Details (Optional):</label>
-                <textarea class="modal-textarea" placeholder="Please provide more details..." @bind="State.ReportReasonDetails"></textarea>
-            </div>
-            <div class="modal-actions">
-                <button class="login-btn secondary" @onclick="@(() => State.ShowReportModal = false)">Cancel</button>
-                <button class="login-btn btn-error" @onclick="OnSubmitReport">Submit Report</button>
-            </div>
-        </div>
-    </div>
-}
+@* REPORT MODAL - Using shared component *@
+<ReportModal 
+    ShowModal="@State.ShowReportModal"
+    OnClose="@(() => State.ShowReportModal = false)"
+    OnSubmit="@HandleReportSubmit" />
 
 @* NOTIFICATION MODAL *@
 <NotificationModal 
@@ -123,5 +98,12 @@
     {
         State.RequestReason = args.Reason;
         await OnSubmitRequest.InvokeAsync((args.Reason, args.File));
+    }
+
+    private async Task HandleReportSubmit((string Reason, string? Details) args)
+    {
+        State.ReportReasonSelection = args.Reason;
+        State.ReportReasonDetails = args.Details ?? "";
+        await OnSubmitReport.InvokeAsync();
     }
 }

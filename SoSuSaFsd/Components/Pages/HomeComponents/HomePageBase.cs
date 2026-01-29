@@ -280,12 +280,10 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
             if (!EnsureAuthenticated()) return;
 
             State.ReportPostId = postId;
-            State.ReportReasonSelection = "Spam";
-            State.ReportReasonDetails = "";
             State.ShowReportModal = true;
         }
 
-        protected async Task SubmitReport()
+        protected async Task SubmitReport((string Reason, string? Details) args)
         {
             if (State.ReportPostId == 0 || !EnsureAuthenticated())
             {
@@ -298,8 +296,8 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
                 var submitted = await HomePageService.SubmitReportAsync(
                     State.ReportPostId,
                     State.CurrentUser!.Id,
-                    State.ReportReasonSelection,
-                    State.ReportReasonDetails);
+                    args.Reason,
+                    args.Details);
 
                 State.ResetReportModal();
                 State.ShowNotification(

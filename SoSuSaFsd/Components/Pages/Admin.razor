@@ -136,7 +136,8 @@
             OnOpenContentModal="@OpenContentModal"
             OnDismissReportGroup="@DismissReportGroup"
             OnUndoDismiss="@UndoDismiss"
-            OnRequestDelete="@RequestDelete" />
+            OnRequestDelete="@RequestDelete"
+            OnBanUser="@BanReportedUser" />
     </div>
 
     <div class="admin-panel @(activeTab == "users" ? "active" : "")" id="panel-users">
@@ -373,6 +374,24 @@
             await LoadData();
         }
         catch { }
+    }
+
+    private async Task BanReportedUser(int reportId)
+    {
+        try
+        {
+            var report = AllReports.FirstOrDefault(r => r.ReportID == reportId);
+            if (report?.TargetUserID != null)
+            {
+                await AdminService.ToggleUserBanAsync(report.TargetUserID);
+                await AdminService.ResolveReportGroupAsync(reportId);
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error banning user: {ex.Message}");
+        }
     }
 
     private async Task RemoveCategoryAccess((string UserId, int CategoryId) data)

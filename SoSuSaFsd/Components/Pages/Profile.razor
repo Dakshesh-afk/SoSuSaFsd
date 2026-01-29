@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inherits ProfileBase
 @using SoSuSaFsd.Components.Pages.ProfileComponents
+@using SoSuSaFsd.Components.Common
 
 <PageTitle>@State.PageTitle</PageTitle>
 <link rel="stylesheet" href="/styles/category-details.css" />
@@ -68,3 +69,16 @@
         }
     </main>
 </div>
+
+@* REPORT MODAL *@
+<ReportModal 
+    ShowModal="@State.ShowReportModal"
+    OnClose="@(() => State.ShowReportModal = false)"
+    OnSubmit="@SubmitReport" />
+
+@* NOTIFICATION MODAL *@
+<NotificationModal 
+    IsVisible="@State.ShowNotificationModal"
+    Message="@State.NotificationMessage"
+    Type="@State.NotificationType"
+    OnClose="@State.CloseNotification" />

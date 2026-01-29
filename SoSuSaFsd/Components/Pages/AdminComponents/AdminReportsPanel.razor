@@ -32,7 +32,8 @@
             OnOpenContentModal="@OnOpenContentModal"
             OnDismissReportGroup="@OnDismissReportGroup"
             OnUndoDismiss="@OnUndoDismiss"
-            OnRequestDelete="@OnRequestDelete" />
+            OnRequestDelete="@OnRequestDelete"
+            OnBanUser="@OnBanUser" />
     }
 
     @if (!sortedGroups.Any())
@@ -52,4 +53,5 @@
     [Parameter] public EventCallback<int> OnDismissReportGroup { get; set; }
     [Parameter] public EventCallback<int> OnUndoDismiss { get; set; }
     [Parameter] public EventCallback<int> OnRequestDelete { get; set; }
+    [Parameter] public EventCallback<int> OnBanUser { get; set; }
 }

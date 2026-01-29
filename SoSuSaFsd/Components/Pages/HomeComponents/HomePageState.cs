@@ -45,8 +45,6 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
         // ========== MODALS ==========
         public bool ShowReportModal { get; set; } = false;
         public int ReportPostId { get; set; } = 0;
-        public string ReportReasonSelection { get; set; } = "Spam";
-        public string ReportReasonDetails { get; set; } = "";
         public bool ShowNotificationModal { get; set; } = false;
         public string NotificationMessage { get; set; } = "";
         public string NotificationType { get; set; } = "success";
@@ -75,14 +73,12 @@ namespace SoSuSaFsd.Components.Pages.HomeComponents
         }
 
         /// <summary>
-        /// Resets modal state
+        /// Resets report modal state
         /// </summary>
         public void ResetReportModal()
         {
             ShowReportModal = false;
             ReportPostId = 0;
-            ReportReasonSelection = "Spam";
-            ReportReasonDetails = "";
         }
 
         /// <summary>

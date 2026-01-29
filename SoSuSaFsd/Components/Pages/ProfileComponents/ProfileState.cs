@@ -51,6 +51,32 @@ namespace SoSuSaFsd.Components.Pages.ProfileComponents
         /// </summary>
         public string ReportStatusMessage { get; set; } = "";
 
+        // ========== MODAL STATE ==========
+        /// <summary>
+        /// Whether the report modal is visible
+        /// </summary>
+        public bool ShowReportModal { get; set; } = false;
+
+        /// <summary>
+        /// Whether the notification modal is visible
+        /// </summary>
+        public bool ShowNotificationModal { get; set; } = false;
+
+        /// <summary>
+        /// Notification message to display
+        /// </summary>
+        public string NotificationMessage { get; set; } = "";
+
+        /// <summary>
+        /// Type of notification: "success", "error", "info"
+        /// </summary>
+        public string NotificationType { get; set; } = "success";
+
+        /// <summary>
+        /// ID of the post being reported
+        /// </summary>
+        public int ReportPostId { get; set; } = 0;
+
         // ========== POST INTERACTION STATE ==========
         /// <summary>
         /// Tracks which posts have comments visible
@@ -94,12 +120,36 @@ namespace SoSuSaFsd.Components.Pages.ProfileComponents
             ErrorMessage = "";
             FollowerCount = 0;
             ReportStatusMessage = "";
+            ShowReportModal = false;
+            ShowNotificationModal = false;
+            NotificationMessage = "";
+            NotificationType = "success";
+            ReportPostId = 0;
             ShowComments.Clear();
             PostComments.Clear();
             CommentDrafts.Clear();
             CarouselIndices.Clear();
             ActiveReplyBoxes.Clear();
             ReplyDrafts.Clear();
+        }
+
+        /// <summary>
+        /// Shows a notification modal
+        /// </summary>
+        public void ShowNotification(string message, string type = "success")
+        {
+            NotificationMessage = message;
+            NotificationType = type;
+            ShowNotificationModal = true;
+        }
+
+        /// <summary>
+        /// Closes the notification modal
+        /// </summary>
+        public void CloseNotification()
+        {
+            ShowNotificationModal = false;
+            NotificationMessage = "";
         }
 
         /// <summary>

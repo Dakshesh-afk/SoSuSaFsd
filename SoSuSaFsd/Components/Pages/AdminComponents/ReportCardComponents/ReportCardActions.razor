@@ -1,10 +1,12 @@
 @using SoSuSaFsd.Domain
 
-@* ReportCardActions - Action buttons (View, Dismiss, Delete, Undo) *@
+@* ReportCardActions - Action buttons (View, Dismiss, Delete/Ban, Undo) *@
 
 @{
-    var isResolved = Group.Any(r => r.Status == "Resolved" || r.Status == "Dismissed");
+    var isDismissed = Group.Any(r => r.Status == "Dismissed");
+    var isResolved = Group.Any(r => r.Status == "Resolved");
     var rep = Group.First();
+    var isUserReport = rep.TargetUserID != null;
 }
 
 <div class="report-actions">
@@ -15,17 +17,33 @@
         </button>
     }
 
-    @if (!isResolved)
+    @if (!isResolved && !isDismissed)
     {
         <button class="btn-action btn-dismiss" @onclick="@(() => OnDismissReportGroup.InvokeAsync(rep.ReportID))">Dismiss All</button>
-        <button class="btn-action btn-delete" @onclick="@(() => OnRequestDelete.InvokeAsync(rep.ReportID))">Delete Content</button>
+        
+        @if (isUserReport)
+        {
+            <button class="btn-action btn-delete" @onclick="@(() => OnBanUser.InvokeAsync(rep.ReportID))">
+                <i class="fas fa-user-slash mr-1"></i> Ban User
+            </button>
+        }
+        else
+        {
+            <button class="btn-action btn-delete" @onclick="@(() => OnRequestDelete.InvokeAsync(rep.ReportID))">Delete Content</button>
+        }
     }
-    else
+    else if (isDismissed)
     {
-        <span class="text-gray-400 text-xs font-medium mr-2">Problem Resolved</span>
+        <span class="text-gray-400 text-xs font-medium mr-2">Problem Dismissed</span>
         <button class="btn-action btn-undo" @onclick="@(() => OnUndoDismiss.InvokeAsync(rep.ReportID))">
             <i class="fas fa-undo mr-1"></i> Undo Dismiss
         </button>
+    }
+    else if (isResolved)
+    {
+        <span class="text-gray-400 text-xs font-medium mr-2">
+            @(isUserReport ? "User Banned" : "Content Deleted")
+        </span>
     }
 </div>
 
@@ -34,5 +52,6 @@
     [Parameter] public EventCallback<int> OnOpenContentModal { get; set; }
     [Parameter] public EventCallback<int> OnDismissReportGroup { get; set; }
     [Parameter] public EventCallback<int> OnRequestDelete { get; set; }
+    [Parameter] public EventCallback<int> OnBanUser { get; set; }
     [Parameter] public EventCallback<int> OnUndoDismiss { get; set; }
 }
