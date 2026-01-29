@@ -78,16 +78,6 @@ namespace SoSuSaFsd.Controllers
         [HttpPost]
         public async Task<ActionResult<Comments>> PostComments(Comments comments)
         {
-            // 1. Mastery Check: Verify the Post exists before allowing a comment
-            var postExists = await _context.Posts.AnyAsync(p => p.Id == comments.PostID);
-
-            if (!postExists)
-            {
-                // Return 404 because the 'target' of the comment is missing
-                return NotFound($"Validation Error: Post with ID {comments.PostID} does not exist.");
-            }
-
-            // 2. If it exists, proceed with saving
             _context.Comments.Add(comments);
             await _context.SaveChangesAsync();
 
