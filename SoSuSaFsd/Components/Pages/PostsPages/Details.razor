@@ -2,6 +2,8 @@
 @using Microsoft.EntityFrameworkCore
 @using SoSuSaFsd.Domain
 @inject IDbContextFactory<SoSuSaFsd.Data.SoSuSaFsdContext> DbFactory
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin")]
 @inject NavigationManager NavigationManager
 
 <PageTitle>Details</PageTitle>

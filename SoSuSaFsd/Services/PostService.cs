@@ -126,8 +126,8 @@ namespace SoSuSaFsd.Services
                 
                 using var context = _contextFactory.CreateDbContext();
                 context.Posts.Add(post);
-                await context.SaveChangesAsync();
-                
+                await context.SaveChangesAsync(); // save details to SQL
+
                 _logger.LogInformation("Post created successfully with ID {PostId}", post.Id);
             }
             catch (Exception ex)

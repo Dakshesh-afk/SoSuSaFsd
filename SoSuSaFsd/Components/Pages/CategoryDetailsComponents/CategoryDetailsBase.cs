@@ -15,7 +15,7 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
     public abstract class CategoryDetailsBase : ComponentBase
     {
         // ========== INJECTED DEPENDENCIES ==========
-        [Inject] protected IDbContextFactory<SoSuSaFsdContext> DbFactory { get; set; } = default!;
+        [Inject] protected IDbContextFactory<SoSuSaFsdContext> DbFactory { get; set; } = default!;      
         [Inject] protected NavigationManager Navigation { get; set; } = default!;
         [Inject] protected AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
         [Inject] protected IServiceScopeFactory ScopeFactory { get; set; } = default!;
@@ -295,7 +295,7 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
         }
 
         // ========== POSTS ==========
-        protected bool CanUserPost()
+        protected bool CanUserPost() // used to enable/disable post button
         {
             if (State.CurrentCategory?.IsVerified == true)
                 return State.IsAdmin || State.HasApprovedAccess;
@@ -304,16 +304,21 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
 
         protected async Task HandleCreatePost()
         {
-            if (string.IsNullOrWhiteSpace(State.NewPostContent) && State.PendingUploads.Count == 0)
+            if (string.IsNullOrWhiteSpace(State.NewPostContent) && State.PendingUploads.Count == 0)  //Check for empty post //If empty, not allowed to post
                 return;
 
-            if (string.IsNullOrEmpty(State.CurrentUserId))
+            if (string.IsNullOrEmpty(State.CurrentUserId)) //Checks if user is logged in
             {
-                State.ShowLoginOverlay = true;
+                State.ShowLoginOverlay = true; // Show login overlay if not logged in where users are asked to log in
                 return;
             }
 
-            if (State.CurrentCategory?.IsVerified == true && !State.IsAdmin && !State.HasApprovedAccess)
+            // check if the category is Verified AND the user is NOT an Admin
+            bool requiresCheck = State.CurrentCategory?.IsVerified == true && !State.IsAdmin;
+
+            // If we already know from memory (State) that they don't have access, stop here.
+            // This saves time and effort from opening a new database connection entirely.
+            if (requiresCheck && !State.HasApprovedAccess)
             {
                 State.ErrorMessage = "This category is verified. You must request access to post here.";
                 return;
@@ -322,14 +327,22 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
             try
             {
                 using var context = DbFactory.CreateDbContext();
-                bool dbHasAccess = await context.CategoryAccessRequests
-                    .AnyAsync(r => r.UserId == State.CurrentUserId && r.CategoryId == Id && r.Status == "Approved");
 
-                if (State.CurrentCategory?.IsVerified == true && !State.IsAdmin && !dbHasAccess)
+                // ONLY run this query if the category actually requires checking.
+                if (requiresCheck)
                 {
-                    State.ErrorMessage = "This category is verified. You must request access to post here.";
-                    return;
+                    bool dbHasAccess = await context.CategoryAccessRequests
+                        .AnyAsync(r => r.UserId == State.CurrentUserId
+                                    && r.CategoryId == Id
+                                    && r.Status == "Approved");
+
+                    if (!dbHasAccess)
+                    {
+                        State.ErrorMessage = "Access revoked. You must request access to post here.";
+                        return;
+                    }
                 }
+
 
                 var newPost = new Posts
                 {
@@ -353,7 +366,7 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                     });
                 }
 
-                await CategoryDetailsService.CreatePostAsync(newPost);
+                await CategoryDetailsService.CreatePostAsync(newPost); // service handles DB save --> PostService.cs
                 State.ClosePostModal();
                 State.CategoryPosts = await PostService.GetCategoryPostsAsync(Id);
             }
@@ -371,11 +384,11 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
 
             try
             {
-                var newFiles = e.GetMultipleFiles(MaxAllowedFiles);
-                var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads");
+                var newFiles = e.GetMultipleFiles(MaxAllowedFiles); // allow multiple file selection
+                var uploadsFolder = Path.Combine(Environment.WebRootPath, "uploads"); //uploads folder path
 
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
+                if (!Directory.Exists(uploadsFolder)) // create uploads folder if it doesn't exist
+                    Directory.CreateDirectory(uploadsFolder); 
 
                 foreach (var file in newFiles)
                 {
@@ -388,12 +401,12 @@ namespace SoSuSaFsd.Components.Pages.CategoryDetailsComponents
                         {
                             var extension = Path.GetExtension(file.Name).ToLower();
                             bool isVideo = extension is ".mp4" or ".webm" or ".mov";
-                            var fileName = $"{Guid.NewGuid()}{extension}";
-                            var physicalPath = Path.Combine(uploadsFolder, fileName);
-                            var webPath = $"/uploads/{fileName}";
+                            var fileName = $"{Guid.NewGuid()}{extension}"; // unique file name to allow posting of same file
+                            var physicalPath = Path.Combine(uploadsFolder, fileName); // physical path on server
+                            var webPath = $"/uploads/{fileName}"; // web-accessible path
 
-                            await using var fileStream = new FileStream(physicalPath, FileMode.Create);
-                            await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream);
+                            await using var fileStream = new FileStream(physicalPath, FileMode.Create); // create file stream
+                            await file.OpenReadStream(MaxFileSize).CopyToAsync(fileStream); // copy file to server
 
                             State.PendingUploads.Add(new PendingFile
                             {

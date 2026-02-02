@@ -44,6 +44,7 @@ else
             @if (CanUserPost)
             {
                 <button class="login-btn" @onclick="OnShowPostModal">Create Post</button>
+                // button enabled if user can post
             }
             else if (State.HasPendingRequest)
             {
